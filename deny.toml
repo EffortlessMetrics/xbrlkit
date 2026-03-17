@@ -1,0 +1,6 @@
+[advisories]
+ignore = []
+
+[licenses]
+# Workspace crates are AGPL-3.0-or-later; Apache/MIT remain allowed for third-party dependencies.
+allow = ["AGPL-3.0-or-later", "Apache-2.0", "MIT"]

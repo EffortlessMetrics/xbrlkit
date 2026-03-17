@@ -1,0 +1,24 @@
+feature_id: FEAT-XK-TAX-YEARS
+layer: sec
+module: taxonomy-year-compatibility
+scenarios:
+  SCN-XK-TAXONOMY-002:
+    ac_id: AC-XK-TAXONOMY-002
+    req_id: REQ-XK-TAXONOMY
+    crates: [taxonomy-dts, efm-rules, validation-run, sec-profile-types, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: [synthetic/taxonomy/mixed-year-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [validation.report.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/taxonomy-dts
+      - crates/efm-rules
+      - crates/validation-run
+      - crates/sec-profile-types
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - xtask
+      - specs/features/sec
+      - profiles/sec/efm-77/opco

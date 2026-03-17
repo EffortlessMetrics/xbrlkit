@@ -1,0 +1,18 @@
+[package]
+name = "sec-profile-types"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true
+taxonomy-types = { path = "../taxonomy-types" }
+
+[lints]
+workspace = true

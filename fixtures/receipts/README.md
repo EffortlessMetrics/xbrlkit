@@ -1,0 +1,1 @@
+Receipt goldens live here.

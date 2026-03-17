@@ -1,0 +1,3 @@
+entry_points:
+  - https://xbrl.sec.gov/dei/2024/dei-2024.xsd
+  - https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd

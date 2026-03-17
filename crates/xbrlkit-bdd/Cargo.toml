@@ -1,0 +1,19 @@
+[package]
+name = "xbrlkit-bdd"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow.workspace = true
+walkdir.workspace = true
+scenario-contract = { path = "../scenario-contract" }
+receipt-types = { path = "../receipt-types" }
+xbrlkit-bdd-steps = { path = "../xbrlkit-bdd-steps" }
+
+[lints]
+workspace = true

@@ -1,0 +1,13 @@
+version: 1
+flows:
+  - id: implement_ac
+    description: Build a bounded context bundle for one acceptance criterion and run focused checks.
+    commands:
+      - cargo xtask feature-grid
+      - cargo xtask bundle ${AC}
+      - cargo xtask test-ac ${AC}
+  - id: impact_loop
+    description: Estimate affected scenarios from changed paths.
+    commands:
+      - cargo xtask feature-grid
+      - cargo xtask impact --changed ${PATHS}

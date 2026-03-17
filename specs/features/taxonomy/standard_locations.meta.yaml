@@ -1,0 +1,23 @@
+feature_id: FEAT-XK-TAX-LOC
+layer: sec
+module: standard-locations
+scenarios:
+  SCN-XK-TAXONOMY-001:
+    ac_id: AC-XK-TAXONOMY-001
+    req_id: REQ-XK-TAXONOMY
+    crates: [taxonomy-dts, sec-profile-types, validation-run, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: [synthetic/taxonomy/standard-location-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [taxonomy.resolve.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/taxonomy-dts
+      - crates/sec-profile-types
+      - crates/validation-run
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - xtask
+      - specs/features/taxonomy
+      - profiles/sec/efm-77/opco

@@ -1,0 +1,329 @@
+- .editorconfig
+- .cargo
+  - .cargo/config.toml
+- .gitattributes
+- .github
+  - .github/ISSUE_TEMPLATE
+    - .github/ISSUE_TEMPLATE/bug_report.yml
+    - .github/ISSUE_TEMPLATE/slice_request.yml
+  - .github/pull_request_template.md
+  - .github/workflows
+    - .github/workflows/cla.yml
+    - .github/workflows/ci.yml
+- .gitignore
+- .llm
+  - .llm/contextpack.yaml
+- .typos.toml
+- AGENTS.md
+- CHANGELOG.md
+- CLA.md
+- CLAUDE.md
+- CONTRIBUTING.md
+- Cargo.lock
+- Cargo.toml
+- LICENSE
+- README.md
+- SECURITY.md
+- adr
+  - adr/ADR-001-scenario-driven-workspace.md
+  - adr/ADR-002-canonical-report-model.md
+  - adr/ADR-003-profile-packs-as-data.md
+  - adr/ADR-004-semantic-microcrate-boundaries.md
+  - adr/ADR-005-receipts-as-public-contracts.md
+  - adr/ADR-006-no-live-network-in-bdd.md
+- artifacts
+  - artifacts/.gitkeep
+  - artifacts/bundles
+    - artifacts/bundles/AC-XK-IXDS-002.json
+  - artifacts/cockpit
+    - artifacts/cockpit/sensor.report.v1.json
+  - artifacts/feature.grid.v1.json
+  - artifacts/impact
+    - artifacts/impact/impact.report.v1.json
+  - artifacts/ixds
+    - artifacts/ixds/ixds.assembly.v1.json
+  - artifacts/runs
+    - artifacts/runs/scenario.run.v1.json
+  - artifacts/taxonomy
+    - artifacts/taxonomy/taxonomy.resolve.v1.json
+  - artifacts/validation
+    - artifacts/validation/validation.report.v1.json
+- clippy.toml
+- contracts
+  - contracts/docs
+    - contracts/docs/identity-spec.md
+    - contracts/docs/receipt-spec.md
+    - contracts/docs/rule-registry.md
+  - contracts/schemas
+    - contracts/schemas/bundle.manifest.v1.json
+    - contracts/schemas/diff.report.v1.json
+    - contracts/schemas/export.report.v1.json
+    - contracts/schemas/feature.grid.v1.json
+    - contracts/schemas/filing.manifest.v1.json
+    - contracts/schemas/impact.report.v1.json
+    - contracts/schemas/ixds.assembly.v1.json
+    - contracts/schemas/oracle.compare.v1.json
+    - contracts/schemas/scenario.run.v1.json
+    - contracts/schemas/sensor.report.v1.json
+    - contracts/schemas/taxonomy.resolve.v1.json
+    - contracts/schemas/validation.report.v1.json
+- corpus
+  - corpus/README.md
+  - corpus/corpus.lock
+  - corpus/manifests
+    - corpus/manifests/README.md
+- crates
+  - crates/archive-zip
+    - crates/archive-zip/Cargo.toml
+    - crates/archive-zip/src
+      - crates/archive-zip/src/lib.rs
+  - crates/calc11
+    - crates/calc11/Cargo.toml
+    - crates/calc11/src
+      - crates/calc11/src/lib.rs
+  - crates/cockpit-export
+    - crates/cockpit-export/Cargo.toml
+    - crates/cockpit-export/src
+      - crates/cockpit-export/src/lib.rs
+  - crates/corpus-fs
+    - crates/corpus-fs/Cargo.toml
+    - crates/corpus-fs/src
+      - crates/corpus-fs/src/lib.rs
+  - crates/diff-run
+    - crates/diff-run/Cargo.toml
+    - crates/diff-run/src
+      - crates/diff-run/src/lib.rs
+  - crates/duplicate-facts
+    - crates/duplicate-facts/Cargo.toml
+    - crates/duplicate-facts/src
+      - crates/duplicate-facts/src/lib.rs
+  - crates/edgar-attachments
+    - crates/edgar-attachments/Cargo.toml
+    - crates/edgar-attachments/src
+      - crates/edgar-attachments/src/lib.rs
+  - crates/edgar-identity
+    - crates/edgar-identity/Cargo.toml
+    - crates/edgar-identity/src
+      - crates/edgar-identity/src/lib.rs
+  - crates/edgar-sgml
+    - crates/edgar-sgml/Cargo.toml
+    - crates/edgar-sgml/src
+      - crates/edgar-sgml/src/lib.rs
+  - crates/efm-rules
+    - crates/efm-rules/Cargo.toml
+    - crates/efm-rules/src
+      - crates/efm-rules/src/lib.rs
+  - crates/export-run
+    - crates/export-run/Cargo.toml
+    - crates/export-run/src
+      - crates/export-run/src/lib.rs
+  - crates/filing-load
+    - crates/filing-load/Cargo.toml
+    - crates/filing-load/src
+      - crates/filing-load/src/lib.rs
+  - crates/ixds-assemble
+    - crates/ixds-assemble/Cargo.toml
+    - crates/ixds-assemble/src
+      - crates/ixds-assemble/src/lib.rs
+  - crates/ixhtml-scan
+    - crates/ixhtml-scan/Cargo.toml
+    - crates/ixhtml-scan/src
+      - crates/ixhtml-scan/src/lib.rs
+  - crates/oim-normalize
+    - crates/oim-normalize/Cargo.toml
+    - crates/oim-normalize/src
+      - crates/oim-normalize/src/lib.rs
+  - crates/oracle-compare
+    - crates/oracle-compare/Cargo.toml
+    - crates/oracle-compare/src
+      - crates/oracle-compare/src/lib.rs
+  - crates/receipt-types
+    - crates/receipt-types/Cargo.toml
+    - crates/receipt-types/src
+      - crates/receipt-types/src/lib.rs
+  - crates/render-json
+    - crates/render-json/Cargo.toml
+    - crates/render-json/src
+      - crates/render-json/src/lib.rs
+  - crates/render-md
+    - crates/render-md/Cargo.toml
+    - crates/render-md/src
+      - crates/render-md/src/lib.rs
+  - crates/scenario-contract
+    - crates/scenario-contract/Cargo.toml
+    - crates/scenario-contract/src
+      - crates/scenario-contract/src/lib.rs
+  - crates/scenario-runner
+    - crates/scenario-runner/Cargo.toml
+    - crates/scenario-runner/src
+      - crates/scenario-runner/src/lib.rs
+  - crates/sec-http
+    - crates/sec-http/Cargo.toml
+    - crates/sec-http/src
+      - crates/sec-http/src/lib.rs
+  - crates/sec-profile-types
+    - crates/sec-profile-types/Cargo.toml
+    - crates/sec-profile-types/src
+      - crates/sec-profile-types/src/lib.rs
+  - crates/taxonomy-cache
+    - crates/taxonomy-cache/Cargo.toml
+    - crates/taxonomy-cache/src
+      - crates/taxonomy-cache/src/lib.rs
+  - crates/taxonomy-dts
+    - crates/taxonomy-dts/Cargo.toml
+    - crates/taxonomy-dts/src
+      - crates/taxonomy-dts/src/lib.rs
+  - crates/taxonomy-package
+    - crates/taxonomy-package/Cargo.toml
+    - crates/taxonomy-package/src
+      - crates/taxonomy-package/src/lib.rs
+  - crates/taxonomy-types
+    - crates/taxonomy-types/Cargo.toml
+    - crates/taxonomy-types/src
+      - crates/taxonomy-types/src/lib.rs
+  - crates/validation-run
+    - crates/validation-run/Cargo.toml
+    - crates/validation-run/src
+      - crates/validation-run/src/lib.rs
+  - crates/xbrl-contexts
+    - crates/xbrl-contexts/Cargo.toml
+    - crates/xbrl-contexts/src
+      - crates/xbrl-contexts/src/lib.rs
+  - crates/xbrl-dimensions
+    - crates/xbrl-dimensions/Cargo.toml
+    - crates/xbrl-dimensions/src
+      - crates/xbrl-dimensions/src/lib.rs
+  - crates/xbrl-linkbases
+    - crates/xbrl-linkbases/Cargo.toml
+    - crates/xbrl-linkbases/src
+      - crates/xbrl-linkbases/src/lib.rs
+  - crates/xbrl-report-types
+    - crates/xbrl-report-types/Cargo.toml
+    - crates/xbrl-report-types/src
+      - crates/xbrl-report-types/src/lib.rs
+  - crates/xbrl-units
+    - crates/xbrl-units/Cargo.toml
+    - crates/xbrl-units/src
+      - crates/xbrl-units/src/lib.rs
+  - crates/xbrlkit-bdd
+    - crates/xbrlkit-bdd/Cargo.toml
+    - crates/xbrlkit-bdd/src
+      - crates/xbrlkit-bdd/src/lib.rs
+  - crates/xbrlkit-bdd-steps
+    - crates/xbrlkit-bdd-steps/Cargo.toml
+    - crates/xbrlkit-bdd-steps/src
+      - crates/xbrlkit-bdd-steps/src/lib.rs
+  - crates/xbrlkit-cli
+    - crates/xbrlkit-cli/Cargo.toml
+    - crates/xbrlkit-cli/src
+      - crates/xbrlkit-cli/src/main.rs
+  - crates/xbrlkit-conform
+    - crates/xbrlkit-conform/Cargo.toml
+    - crates/xbrlkit-conform/src
+      - crates/xbrlkit-conform/src/lib.rs
+  - crates/xbrlkit-core
+    - crates/xbrlkit-core/Cargo.toml
+    - crates/xbrlkit-core/src
+      - crates/xbrlkit-core/src/lib.rs
+  - crates/xbrlkit-feature-grid
+    - crates/xbrlkit-feature-grid/Cargo.toml
+    - crates/xbrlkit-feature-grid/src
+      - crates/xbrlkit-feature-grid/src/lib.rs
+  - crates/xbrlkit-interop-tests
+    - crates/xbrlkit-interop-tests/Cargo.toml
+    - crates/xbrlkit-interop-tests/src
+      - crates/xbrlkit-interop-tests/src/lib.rs
+  - crates/xbrlkit-test-grid
+    - crates/xbrlkit-test-grid/Cargo.toml
+    - crates/xbrlkit-test-grid/src
+      - crates/xbrlkit-test-grid/src/lib.rs
+- deny.toml
+- docs
+  - docs/STATUS.md
+  - docs/architecture
+    - docs/architecture/overview.md
+  - docs/audit
+    - docs/audit/evidence.md
+  - docs/how-to
+    - docs/how-to/add-scenario.md
+  - docs/reference
+    - docs/reference/repo-map.md
+- fixtures
+  - fixtures/README.md
+  - fixtures/goldens
+    - fixtures/goldens/README.md
+  - fixtures/receipts
+    - fixtures/receipts/README.md
+  - fixtures/synthetic
+    - fixtures/synthetic/facts
+      - fixtures/synthetic/facts/consistent-duplicates-01
+    - fixtures/synthetic/filing
+      - fixtures/synthetic/filing/minimal-container-01
+    - fixtures/synthetic/inline
+      - fixtures/synthetic/inline/ixds-single-file-01
+      - fixtures/synthetic/inline/ixds-two-file-01
+    - fixtures/synthetic/sec
+      - fixtures/synthetic/sec/inline
+    - fixtures/synthetic/taxonomy
+      - fixtures/synthetic/taxonomy/mixed-year-01
+      - fixtures/synthetic/taxonomy/standard-location-01
+- fuzz
+  - fuzz/README.md
+- plans
+  - plans/implementation-roadmap.md
+- profiles
+  - profiles/sec
+    - profiles/sec/efm-77
+      - profiles/sec/efm-77/README.md
+      - profiles/sec/efm-77/opco
+- rust-toolchain.toml
+- specs
+  - specs/devex_flows.yaml
+  - specs/features
+    - specs/features/export
+      - specs/features/export/oim_json.feature
+      - specs/features/export/oim_json.meta.yaml
+    - specs/features/foundation
+      - specs/features/foundation/duplicate_facts.feature
+      - specs/features/foundation/duplicate_facts.meta.yaml
+      - specs/features/foundation/filing_manifest.feature
+      - specs/features/foundation/filing_manifest.meta.yaml
+    - specs/features/inline
+      - specs/features/inline/ixds_assembly.feature
+      - specs/features/inline/ixds_assembly.meta.yaml
+    - specs/features/sec
+      - specs/features/sec/inline_restrictions.feature
+      - specs/features/sec/inline_restrictions.meta.yaml
+      - specs/features/sec/taxonomy_years.feature
+      - specs/features/sec/taxonomy_years.meta.yaml
+    - specs/features/taxonomy
+      - specs/features/taxonomy/standard_locations.feature
+      - specs/features/taxonomy/standard_locations.meta.yaml
+    - specs/features/workflow
+      - specs/features/workflow/alpha_check.feature
+      - specs/features/workflow/alpha_check.meta.yaml
+      - specs/features/workflow/bundle.feature
+      - specs/features/workflow/bundle.meta.yaml
+      - specs/features/workflow/cockpit_pack.feature
+      - specs/features/workflow/cockpit_pack.meta.yaml
+      - specs/features/workflow/feature_grid.feature
+      - specs/features/workflow/feature_grid.meta.yaml
+  - specs/rules
+    - specs/rules/rule_registry.yaml
+  - specs/spec_ledger.yaml
+- templates
+  - templates/cockpit.comment.v1.md
+  - templates/oracle.compare.v1.md
+  - templates/validation.summary.v1.md
+- tests
+  - tests/goldens
+    - tests/goldens/feature.grid.v1.json
+    - tests/goldens/taxonomy.resolve.same-year.json
+    - tests/goldens/validation.report.sec-inline-no-ix-fraction.json
+  - tests/README.md
+- xtask
+  - xtask/Cargo.toml
+  - xtask/src
+    - xtask/src/alpha_check.rs
+    - xtask/src/main.rs
+    - xtask/src/schema_check.rs

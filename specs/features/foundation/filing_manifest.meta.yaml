@@ -1,0 +1,19 @@
+feature_id: FEAT-XK-MANIFEST
+layer: standard
+module: filing-manifest
+scenarios:
+  SCN-XK-MANIFEST-001:
+    ac_id: AC-XK-MANIFEST-001
+    req_id: REQ-XK-MANIFEST
+    crates: [edgar-identity, edgar-sgml, edgar-attachments, filing-load]
+    fixtures: [synthetic/filing/minimal-container-01]
+    receipts: [filing.manifest.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/edgar-identity
+      - crates/edgar-sgml
+      - crates/edgar-attachments
+      - crates/filing-load
+      - specs/features/foundation
+      - fixtures/synthetic/filing

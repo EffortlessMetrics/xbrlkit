@@ -1,0 +1,17 @@
+[package]
+name = "xbrlkit-bdd-steps"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow.workspace = true
+scenario-contract = { path = "../scenario-contract" }
+scenario-runner = { path = "../scenario-runner" }
+
+[lints]
+workspace = true

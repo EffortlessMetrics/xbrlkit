@@ -1,0 +1,21 @@
+feature_id: FEAT-XK-DUPLICATES
+layer: standard
+module: duplicate-facts
+scenarios:
+  SCN-XK-DUPLICATES-001:
+    ac_id: AC-XK-DUPLICATES-001
+    req_id: REQ-XK-DUPLICATES
+    crates: [duplicate-facts, validation-run, xbrl-report-types, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: [synthetic/facts/consistent-duplicates-01]
+    receipts: [validation.report.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/duplicate-facts
+      - crates/validation-run
+      - crates/xbrl-report-types
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - specs/features/foundation
+      - fixtures/synthetic/facts

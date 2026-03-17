@@ -1,0 +1,7 @@
+facts:
+  - concept: us-gaap:Assets
+    context: c1
+    value: "100"
+  - concept: us-gaap:Assets
+    context: c1
+    value: "100"

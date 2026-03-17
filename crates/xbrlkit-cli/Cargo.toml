@@ -1,0 +1,25 @@
+[package]
+name = "xbrlkit-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "xbrlkit-cli"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+corpus-fs = { path = "../corpus-fs" }
+sec-profile-types = { path = "../sec-profile-types" }
+validation-run = { path = "../validation-run" }
+export-run = { path = "../export-run" }
+render-json = { path = "../render-json" }
+xbrl-report-types = { path = "../xbrl-report-types" }
+
+[lints]
+workspace = true

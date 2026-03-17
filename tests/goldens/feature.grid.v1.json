@@ -1,0 +1,451 @@
+{
+  "scenarios": [
+    {
+      "scenario_id": "SCN-XK-DUPLICATES-001",
+      "ac_id": "AC-XK-DUPLICATES-001",
+      "req_id": "REQ-XK-DUPLICATES",
+      "feature_file": "specs/features/foundation/duplicate_facts.feature",
+      "sidecar_file": "specs/features/foundation/duplicate_facts.meta.yaml",
+      "layer": "standard",
+      "module": "FEAT-XK-DUPLICATES:duplicate-facts",
+      "crates": [
+        "duplicate-facts",
+        "validation-run",
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/facts/consistent-duplicates-01"
+      ],
+      "profile_pack": null,
+      "receipts": [
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/duplicate-facts",
+        "crates/validation-run",
+        "crates/xbrl-report-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/foundation",
+        "fixtures/synthetic/facts"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-EXPORT-001",
+      "ac_id": null,
+      "req_id": null,
+      "feature_file": "specs/features/export/oim_json.feature",
+      "sidecar_file": "specs/features/export/oim_json.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-EXPORT-OIM:export-oim-json",
+      "crates": [
+        "oim-normalize",
+        "export-run",
+        "render-json"
+      ],
+      "fixtures": [
+        "synthetic/inline/ixds-single-file-01"
+      ],
+      "profile_pack": null,
+      "receipts": [
+        "export.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/oim-normalize",
+        "crates/export-run",
+        "crates/render-json",
+        "specs/features/export"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-IXDS-001",
+      "ac_id": "AC-XK-IXDS-001",
+      "req_id": "REQ-XK-IXDS",
+      "feature_file": "specs/features/inline/ixds_assembly.feature",
+      "sidecar_file": "specs/features/inline/ixds_assembly.meta.yaml",
+      "layer": "standard",
+      "module": "FEAT-XK-IXDS:inline-xbrl-1.1",
+      "crates": [
+        "ixhtml-scan",
+        "ixds-assemble",
+        "validation-run",
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/inline/ixds-single-file-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "ixds.assembly.v1",
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/ixhtml-scan",
+        "crates/ixds-assemble",
+        "crates/validation-run",
+        "crates/xbrl-report-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/inline",
+        "fixtures/synthetic/inline"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-IXDS-002",
+      "ac_id": "AC-XK-IXDS-002",
+      "req_id": "REQ-XK-IXDS",
+      "feature_file": "specs/features/inline/ixds_assembly.feature",
+      "sidecar_file": "specs/features/inline/ixds_assembly.meta.yaml",
+      "layer": "standard",
+      "module": "FEAT-XK-IXDS:inline-xbrl-1.1",
+      "crates": [
+        "ixhtml-scan",
+        "ixds-assemble",
+        "validation-run",
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/inline/ixds-two-file-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "ixds.assembly.v1",
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/ixhtml-scan",
+        "crates/ixds-assemble",
+        "crates/validation-run",
+        "crates/xbrl-report-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/inline",
+        "fixtures/synthetic/inline"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-MANIFEST-001",
+      "ac_id": "AC-XK-MANIFEST-001",
+      "req_id": "REQ-XK-MANIFEST",
+      "feature_file": "specs/features/foundation/filing_manifest.feature",
+      "sidecar_file": "specs/features/foundation/filing_manifest.meta.yaml",
+      "layer": "standard",
+      "module": "FEAT-XK-MANIFEST:filing-manifest",
+      "crates": [
+        "edgar-identity",
+        "edgar-sgml",
+        "edgar-attachments",
+        "filing-load"
+      ],
+      "fixtures": [
+        "synthetic/filing/minimal-container-01"
+      ],
+      "profile_pack": null,
+      "receipts": [
+        "filing.manifest.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/edgar-identity",
+        "crates/edgar-sgml",
+        "crates/edgar-attachments",
+        "crates/filing-load",
+        "specs/features/foundation",
+        "fixtures/synthetic/filing"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-SEC-INLINE-001",
+      "ac_id": "AC-XK-SEC-INLINE-001",
+      "req_id": "REQ-XK-SEC-INLINE",
+      "feature_file": "specs/features/sec/inline_restrictions.feature",
+      "sidecar_file": "specs/features/sec/inline_restrictions.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-SEC-INLINE:inline-restrictions",
+      "crates": [
+        "ixhtml-scan",
+        "ixds-assemble",
+        "efm-rules",
+        "validation-run",
+        "sec-profile-types",
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xbrlkit-cli",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/sec/inline/ix-fraction-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/ixhtml-scan",
+        "crates/ixds-assemble",
+        "crates/efm-rules",
+        "crates/validation-run",
+        "crates/sec-profile-types",
+        "crates/xbrl-report-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "crates/xbrlkit-cli",
+        "xtask",
+        "specs/features/sec",
+        "profiles/sec/efm-77/opco"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAXONOMY-001",
+      "ac_id": "AC-XK-TAXONOMY-001",
+      "req_id": "REQ-XK-TAXONOMY",
+      "feature_file": "specs/features/taxonomy/standard_locations.feature",
+      "sidecar_file": "specs/features/taxonomy/standard_locations.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-TAX-LOC:standard-locations",
+      "crates": [
+        "taxonomy-dts",
+        "sec-profile-types",
+        "validation-run",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "taxonomy.resolve.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dts",
+        "crates/sec-profile-types",
+        "crates/validation-run",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "profiles/sec/efm-77/opco"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAXONOMY-002",
+      "ac_id": "AC-XK-TAXONOMY-002",
+      "req_id": "REQ-XK-TAXONOMY",
+      "feature_file": "specs/features/sec/taxonomy_years.feature",
+      "sidecar_file": "specs/features/sec/taxonomy_years.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-TAX-YEARS:taxonomy-year-compatibility",
+      "crates": [
+        "taxonomy-dts",
+        "efm-rules",
+        "validation-run",
+        "sec-profile-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/mixed-year-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dts",
+        "crates/efm-rules",
+        "crates/validation-run",
+        "crates/sec-profile-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/sec",
+        "profiles/sec/efm-77/opco"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-001",
+      "ac_id": "AC-XK-WORKFLOW-001",
+      "req_id": "REQ-XK-WORKFLOW",
+      "feature_file": "specs/features/workflow/feature_grid.feature",
+      "sidecar_file": "specs/features/workflow/feature_grid.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-GRID:feature-grid",
+      "crates": [
+        "xbrlkit-feature-grid",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "feature.grid.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/xbrlkit-feature-grid",
+        "xtask",
+        "specs/features/workflow"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-002",
+      "ac_id": "AC-XK-WORKFLOW-002",
+      "req_id": "REQ-XK-WORKFLOW",
+      "feature_file": "specs/features/workflow/bundle.feature",
+      "sidecar_file": "specs/features/workflow/bundle.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-BUNDLE:bundle",
+      "crates": [
+        "scenario-contract",
+        "xbrlkit-feature-grid",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "bundle.manifest.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/scenario-contract",
+        "crates/xbrlkit-feature-grid",
+        "xtask",
+        "specs/features/workflow"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-003",
+      "ac_id": null,
+      "req_id": null,
+      "feature_file": "specs/features/workflow/cockpit_pack.feature",
+      "sidecar_file": "specs/features/workflow/cockpit_pack.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-COCKPIT:cockpit-pack",
+      "crates": [
+        "cockpit-export",
+        "receipt-types",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "sensor.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/cockpit-export",
+        "crates/receipt-types",
+        "xtask",
+        "specs/features/workflow"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-004",
+      "ac_id": "AC-XK-WORKFLOW-002",
+      "req_id": "REQ-XK-WORKFLOW",
+      "feature_file": "specs/features/workflow/bundle.feature",
+      "sidecar_file": "specs/features/workflow/bundle.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-BUNDLE:bundle",
+      "crates": [
+        "scenario-contract",
+        "xbrlkit-feature-grid",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "bundle.manifest.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/scenario-contract",
+        "crates/xbrlkit-feature-grid",
+        "xtask",
+        "specs/features/workflow"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-005",
+      "ac_id": "AC-XK-WORKFLOW-003",
+      "req_id": "REQ-XK-WORKFLOW",
+      "feature_file": "specs/features/workflow/alpha_check.feature",
+      "sidecar_file": "specs/features/workflow/alpha_check.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-ALPHA:alpha-check",
+      "crates": [
+        "xtask",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "xtask",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/workflow",
+        "tests/goldens"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    }
+  ]
+}

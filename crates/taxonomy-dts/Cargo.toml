@@ -1,0 +1,16 @@
+[package]
+name = "taxonomy-dts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+taxonomy-types = { path = "../taxonomy-types" }
+sec-profile-types = { path = "../sec-profile-types" }
+
+[lints]
+workspace = true

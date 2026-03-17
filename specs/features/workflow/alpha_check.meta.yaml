@@ -1,0 +1,19 @@
+feature_id: FEAT-XK-WORKFLOW-ALPHA
+layer: workflow
+module: alpha-check
+scenarios:
+  SCN-XK-WORKFLOW-005:
+    ac_id: AC-XK-WORKFLOW-003
+    req_id: REQ-XK-WORKFLOW
+    crates: [xtask, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: []
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - xtask
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - specs/features/workflow
+      - tests/goldens

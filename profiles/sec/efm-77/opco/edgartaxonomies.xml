@@ -1,0 +1,4 @@
+<edgarTaxonomies>
+  <taxonomy namespace="https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd" />
+  <taxonomy namespace="https://xbrl.sec.gov/dei/2025/dei-2025.xsd" />
+</edgarTaxonomies>

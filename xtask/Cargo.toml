@@ -1,0 +1,30 @@
+[package]
+name = "xtask"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[dependencies]
+serde.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+walkdir.workspace = true
+scenario-contract = { path = "../crates/scenario-contract" }
+xbrlkit-feature-grid = { path = "../crates/xbrlkit-feature-grid" }
+cockpit-export = { path = "../crates/cockpit-export" }
+receipt-types = { path = "../crates/receipt-types" }
+xbrlkit-bdd = { path = "../crates/xbrlkit-bdd" }
+sec-profile-types = { path = "../crates/sec-profile-types" }
+validation-run = { path = "../crates/validation-run" }
+xbrl-report-types = { path = "../crates/xbrl-report-types" }
+scenario-runner = { path = "../crates/scenario-runner" }
+
+[lints]
+workspace = true

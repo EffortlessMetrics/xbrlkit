@@ -1,0 +1,77 @@
+version: 1
+stories:
+  - id: US-XK-001
+    title: Validate a filing deterministically
+    requirements:
+      - id: REQ-XK-MANIFEST
+        title: Build a normalized filing manifest
+        acceptance_criteria:
+          - id: AC-XK-MANIFEST-001
+            title: Build a manifest from a minimal filing container
+            tests:
+              - type: bdd
+                tag: "@AC-XK-MANIFEST-001"
+                file: "specs/features/foundation/filing_manifest.feature"
+      - id: REQ-XK-IXDS
+        title: Assemble inline documents into an IXDS
+        acceptance_criteria:
+          - id: AC-XK-IXDS-001
+            title: Assemble a single-file IXDS
+            tests:
+              - type: bdd
+                tag: "@AC-XK-IXDS-001"
+                file: "specs/features/inline/ixds_assembly.feature"
+          - id: AC-XK-IXDS-002
+            title: Assemble a multi-file IXDS
+            tests:
+              - type: bdd
+                tag: "@AC-XK-IXDS-002"
+                file: "specs/features/inline/ixds_assembly.feature"
+      - id: REQ-XK-TAXONOMY
+        title: Resolve SEC taxonomy locations deterministically
+        acceptance_criteria:
+          - id: AC-XK-TAXONOMY-001
+            title: Resolve a standard taxonomy location via the profile pack
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAXONOMY-001"
+                file: "specs/features/taxonomy/standard_locations.feature"
+          - id: AC-XK-TAXONOMY-002
+            title: Reject mixed-year taxonomy combinations
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAXONOMY-002"
+                file: "specs/features/sec/taxonomy_years.feature"
+      - id: REQ-XK-SEC-INLINE
+        title: Enforce SEC inline restrictions
+        acceptance_criteria:
+          - id: AC-XK-SEC-INLINE-001
+            title: Reject ix:fraction in inline content
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-INLINE-001"
+                file: "specs/features/sec/inline_restrictions.feature"
+      - id: REQ-XK-DUPLICATES
+        title: Apply duplicate fact policy
+        acceptance_criteria:
+          - id: AC-XK-DUPLICATES-001
+            title: Consolidate consistent duplicates
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DUPLICATES-001"
+                file: "specs/features/foundation/duplicate_facts.feature"
+      - id: REQ-XK-WORKFLOW
+        title: Package scenario-bounded work for agents
+        acceptance_criteria:
+          - id: AC-XK-WORKFLOW-001
+            title: Compile the feature grid
+            tests:
+              - type: bdd
+                tag: "@AC-XK-WORKFLOW-001"
+                file: "specs/features/workflow/feature_grid.feature"
+          - id: AC-XK-WORKFLOW-002
+            title: Bundle an AC into a bounded context packet
+            tests:
+              - type: bdd
+                tag: "@AC-XK-WORKFLOW-002"
+                file: "specs/features/workflow/bundle.feature"

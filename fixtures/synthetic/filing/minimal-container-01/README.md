@@ -1,0 +1,1 @@
+Minimal filing-container fixture.

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://effortlessmetrics.com/xbrlkit/schemas/taxonomy.resolve.v1.json",
+  "title": "taxonomy.resolve.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "taxonomy.resolve" },
+    "version": { "const": "v1" },
+    "subject": { "type": "string" },
+    "result": {
+      "type": "string",
+      "enum": ["success", "warning", "error"]
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifactRef" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["kind", "version", "subject", "result", "artifacts", "notes"],
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": ["string", "null"] }
+      },
+      "required": ["path", "sha256"]
+    }
+  }
+}

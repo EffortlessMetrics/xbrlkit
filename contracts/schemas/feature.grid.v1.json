@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://effortlessmetrics.com/xbrlkit/schemas/feature.grid.v1.json",
+  "title": "feature.grid.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scenarios": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scenarioRecord" }
+    }
+  },
+  "required": ["scenarios"],
+  "$defs": {
+    "scenarioRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scenario_id": { "type": "string" },
+        "ac_id": { "type": ["string", "null"] },
+        "req_id": { "type": ["string", "null"] },
+        "feature_file": { "type": "string" },
+        "sidecar_file": { "type": "string" },
+        "layer": { "type": "string" },
+        "module": { "type": "string" },
+        "crates": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fixtures": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "profile_pack": { "type": ["string", "null"] },
+        "receipts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "allowed_edit_roots": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suite": { "type": ["string", "null"] },
+        "speed": { "type": ["string", "null"] }
+      },
+      "required": [
+        "scenario_id",
+        "ac_id",
+        "req_id",
+        "feature_file",
+        "sidecar_file",
+        "layer",
+        "module",
+        "crates",
+        "fixtures",
+        "profile_pack",
+        "receipts",
+        "allowed_edit_roots",
+        "suite",
+        "speed"
+      ]
+    }
+  }
+}

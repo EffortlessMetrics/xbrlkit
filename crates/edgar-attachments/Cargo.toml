@@ -1,0 +1,16 @@
+[package]
+name = "edgar-attachments"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde.workspace = true
+edgar-identity = { path = "../edgar-identity" }
+
+[lints]
+workspace = true

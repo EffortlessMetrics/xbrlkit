@@ -1,0 +1,15 @@
+[package]
+name = "edgar-sgml"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+edgar-identity = { path = "../edgar-identity" }
+
+[lints]
+workspace = true

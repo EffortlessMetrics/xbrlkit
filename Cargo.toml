@@ -1,0 +1,76 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/receipt-types",
+  "crates/scenario-contract",
+  "crates/scenario-runner",
+  "crates/taxonomy-types",
+  "crates/sec-profile-types",
+  "crates/xbrl-report-types",
+  "crates/xbrlkit-feature-grid",
+  "crates/xbrlkit-test-grid",
+  "crates/xbrlkit-bdd",
+  "crates/xbrlkit-bdd-steps",
+  "crates/xbrlkit-interop-tests",
+  "crates/edgar-identity",
+  "crates/edgar-sgml",
+  "crates/edgar-attachments",
+  "crates/ixhtml-scan",
+  "crates/ixds-assemble",
+  "crates/xbrl-contexts",
+  "crates/xbrl-units",
+  "crates/xbrl-dimensions",
+  "crates/xbrl-linkbases",
+  "crates/duplicate-facts",
+  "crates/taxonomy-package",
+  "crates/taxonomy-dts",
+  "crates/calc11",
+  "crates/efm-rules",
+  "crates/oim-normalize",
+  "crates/filing-load",
+  "crates/validation-run",
+  "crates/export-run",
+  "crates/diff-run",
+  "crates/oracle-compare",
+  "crates/sec-http",
+  "crates/corpus-fs",
+  "crates/taxonomy-cache",
+  "crates/archive-zip",
+  "crates/render-json",
+  "crates/render-md",
+  "crates/cockpit-export",
+  "crates/xbrlkit-conform",
+  "crates/xbrlkit-core",
+  "crates/xbrlkit-cli",
+  "xtask",
+]
+default-members = ["crates/xbrlkit-cli", "xtask"]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0-alpha.1"
+license = "AGPL-3.0-or-later"
+rust-version = "1.92"
+authors = ["EffortlessMetrics"]
+repository = "https://github.com/EffortlessMetrics/xbrlkit"
+
+[workspace.dependencies]
+anyhow = "1.0.100"
+clap = { version = "4.5.38", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+serde_yaml = "0.9.34"
+thiserror = "2.0.12"
+walkdir = "2.5.0"
+
+[workspace.lints.rust]
+rust_2018_idioms = { level = "warn", priority = -1 }
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+missing_docs = "allow"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"

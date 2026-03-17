@@ -1,0 +1,42 @@
+feature_id: FEAT-XK-IXDS
+layer: standard
+module: inline-xbrl-1.1
+scenarios:
+  SCN-XK-IXDS-001:
+    ac_id: AC-XK-IXDS-001
+    req_id: REQ-XK-IXDS
+    crates: [ixhtml-scan, ixds-assemble, validation-run, xbrl-report-types, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: [synthetic/inline/ixds-single-file-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [ixds.assembly.v1, validation.report.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/ixhtml-scan
+      - crates/ixds-assemble
+      - crates/validation-run
+      - crates/xbrl-report-types
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - specs/features/inline
+      - fixtures/synthetic/inline
+  SCN-XK-IXDS-002:
+    ac_id: AC-XK-IXDS-002
+    req_id: REQ-XK-IXDS
+    crates: [ixhtml-scan, ixds-assemble, validation-run, xbrl-report-types, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: [synthetic/inline/ixds-two-file-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [ixds.assembly.v1, validation.report.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/ixhtml-scan
+      - crates/ixds-assemble
+      - crates/validation-run
+      - crates/xbrl-report-types
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - specs/features/inline
+      - fixtures/synthetic/inline

@@ -1,0 +1,16 @@
+[package]
+name = "cockpit-export"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+receipt-types = { path = "../receipt-types" }
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://effortlessmetrics.com/xbrlkit/schemas/impact.report.v1.json",
+  "title": "impact.report.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "changed_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "impacted_scenarios": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["changed_paths", "impacted_scenarios"]
+}

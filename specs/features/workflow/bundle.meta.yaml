@@ -1,0 +1,30 @@
+feature_id: FEAT-XK-WORKFLOW-BUNDLE
+layer: workflow
+module: bundle
+scenarios:
+  SCN-XK-WORKFLOW-002:
+    ac_id: AC-XK-WORKFLOW-002
+    req_id: REQ-XK-WORKFLOW
+    crates: [scenario-contract, xbrlkit-feature-grid, xtask]
+    fixtures: []
+    receipts: [bundle.manifest.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/scenario-contract
+      - crates/xbrlkit-feature-grid
+      - xtask
+      - specs/features/workflow
+  SCN-XK-WORKFLOW-004:
+    ac_id: AC-XK-WORKFLOW-002
+    req_id: REQ-XK-WORKFLOW
+    crates: [scenario-contract, xbrlkit-feature-grid, xtask]
+    fixtures: []
+    receipts: [bundle.manifest.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/scenario-contract
+      - crates/xbrlkit-feature-grid
+      - xtask
+      - specs/features/workflow

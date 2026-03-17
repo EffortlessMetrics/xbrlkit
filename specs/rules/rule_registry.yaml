@@ -1,0 +1,16 @@
+version: 1
+rules:
+  - id: SEC.TAXONOMY.SAME_YEAR
+    source_type: sec_profile
+    profile_pack: sec/efm-77/opco
+    owning_crates: [taxonomy-dts, efm-rules]
+    severity: error
+  - id: SEC.INLINE.NO_IX_FRACTION
+    source_type: sec_profile
+    profile_pack: sec/efm-77/opco
+    owning_crates: [ixhtml-scan, efm-rules]
+    severity: error
+  - id: XBRL.DUPLICATE_FACT.CONSISTENT
+    source_type: xbrl_core
+    owning_crates: [duplicate-facts]
+    severity: error

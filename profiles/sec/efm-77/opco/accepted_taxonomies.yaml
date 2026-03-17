@@ -1,0 +1,6 @@
+years: [2024, 2025, 2026]
+namespaces:
+  - prefix: us-gaap
+    uri: https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd
+  - prefix: dei
+    uri: https://xbrl.sec.gov/dei/2025/dei-2025.xsd

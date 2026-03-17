@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a concrete defect in the current alpha surface.
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: State the problem directly.
+      placeholder: cargo xtask test-ac AC-XK-SEC-INLINE-001 passes locally but fails in CI
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the command, fixture, profile pack, and observed output.
+      placeholder: |
+        Command:
+        cargo run -p xbrlkit-cli -- validate-fixture --profile sec/efm-77/opco --json ...
+
+        Fixture:
+        fixtures/synthetic/...
+
+        Observed:
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe the expected result, rule, or receipt.
+    validations:
+      required: true
+  - type: input
+    id: scenario
+    attributes:
+      label: Related AC or scenario ID
+      description: If applicable, add the AC or scenario ID.
+      placeholder: AC-XK-SEC-INLINE-001

@@ -1,0 +1,15 @@
+{
+  "facts": [],
+  "findings": [
+    {
+      "member": "member-a.html",
+      "message": "ix:fraction is not allowed in the selected SEC profile pack",
+      "rule_id": "SEC.INLINE.NO_IX_FRACTION",
+      "severity": "error",
+      "subject": "ix:fraction"
+    }
+  ],
+  "members": [
+    "member-a.html"
+  ]
+}

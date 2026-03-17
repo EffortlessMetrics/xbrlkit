@@ -1,0 +1,4 @@
+public_suite: sec-public/77d-260217
+cases:
+  - SEC.INLINE.NO_IX_FRACTION
+  - SEC.TAXONOMY.SAME_YEAR

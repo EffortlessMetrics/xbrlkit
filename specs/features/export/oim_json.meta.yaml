@@ -1,0 +1,15 @@
+feature_id: FEAT-XK-EXPORT-OIM
+layer: workflow
+module: export-oim-json
+scenarios:
+  SCN-XK-EXPORT-001:
+    crates: [oim-normalize, export-run, render-json]
+    fixtures: [synthetic/inline/ixds-single-file-01]
+    receipts: [export.report.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/oim-normalize
+      - crates/export-run
+      - crates/render-json
+      - specs/features/export

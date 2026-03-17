@@ -1,0 +1,4 @@
+required_facts:
+  - dei:EntityRegistrantName
+  - dei:DocumentType
+  - dei:DocumentPeriodEndDate

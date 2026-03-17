@@ -1,0 +1,16 @@
+feature_id: FEAT-XK-WORKFLOW-GRID
+layer: workflow
+module: feature-grid
+scenarios:
+  SCN-XK-WORKFLOW-001:
+    ac_id: AC-XK-WORKFLOW-001
+    req_id: REQ-XK-WORKFLOW
+    crates: [xbrlkit-feature-grid, xtask]
+    fixtures: []
+    receipts: [feature.grid.v1, scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrlkit-feature-grid
+      - xtask
+      - specs/features/workflow

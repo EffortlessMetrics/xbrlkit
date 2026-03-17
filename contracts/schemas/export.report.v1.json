@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://effortlessmetrics.com/xbrlkit/schemas/export.report.v1.json",
+  "title": "export.report.v1",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "kind": { "type": "string" },
+    "version": { "type": "string" },
+    "subject": { "type": "string" },
+    "result": { "type": "string" }
+  },
+  "required": ["kind", "version", "subject", "result"]
+}

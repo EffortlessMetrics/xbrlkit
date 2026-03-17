@@ -1,0 +1,6 @@
+banned_elements:
+  - ix:fraction
+  - ix:tuple
+banned_attributes:
+  - xml:base
+  - target

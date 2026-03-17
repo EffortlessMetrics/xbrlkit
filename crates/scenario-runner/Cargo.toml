@@ -1,0 +1,23 @@
+[package]
+name = "scenario-runner"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+scenario-contract = { path = "../scenario-contract" }
+receipt-types = { path = "../receipt-types" }
+sec-profile-types = { path = "../sec-profile-types" }
+validation-run = { path = "../validation-run" }
+xbrl-report-types = { path = "../xbrl-report-types" }
+
+[lints]
+workspace = true
