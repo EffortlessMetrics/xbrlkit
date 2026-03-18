@@ -221,13 +221,43 @@ pub fn assert_scenario_outcome(
         }
         Some("AC-XK-IXDS-001") => {
             ensure_ixds_member_count(execution, 1)?;
-            ensure_report_fact_count(execution, 3)?;
-            ensure_report_concept_set(execution, &["dei:EntityRegistrantName", "dei:DocumentType", "dei:DocumentPeriodEndDate"])
+            ensure_report_fact_count(execution, 14)?;
+            ensure_report_concept_set(execution, &[
+                "dei:EntityRegistrantName",
+                "dei:DocumentType",
+                "dei:DocumentPeriodEndDate",
+                "dei:AmendmentFlag",
+                "dei:EntityCentralIndexKey",
+                "dei:CurrentFiscalYearEndDate",
+                "dei:DocumentAnnualReport",
+                "dei:EntityAddressAddressLine1",
+                "dei:EntityAddressCityOrTown",
+                "dei:EntityAddressStateOrProvince",
+                "dei:EntityAddressPostalZipCode",
+                "dei:AuditorName",
+                "dei:AuditorFirmId",
+                "dei:AuditorLocation",
+            ])
         }
         Some("AC-XK-IXDS-002") => {
             ensure_ixds_member_count(execution, 2)?;
-            ensure_report_fact_count(execution, 3)?;
-            ensure_report_concept_set(execution, &["dei:EntityRegistrantName", "dei:DocumentType", "dei:DocumentPeriodEndDate"])
+            ensure_report_fact_count(execution, 14)?;
+            ensure_report_concept_set(execution, &[
+                "dei:EntityRegistrantName",
+                "dei:DocumentType",
+                "dei:DocumentPeriodEndDate",
+                "dei:AmendmentFlag",
+                "dei:EntityCentralIndexKey",
+                "dei:CurrentFiscalYearEndDate",
+                "dei:DocumentAnnualReport",
+                "dei:EntityAddressAddressLine1",
+                "dei:EntityAddressCityOrTown",
+                "dei:EntityAddressStateOrProvince",
+                "dei:EntityAddressPostalZipCode",
+                "dei:AuditorName",
+                "dei:AuditorFirmId",
+                "dei:AuditorLocation",
+            ])
         }
         _ => anyhow::bail!(
             "no scenario assertions implemented for {}",
