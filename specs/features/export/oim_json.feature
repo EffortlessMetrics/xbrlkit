@@ -2,6 +2,7 @@
 @suite.synthetic
 Feature: OIM JSON export
 
+  @alpha-active
   @SCN-XK-EXPORT-001
   @speed.fast
   Scenario: Emit canonical JSON export with provenance

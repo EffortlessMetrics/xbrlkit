@@ -340,6 +340,7 @@ name = "scenario-runner"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "export-run",
  "receipt-types",
  "scenario-contract",
  "sec-profile-types",

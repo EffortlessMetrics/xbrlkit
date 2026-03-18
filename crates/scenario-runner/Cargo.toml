@@ -17,6 +17,7 @@ scenario-contract = { path = "../scenario-contract" }
 receipt-types = { path = "../receipt-types" }
 sec-profile-types = { path = "../sec-profile-types" }
 validation-run = { path = "../validation-run" }
+export-run = { path = "../export-run" }
 xbrl-report-types = { path = "../xbrl-report-types" }
 
 [lints]

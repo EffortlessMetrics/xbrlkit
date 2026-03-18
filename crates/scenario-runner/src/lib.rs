@@ -18,6 +18,7 @@ pub struct ScenarioExecution {
     pub validation_run: Option<ValidationRun>,
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
+    pub export_receipt: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -90,10 +91,16 @@ pub fn execute_scenario(
         .iter()
         .any(|receipt| receipt == "ixds.assembly.v1")
         .then(|| ixds_assembly_receipt(&validation_run.report));
+    let export_receipt = scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "export.report.v1")
+        .then(|| export_run::export_json(&validation_run.report).1);
     Ok(ScenarioExecution {
         validation_run: Some(validation_run),
         taxonomy_resolution: None,
         ixds_receipt,
+        export_receipt,
     })
 }
 
@@ -174,6 +181,12 @@ pub fn write_execution_receipts(
         write_json(
             &repo_root.join("artifacts/taxonomy/taxonomy.resolve.v1.json"),
             &taxonomy_resolution.receipt,
+        )?;
+    }
+    if let Some(export_receipt) = &execution.export_receipt {
+        write_json(
+            &repo_root.join("artifacts/export/export.report.v1.json"),
+            export_receipt,
         )?;
     }
     Ok(())
@@ -259,6 +272,9 @@ pub fn assert_scenario_outcome(
                 "dei:AuditorLocation",
             ])
         }
+        // Scenarios without an AC ID are BDD-style scenarios that handle
+        // assertions via step definitions rather than scenario-level checks
+        None => Ok(()),
         _ => anyhow::bail!(
             "no scenario assertions implemented for {}",
             scenario.scenario_id
