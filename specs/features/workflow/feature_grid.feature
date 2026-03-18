@@ -3,6 +3,7 @@
 @suite.synthetic
 Feature: Feature grid
 
+  @alpha-active
   @AC-XK-WORKFLOW-001
   @SCN-XK-WORKFLOW-001
   @speed.fast

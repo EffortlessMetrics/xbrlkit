@@ -2,7 +2,7 @@
 
 use anyhow::Context;
 use receipt_types::{Receipt, RunResult};
-use scenario_contract::ScenarioRecord;
+use scenario_contract::{FeatureGrid, ScenarioRecord};
 use sec_profile_types::{ProfilePack, load_profile_from_workspace};
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -20,6 +20,7 @@ pub struct ScenarioExecution {
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
     pub filing_receipt: Option<Receipt>,
+    pub feature_grid: Option<FeatureGrid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,6 +39,19 @@ pub fn execute_scenario(
     repo_root: &Path,
     scenario: &ScenarioRecord,
 ) -> anyhow::Result<ScenarioExecution> {
+    // Feature grid compilation (no fixtures needed)
+    if scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "feature.grid.v1")
+    {
+        let grid = xbrlkit_feature_grid::compile(repo_root)?;
+        return Ok(ScenarioExecution {
+            feature_grid: Some(grid),
+            ..ScenarioExecution::default()
+        });
+    }
+
     let fixture_dirs = scenario
         .fixtures
         .iter()
@@ -115,6 +129,7 @@ pub fn execute_scenario(
         ixds_receipt,
         export_receipt,
         filing_receipt: None,
+        feature_grid: None,
     })
 }
 
@@ -269,6 +284,12 @@ pub fn assert_scenario_outcome(
         Some("AC-XK-MANIFEST-001") => {
             if execution.filing_receipt.is_none() {
                 anyhow::bail!("filing manifest receipt was not emitted");
+            }
+            Ok(())
+        }
+        Some("AC-XK-WORKFLOW-001") => {
+            if execution.feature_grid.is_none() {
+                anyhow::bail!("feature grid was not compiled");
             }
             Ok(())
         }

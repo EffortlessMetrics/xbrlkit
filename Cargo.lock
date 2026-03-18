@@ -350,6 +350,7 @@ dependencies = [
  "serde_yaml",
  "validation-run",
  "xbrl-report-types",
+ "xbrlkit-feature-grid",
 ]
 
 [[package]]
