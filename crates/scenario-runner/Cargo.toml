@@ -18,6 +18,7 @@ receipt-types = { path = "../receipt-types" }
 sec-profile-types = { path = "../sec-profile-types" }
 validation-run = { path = "../validation-run" }
 export-run = { path = "../export-run" }
+filing-load = { path = "../filing-load" }
 xbrl-report-types = { path = "../xbrl-report-types" }
 
 [lints]

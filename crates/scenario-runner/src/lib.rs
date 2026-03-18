@@ -19,6 +19,7 @@ pub struct ScenarioExecution {
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
+    pub filing_receipt: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -79,6 +80,18 @@ pub fn execute_scenario(
         });
     }
 
+    if fixture_dirs
+        .iter()
+        .all(|fixture_dir| fixture_dir.join("submission.txt").exists())
+    {
+        let submission = load_submission(&fixture_dirs)?;
+        let (_manifest, receipt) = filing_load::load_from_submission(&submission);
+        return Ok(ScenarioExecution {
+            filing_receipt: Some(receipt),
+            ..ScenarioExecution::default()
+        });
+    }
+
     let profile = load_profile_for_scenario(repo_root, scenario)?;
     let owned_members = load_html_members(&fixture_dirs)?;
     let members = owned_members
@@ -101,6 +114,7 @@ pub fn execute_scenario(
         taxonomy_resolution: None,
         ixds_receipt,
         export_receipt,
+        filing_receipt: None,
     })
 }
 
@@ -148,6 +162,20 @@ pub fn load_html_members(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<(String
     Ok(members)
 }
 
+pub fn load_submission(fixture_dirs: &[PathBuf]) -> anyhow::Result<String> {
+    let mut submissions = Vec::new();
+    for fixture_dir in fixture_dirs {
+        let path = fixture_dir.join("submission.txt");
+        let content = std::fs::read_to_string(&path)
+            .with_context(|| format!("reading {}", path.display()))?;
+        submissions.push(content);
+    }
+    if submissions.is_empty() {
+        anyhow::bail!("no submission files found in fixture directories");
+    }
+    Ok(submissions.join("\n"))
+}
+
 #[must_use]
 pub fn ixds_assembly_receipt(report: &CanonicalReport) -> Receipt {
     let mut receipt = Receipt::new(
@@ -187,6 +215,12 @@ pub fn write_execution_receipts(
         write_json(
             &repo_root.join("artifacts/export/export.report.v1.json"),
             export_receipt,
+        )?;
+    }
+    if let Some(filing_receipt) = &execution.filing_receipt {
+        write_json(
+            &repo_root.join("artifacts/filing/filing.manifest.v1.json"),
+            filing_receipt,
         )?;
     }
     Ok(())
@@ -231,6 +265,12 @@ pub fn assert_scenario_outcome(
         }
         Some("AC-XK-SEC-REQUIRED-002") => {
             ensure_report_has_no_error_findings(execution)
+        }
+        Some("AC-XK-MANIFEST-001") => {
+            if execution.filing_receipt.is_none() {
+                anyhow::bail!("filing manifest receipt was not emitted");
+            }
+            Ok(())
         }
         Some("AC-XK-IXDS-001") => {
             ensure_ixds_member_count(execution, 1)?;
