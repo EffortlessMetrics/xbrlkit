@@ -70,6 +70,36 @@ pub fn validate_taxonomy_years(
     findings
 }
 
+/// Validates that all required DEI facts are present in the report.
+#[must_use]
+pub fn validate_required_facts(
+    facts: &[xbrl_report_types::Fact],
+    profile: &ProfilePack,
+) -> Vec<ValidationFinding> {
+    let mut findings = Vec::new();
+
+    // Extract all concept names from facts
+    let present_concepts: std::collections::HashSet<String> = facts
+        .iter()
+        .map(|f| f.concept.clone())
+        .collect();
+
+    // Check each required fact
+    for required in &profile.required_facts {
+        if !present_concepts.contains(required) {
+            findings.push(ValidationFinding {
+                rule_id: format!("SEC.REQUIRED_FACT.{}", sanitize_for_rule_id(required)),
+                severity: "error".to_string(),
+                message: format!("Required fact '{}' is missing", required),
+                member: None,
+                subject: Some(required.clone()),
+            });
+        }
+    }
+
+    findings
+}
+
 fn inline_element_rule_id(element_name: &str) -> String {
     match element_name {
         "ix:fraction" => "SEC.INLINE.NO_IX_FRACTION".to_string(),

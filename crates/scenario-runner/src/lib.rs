@@ -209,6 +209,16 @@ pub fn assert_scenario_outcome(
                 .context("missing validation run for duplicate facts scenario")?;
             ensure_report_does_not_contain_rule(validation_run, "XBRL.DUPLICATE_FACT.INCONSISTENT")
         }
+        Some("AC-XK-SEC-REQUIRED-001") => {
+            let validation_run = execution
+                .validation_run
+                .as_ref()
+                .context("missing validation run for required facts scenario")?;
+            ensure_report_contains_rule(validation_run, "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
+        }
+        Some("AC-XK-SEC-REQUIRED-002") => {
+            ensure_report_has_no_error_findings(execution)
+        }
         Some("AC-XK-IXDS-001") => {
             ensure_ixds_member_count(execution, 1)?;
             ensure_report_fact_count(execution, 1)?;
