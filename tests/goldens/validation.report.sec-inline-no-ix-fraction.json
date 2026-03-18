@@ -7,6 +7,27 @@
       "rule_id": "SEC.INLINE.NO_IX_FRACTION",
       "severity": "error",
       "subject": "ix:fraction"
+    },
+    {
+      "member": null,
+      "message": "Required fact 'dei:EntityRegistrantName' is missing",
+      "rule_id": "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME",
+      "severity": "error",
+      "subject": "dei:EntityRegistrantName"
+    },
+    {
+      "member": null,
+      "message": "Required fact 'dei:DocumentType' is missing",
+      "rule_id": "SEC.REQUIRED_FACT.DEI_DOCUMENTTYPE",
+      "severity": "error",
+      "subject": "dei:DocumentType"
+    },
+    {
+      "member": null,
+      "message": "Required fact 'dei:DocumentPeriodEndDate' is missing",
+      "rule_id": "SEC.REQUIRED_FACT.DEI_DOCUMENTPERIODENDDATE",
+      "severity": "error",
+      "subject": "dei:DocumentPeriodEndDate"
     }
   ],
   "members": [

@@ -221,13 +221,13 @@ pub fn assert_scenario_outcome(
         }
         Some("AC-XK-IXDS-001") => {
             ensure_ixds_member_count(execution, 1)?;
-            ensure_report_fact_count(execution, 1)?;
-            ensure_report_concept_set(execution, &["dei:DocumentType"])
+            ensure_report_fact_count(execution, 3)?;
+            ensure_report_concept_set(execution, &["dei:EntityRegistrantName", "dei:DocumentType", "dei:DocumentPeriodEndDate"])
         }
         Some("AC-XK-IXDS-002") => {
             ensure_ixds_member_count(execution, 2)?;
-            ensure_report_fact_count(execution, 2)?;
-            ensure_report_concept_set(execution, &["dei:DocumentType", "dei:EntityRegistrantName"])
+            ensure_report_fact_count(execution, 3)?;
+            ensure_report_concept_set(execution, &["dei:EntityRegistrantName", "dei:DocumentType", "dei:DocumentPeriodEndDate"])
         }
         _ => anyhow::bail!(
             "no scenario assertions implemented for {}",

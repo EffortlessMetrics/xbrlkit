@@ -228,6 +228,92 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-SEC-REQUIRED-001",
+      "ac_id": "AC-XK-SEC-REQUIRED-001",
+      "req_id": "REQ-XK-SEC-REQUIRED",
+      "feature_file": "specs/features/sec/required_facts.feature",
+      "sidecar_file": "specs/features/sec/required_facts.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-SEC-REQUIRED:required-facts",
+      "crates": [
+        "efm-rules",
+        "validation-run",
+        "sec-profile-types",
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xbrlkit-cli",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/sec/required-facts/missing-dei-facts"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/efm-rules",
+        "crates/validation-run",
+        "crates/sec-profile-types",
+        "crates/xbrl-report-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "crates/xbrlkit-cli",
+        "xtask",
+        "specs/features/sec",
+        "profiles/sec/efm-77/opco"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-SEC-REQUIRED-002",
+      "ac_id": "AC-XK-SEC-REQUIRED-002",
+      "req_id": "REQ-XK-SEC-REQUIRED",
+      "feature_file": "specs/features/sec/required_facts.feature",
+      "sidecar_file": "specs/features/sec/required_facts.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-SEC-REQUIRED:required-facts",
+      "crates": [
+        "efm-rules",
+        "validation-run",
+        "sec-profile-types",
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xbrlkit-cli",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/sec/required-facts/valid-dei-facts"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/efm-rules",
+        "crates/validation-run",
+        "crates/sec-profile-types",
+        "crates/xbrl-report-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "crates/xbrlkit-cli",
+        "xtask",
+        "specs/features/sec",
+        "profiles/sec/efm-77/opco"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-TAXONOMY-001",
       "ac_id": "AC-XK-TAXONOMY-001",
       "req_id": "REQ-XK-TAXONOMY",

@@ -12,10 +12,12 @@ Feature: IXDS assembly
     And the fixture directory "synthetic/inline/ixds-single-file-01"
     When I validate the filing
     Then the IXDS assembly receipt contains 1 member
-    And the report contains 1 facts
+    And the report contains 3 facts
     And the validation report has no error findings
     And the concept set is:
+      | dei:EntityRegistrantName |
       | dei:DocumentType |
+      | dei:DocumentPeriodEndDate |
 
   @alpha-active
   @AC-XK-IXDS-002
@@ -26,8 +28,9 @@ Feature: IXDS assembly
     And the fixture directory "synthetic/inline/ixds-two-file-01"
     When I validate the filing
     Then the IXDS assembly receipt contains 2 members
-    And the report contains 2 facts
+    And the report contains 3 facts
     And the validation report has no error findings
     And the concept set is:
-      | dei:DocumentType |
       | dei:EntityRegistrantName |
+      | dei:DocumentType |
+      | dei:DocumentPeriodEndDate |
