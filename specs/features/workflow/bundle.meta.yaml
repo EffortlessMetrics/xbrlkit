@@ -5,12 +5,14 @@ scenarios:
   SCN-XK-WORKFLOW-002:
     ac_id: AC-XK-WORKFLOW-002
     req_id: REQ-XK-WORKFLOW
-    crates: [scenario-contract, xbrlkit-feature-grid, xtask]
-    fixtures: []
+    crates: [bundle-selector, scenario-contract, xbrlkit-feature-grid, xtask]
+    fixtures: [synthetic/workflow/bundle-test]
+    profile_pack: sec/efm-77/opco
     receipts: [bundle.manifest.v1, scenario.run.v1]
     suite: synthetic
     speed: fast
     allowed_edit_roots:
+      - crates/bundle-selector
       - crates/scenario-contract
       - crates/xbrlkit-feature-grid
       - xtask
@@ -18,12 +20,14 @@ scenarios:
   SCN-XK-WORKFLOW-004:
     ac_id: AC-XK-WORKFLOW-002
     req_id: REQ-XK-WORKFLOW
-    crates: [scenario-contract, xbrlkit-feature-grid, xtask]
-    fixtures: []
+    crates: [bundle-selector, scenario-contract, xbrlkit-feature-grid, xtask]
+    fixtures: [synthetic/workflow/bundle-test]
+    profile_pack: sec/efm-77/opco
     receipts: [bundle.manifest.v1, scenario.run.v1]
     suite: synthetic
     speed: fast
     allowed_edit_roots:
+      - crates/bundle-selector
       - crates/scenario-contract
       - crates/xbrlkit-feature-grid
       - xtask

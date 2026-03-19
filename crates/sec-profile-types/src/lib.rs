@@ -55,9 +55,10 @@ pub fn load_profile_from_workspace(root: &Path, profile_id: &str) -> anyhow::Res
     profile.accepted_taxonomies = read_yaml(&profile_dir.join("accepted_taxonomies.yaml"))?;
     profile.standard_taxonomy_uris =
         read_standard_taxonomy_uris(&profile_dir.join("edgartaxonomies.xml"))?;
-    profile.required_facts = read_yaml::<RequiredFactsFile>(&profile_dir.join("required_facts.yaml"))
-        .map(|f| f.required_facts)
-        .unwrap_or_default();
+    profile.required_facts =
+        read_yaml::<RequiredFactsFile>(&profile_dir.join("required_facts.yaml"))
+            .map(|f| f.required_facts)
+            .unwrap_or_default();
     Ok(profile)
 }
 

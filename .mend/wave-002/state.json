@@ -1,0 +1,10 @@
+{
+  "wave_id": "activation-002",
+  "started_at": "2026-03-19T09:56:00Z",
+  "status": "starting",
+  "agents": [
+    {"id": 0, "role": "tag_adder", "status": "in_progress", "session_key": "agent:main:subagent:731d1207-602a-4260-99bc-1d9492cc260f", "files": ["specs/features/workflow/bundle.feature"], "retry_count": 0},
+    {"id": 1, "role": "alpha_updater", "status": "in_progress", "session_key": "agent:main:subagent:e56132ba-6616-4b72-aa01-e8ef53d235d9", "files": ["xtask/src/alpha_check.rs"], "retry_count": 0},
+    {"id": 2, "role": "handler_extender", "status": "in_progress", "session_key": "agent:main:subagent:e10cfcf3-1f9b-4529-9902-c88e01b82e2e", "files": ["crates/xbrlkit-bdd-steps/src/lib.rs"], "retry_count": 0}
+  ]
+}

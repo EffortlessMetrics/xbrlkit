@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+  "crates/bundle-selector",
   "crates/receipt-types",
   "crates/scenario-contract",
   "crates/scenario-runner",

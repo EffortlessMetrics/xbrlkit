@@ -1,5 +1,5 @@
 [package]
-name = "xbrlkit-bdd-steps"
+name = "bundle-selector"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,9 +10,8 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow.workspace = true
-bundle-selector = { path = "../bundle-selector" }
 scenario-contract = { path = "../scenario-contract" }
-scenario-runner = { path = "../scenario-runner" }
+serde.workspace = true
 
 [lints]
 workspace = true

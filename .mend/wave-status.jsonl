@@ -1,0 +1,8 @@
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"wave_start","wave_id":"research-002","workers":["step_handler_finder","bundle_api_mapper","scenario_analyzer"]}
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"worker_start","worker":"step_handler_finder","session":"clear-falcon"}
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"worker_start","worker":"bundle_api_mapper","session":"tender-gulf"}
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"worker_start","worker":"scenario_analyzer","session":"tide-canyon"}
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"worker_complete","worker":"step_handler_finder","status":"completed","output":".mend/wave-outputs/step-handlers.md"}
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"worker_failed","worker":"bundle_api_mapper","status":"failed","reason":"crate_not_found"}
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"worker_complete","worker":"scenario_analyzer","status":"completed","output":".mend/wave-outputs/scenario-needs.md"}
+{"timestamp":"2026-03-19T09:52:27+08:00","event":"wave_end","wave_id":"research-002","completed":2,"failed":1,"total":3}

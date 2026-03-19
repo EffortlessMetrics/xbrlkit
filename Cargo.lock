@@ -66,6 +66,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bundle-selector"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "scenario-contract",
+ "serde",
+]
+
+[[package]]
 name = "calc11"
 version = "0.1.0-alpha.1"
 
@@ -575,6 +584,7 @@ name = "xbrlkit-bdd-steps"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "bundle-selector",
  "scenario-contract",
  "scenario-runner",
 ]

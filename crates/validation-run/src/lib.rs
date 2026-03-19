@@ -30,7 +30,9 @@ pub fn validate_html_members(members: &[(&str, &str)], profile: &ProfilePack) ->
             .extend(validate_inline_restrictions(member, html, profile));
     }
     // Validate required facts after assembly
-    report.findings.extend(validate_required_facts(&report.facts, profile));
+    report
+        .findings
+        .extend(validate_required_facts(&report.facts, profile));
     let subject = format!("{} members", report.members.len());
     finalize_validation(report, subject)
 }

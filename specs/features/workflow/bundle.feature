@@ -5,8 +5,11 @@ Feature: Bundle
 
   @AC-XK-WORKFLOW-002
   @SCN-XK-WORKFLOW-002
+  @alpha-active
   @speed.fast
   Scenario: Bundle an AC into a bounded context packet
+    Given the profile pack "sec/efm-77/opco"
+    Given the fixture "synthetic/workflow/bundle-test"
     Given the feature grid is compiled
     When I bundle the selector "AC-XK-IXDS-002"
     Then the bundle manifest lists scenario "SCN-XK-IXDS-002"
@@ -15,6 +18,8 @@ Feature: Bundle
   @SCN-XK-WORKFLOW-004
   @speed.fast
   Scenario: Reject a selector that matches no scenarios
+    Given the profile pack "sec/efm-77/opco"
+    Given the fixture "synthetic/workflow/bundle-test"
     Given the feature grid is compiled
     When I bundle the selector "AC-XK-DOES-NOT-EXIST"
     Then bundling fails because no scenario matches
