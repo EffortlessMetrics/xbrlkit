@@ -53,7 +53,7 @@
       "fixtures": [
         "synthetic/inline/ixds-single-file-01"
       ],
-      "profile_pack": null,
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "export.report.v1",
         "scenario.run.v1"
