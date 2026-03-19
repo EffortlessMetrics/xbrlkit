@@ -39,7 +39,7 @@
     },
     {
       "scenario_id": "SCN-XK-EXPORT-001",
-      "ac_id": null,
+      "ac_id": "AC-XK-EXPORT-001",
       "req_id": null,
       "feature_file": "specs/features/export/oim_json.feature",
       "sidecar_file": "specs/features/export/oim_json.meta.yaml",
@@ -164,7 +164,7 @@
       "fixtures": [
         "synthetic/filing/minimal-container-01"
       ],
-      "profile_pack": null,
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "filing.manifest.v1",
         "scenario.run.v1"

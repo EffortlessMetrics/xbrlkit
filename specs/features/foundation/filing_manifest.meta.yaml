@@ -5,6 +5,7 @@ scenarios:
   SCN-XK-MANIFEST-001:
     ac_id: AC-XK-MANIFEST-001
     req_id: REQ-XK-MANIFEST
+    profile_pack: sec/efm-77/opco
     crates: [edgar-identity, edgar-sgml, edgar-attachments, filing-load]
     fixtures: [synthetic/filing/minimal-container-01]
     receipts: [filing.manifest.v1, scenario.run.v1]
