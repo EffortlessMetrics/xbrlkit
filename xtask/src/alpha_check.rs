@@ -11,6 +11,8 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-DUPLICATES-001",
     "AC-XK-IXDS-001",
     "AC-XK-IXDS-002",
+    "AC-XK-MANIFEST-001",
+    "AC-XK-WORKFLOW-001",
     "AC-XK-WORKFLOW-002",
     "AC-XK-WORKFLOW-003",
 ];

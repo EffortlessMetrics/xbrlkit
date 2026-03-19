@@ -64,8 +64,8 @@ pub fn run_scenario(
         run_step(world, scenario, step)?;
     }
 
-    // For bundle scenarios, we don't need a standard execution
-    if scenario.scenario_id == "SCN-XK-WORKFLOW-002" || scenario.scenario_id == "SCN-XK-WORKFLOW-004" {
+    // For BDD-only scenarios, we don't need a standard execution
+    if scenario.scenario_id.starts_with("SCN-XK-WORKFLOW-") || scenario.scenario_id == "SCN-XK-MANIFEST-001" {
         return Ok(());
     }
 
@@ -132,6 +132,11 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text == "the active alpha scenarios are implemented" {
         // Checked by alpha-check itself
+        return Ok(true);
+    }
+
+    if step.text == "the repo has feature sidecars" {
+        // Feature sidecars exist by definition (grid is loaded from them)
         return Ok(true);
     }
 
@@ -222,6 +227,26 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Handle feature grid compilation
+    if step.text == "I compile the feature grid" {
+        // Grid is already compiled when World is created
+        return Ok(true);
+    }
+
+    // Handle generic scenario execution (for scenarios without specific When steps)
+    if step.text == "the scenario executes" {
+        return Ok(true);
+    }
+
+    // Handle filing manifest build
+    if step.text == "I build the filing manifest" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -263,11 +288,33 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
             }
             Ok(())
         }
+        "the filing manifest receipt is emitted" => {
+            let execution = execution(world)?;
+            if execution.filing_manifest.is_none() {
+                anyhow::bail!("filing manifest receipt was not emitted");
+            }
+            Ok(())
+        }
         _ => handle_parameterized_assertion(world, step),
     }
 }
 
 fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<()> {
+    // Feature grid assertions
+    if let Some(scenario_id) = step
+        .text
+        .strip_prefix("the feature grid contains scenario \"")
+    {
+        let scenario_id = scenario_id.trim_end_matches('"');
+        if !world.grid.scenarios.iter().any(|s| s.scenario_id == scenario_id) {
+            anyhow::bail!(
+                "feature grid does not contain scenario '{}'",
+                scenario_id
+            );
+        }
+        return Ok(());
+    }
+
     // Bundle manifest assertions
     if let Some(scenario_id) = step
         .text

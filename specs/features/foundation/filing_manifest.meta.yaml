@@ -7,6 +7,7 @@ scenarios:
     req_id: REQ-XK-MANIFEST
     crates: [edgar-identity, edgar-sgml, edgar-attachments, filing-load]
     fixtures: [synthetic/filing/minimal-container-01]
+    profile_pack: sec/efm-77/opco
     receipts: [filing.manifest.v1, scenario.run.v1]
     suite: synthetic
     speed: fast

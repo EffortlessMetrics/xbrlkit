@@ -5,8 +5,10 @@ Feature: Filing manifest
 
   @AC-XK-MANIFEST-001
   @SCN-XK-MANIFEST-001
+  @alpha-active
   @speed.fast
   Scenario: Build a manifest from a minimal filing container
+    Given the profile pack "sec/efm-77/opco"
     Given the fixture "synthetic/filing/minimal-container-01"
     When I build the filing manifest
     Then the filing manifest receipt is emitted

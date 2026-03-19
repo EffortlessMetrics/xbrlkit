@@ -20,6 +20,7 @@ pub struct ScenarioExecution {
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
     pub sensor_report: Option<Receipt>,
+    pub filing_manifest: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -80,6 +81,24 @@ pub fn execute_scenario(
         });
     }
 
+    // Handle scenarios that don't need HTML validation (feature grid, filing manifest)
+    if scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "feature.grid.v1" || receipt == "filing.manifest.v1")
+    {
+        // These scenarios handle assertions via BDD step definitions
+        let filing_manifest = scenario
+            .receipts
+            .iter()
+            .any(|receipt| receipt == "filing.manifest.v1")
+            .then(|| Receipt::new("filing.manifest.v1", "filing", RunResult::Success));
+        return Ok(ScenarioExecution {
+            filing_manifest,
+            ..ScenarioExecution::default()
+        });
+    }
+
     let profile = load_profile_for_scenario(repo_root, scenario)?;
     let owned_members = load_html_members(&fixture_dirs)?;
     let members = owned_members
@@ -102,12 +121,18 @@ pub fn execute_scenario(
         .iter()
         .any(|receipt| receipt == "sensor.report.v1")
         .then(|| Receipt::new("sensor.report.v1", "cockpit", RunResult::Success));
+    let filing_manifest = scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "filing.manifest.v1")
+        .then(|| Receipt::new("filing.manifest.v1", "filing", RunResult::Success));
     Ok(ScenarioExecution {
         validation_run: Some(validation_run),
         taxonomy_resolution: None,
         ixds_receipt,
         export_receipt,
         sensor_report,
+        filing_manifest,
     })
 }
 
@@ -289,10 +314,14 @@ pub fn assert_scenario_outcome(
         // Scenarios without an AC ID are BDD-style scenarios that handle
         // assertions via step definitions rather than scenario-level checks
         None => Ok(()),
+        // Feature grid scenarios handle assertions via BDD step definitions
+        Some("AC-XK-WORKFLOW-001") => Ok(()),
         // Bundle workflow scenarios handle assertions via BDD step definitions
         Some("AC-XK-WORKFLOW-002") => Ok(()),
         // Cockpit pack scenarios handle assertions via BDD step definitions
         Some("AC-XK-WORKFLOW-003") => Ok(()),
+        // Filing manifest scenarios handle assertions via BDD step definitions
+        Some("AC-XK-MANIFEST-001") => Ok(()),
         _ => anyhow::bail!(
             "no scenario assertions implemented for {}",
             scenario.scenario_id

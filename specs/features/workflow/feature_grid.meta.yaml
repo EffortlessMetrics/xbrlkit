@@ -6,7 +6,8 @@ scenarios:
     ac_id: AC-XK-WORKFLOW-001
     req_id: REQ-XK-WORKFLOW
     crates: [xbrlkit-feature-grid, xtask]
-    fixtures: []
+    fixtures: [synthetic/workflow/bundle-test]
+    profile_pack: sec/efm-77/opco
     receipts: [feature.grid.v1, scenario.run.v1]
     suite: synthetic
     speed: fast

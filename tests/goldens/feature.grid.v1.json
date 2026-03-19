@@ -164,7 +164,7 @@
       "fixtures": [
         "synthetic/filing/minimal-container-01"
       ],
-      "profile_pack": null,
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "filing.manifest.v1",
         "scenario.run.v1"
@@ -405,8 +405,10 @@
         "xbrlkit-feature-grid",
         "xtask"
       ],
-      "fixtures": [],
-      "profile_pack": null,
+      "fixtures": [
+        "synthetic/workflow/bundle-test"
+      ],
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "feature.grid.v1",
         "scenario.run.v1"
