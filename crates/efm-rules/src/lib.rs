@@ -79,10 +79,8 @@ pub fn validate_required_facts(
     let mut findings = Vec::new();
 
     // Extract all concept names from facts
-    let present_concepts: std::collections::HashSet<String> = facts
-        .iter()
-        .map(|f| f.concept.clone())
-        .collect();
+    let present_concepts: std::collections::HashSet<String> =
+        facts.iter().map(|f| f.concept.clone()).collect();
 
     // Check each required fact
     for required in &profile.required_facts {
