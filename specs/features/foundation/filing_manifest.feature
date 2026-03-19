@@ -3,6 +3,7 @@
 @suite.synthetic
 Feature: Filing manifest
 
+  @alpha-active
   @AC-XK-MANIFEST-001
   @SCN-XK-MANIFEST-001
   @speed.fast
