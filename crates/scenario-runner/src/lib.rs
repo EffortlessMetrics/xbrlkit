@@ -18,6 +18,7 @@ pub struct ScenarioExecution {
     pub validation_run: Option<ValidationRun>,
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
+    pub export_receipt: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -90,10 +91,16 @@ pub fn execute_scenario(
         .iter()
         .any(|receipt| receipt == "ixds.assembly.v1")
         .then(|| ixds_assembly_receipt(&validation_run.report));
+    let export_receipt = scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "export.report.v1")
+        .then(|| export_run::export_json(&validation_run.report).1);
     Ok(ScenarioExecution {
         validation_run: Some(validation_run),
         taxonomy_resolution: None,
         ixds_receipt,
+        export_receipt,
     })
 }
 
@@ -176,6 +183,12 @@ pub fn write_execution_receipts(
             &taxonomy_resolution.receipt,
         )?;
     }
+    if let Some(export_receipt) = &execution.export_receipt {
+        write_json(
+            &repo_root.join("artifacts/export/export.report.v1.json"),
+            export_receipt,
+        )?;
+    }
     Ok(())
 }
 
@@ -209,16 +222,59 @@ pub fn assert_scenario_outcome(
                 .context("missing validation run for duplicate facts scenario")?;
             ensure_report_does_not_contain_rule(validation_run, "XBRL.DUPLICATE_FACT.INCONSISTENT")
         }
+        Some("AC-XK-SEC-REQUIRED-001") => {
+            let validation_run = execution
+                .validation_run
+                .as_ref()
+                .context("missing validation run for required facts scenario")?;
+            ensure_report_contains_rule(validation_run, "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
+        }
+        Some("AC-XK-SEC-REQUIRED-002") => {
+            ensure_report_has_no_error_findings(execution)
+        }
         Some("AC-XK-IXDS-001") => {
             ensure_ixds_member_count(execution, 1)?;
-            ensure_report_fact_count(execution, 1)?;
-            ensure_report_concept_set(execution, &["dei:DocumentType"])
+            ensure_report_fact_count(execution, 14)?;
+            ensure_report_concept_set(execution, &[
+                "dei:EntityRegistrantName",
+                "dei:DocumentType",
+                "dei:DocumentPeriodEndDate",
+                "dei:AmendmentFlag",
+                "dei:EntityCentralIndexKey",
+                "dei:CurrentFiscalYearEndDate",
+                "dei:DocumentAnnualReport",
+                "dei:EntityAddressAddressLine1",
+                "dei:EntityAddressCityOrTown",
+                "dei:EntityAddressStateOrProvince",
+                "dei:EntityAddressPostalZipCode",
+                "dei:AuditorName",
+                "dei:AuditorFirmId",
+                "dei:AuditorLocation",
+            ])
         }
         Some("AC-XK-IXDS-002") => {
             ensure_ixds_member_count(execution, 2)?;
-            ensure_report_fact_count(execution, 2)?;
-            ensure_report_concept_set(execution, &["dei:DocumentType", "dei:EntityRegistrantName"])
+            ensure_report_fact_count(execution, 14)?;
+            ensure_report_concept_set(execution, &[
+                "dei:EntityRegistrantName",
+                "dei:DocumentType",
+                "dei:DocumentPeriodEndDate",
+                "dei:AmendmentFlag",
+                "dei:EntityCentralIndexKey",
+                "dei:CurrentFiscalYearEndDate",
+                "dei:DocumentAnnualReport",
+                "dei:EntityAddressAddressLine1",
+                "dei:EntityAddressCityOrTown",
+                "dei:EntityAddressStateOrProvince",
+                "dei:EntityAddressPostalZipCode",
+                "dei:AuditorName",
+                "dei:AuditorFirmId",
+                "dei:AuditorLocation",
+            ])
         }
+        // Scenarios without an AC ID are BDD-style scenarios that handle
+        // assertions via step definitions rather than scenario-level checks
+        None => Ok(()),
         _ => anyhow::bail!(
             "no scenario assertions implemented for {}",
             scenario.scenario_id

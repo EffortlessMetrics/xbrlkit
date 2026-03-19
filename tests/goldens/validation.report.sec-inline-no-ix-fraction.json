@@ -1,5 +1,118 @@
 {
-  "facts": [],
+  "facts": [
+    {
+      "concept": "dei:EntityRegistrantName",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "Example Corp"
+    },
+    {
+      "concept": "dei:DocumentType",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "10-K"
+    },
+    {
+      "concept": "dei:DocumentPeriodEndDate",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "2024-12-31"
+    },
+    {
+      "concept": "dei:AmendmentFlag",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "false"
+    },
+    {
+      "concept": "dei:EntityCentralIndexKey",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "0001234567"
+    },
+    {
+      "concept": "dei:CurrentFiscalYearEndDate",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "--12-31"
+    },
+    {
+      "concept": "dei:DocumentAnnualReport",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "true"
+    },
+    {
+      "concept": "dei:EntityAddressAddressLine1",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "123 Main Street"
+    },
+    {
+      "concept": "dei:EntityAddressCityOrTown",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "New York"
+    },
+    {
+      "concept": "dei:EntityAddressStateOrProvince",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "NY"
+    },
+    {
+      "concept": "dei:EntityAddressPostalZipCode",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "10001"
+    },
+    {
+      "concept": "dei:AuditorName",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "PricewaterhouseCoopers LLP"
+    },
+    {
+      "concept": "dei:AuditorFirmId",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "0238"
+    },
+    {
+      "concept": "dei:AuditorLocation",
+      "context_ref": "",
+      "decimals": null,
+      "member": "member-a.html",
+      "unit_ref": null,
+      "value": "New York, NY, US"
+    }
+  ],
   "findings": [
     {
       "member": "member-a.html",

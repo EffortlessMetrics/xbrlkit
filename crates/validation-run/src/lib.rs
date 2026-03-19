@@ -1,7 +1,7 @@
 //! Main validation orchestrator.
 
 use duplicate_facts::{DuplicateDisposition, classify};
-use efm_rules::{validate_inline_restrictions, validate_taxonomy_years};
+use efm_rules::{validate_inline_restrictions, validate_required_facts, validate_taxonomy_years};
 use ixds_assemble::assemble;
 use receipt_types::{Receipt, RunResult};
 use sec_profile_types::ProfilePack;
@@ -29,6 +29,8 @@ pub fn validate_html_members(members: &[(&str, &str)], profile: &ProfilePack) ->
             .findings
             .extend(validate_inline_restrictions(member, html, profile));
     }
+    // Validate required facts after assembly
+    report.findings.extend(validate_required_facts(&report.facts, profile));
     let subject = format!("{} members", report.members.len());
     finalize_validation(report, subject)
 }

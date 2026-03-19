@@ -156,6 +156,14 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I export the canonical report to JSON" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -175,6 +183,13 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
                 .map(String::as_str)
                 .collect::<Vec<_>>();
             ensure_report_concept_set(execution(world)?, &expected)
+        }
+        "the export report receipt is emitted" => {
+            let execution = execution(world)?;
+            if execution.export_receipt.is_none() {
+                anyhow::bail!("export report receipt was not emitted");
+            }
+            Ok(())
         }
         _ => handle_parameterized_assertion(world, step),
     }
