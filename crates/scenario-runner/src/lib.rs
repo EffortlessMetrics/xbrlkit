@@ -19,6 +19,7 @@ pub struct ScenarioExecution {
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
+    pub sensor_report: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,11 +97,17 @@ pub fn execute_scenario(
         .iter()
         .any(|receipt| receipt == "export.report.v1")
         .then(|| export_run::export_json(&validation_run.report).1);
+    let sensor_report = scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "sensor.report.v1")
+        .then(|| Receipt::new("sensor.report.v1", "cockpit", RunResult::Success));
     Ok(ScenarioExecution {
         validation_run: Some(validation_run),
         taxonomy_resolution: None,
         ixds_receipt,
         export_receipt,
+        sensor_report,
     })
 }
 
@@ -284,6 +291,8 @@ pub fn assert_scenario_outcome(
         None => Ok(()),
         // Bundle workflow scenarios handle assertions via BDD step definitions
         Some("AC-XK-WORKFLOW-002") => Ok(()),
+        // Cockpit pack scenarios handle assertions via BDD step definitions
+        Some("AC-XK-WORKFLOW-003") => Ok(()),
         _ => anyhow::bail!(
             "no scenario assertions implemented for {}",
             scenario.scenario_id

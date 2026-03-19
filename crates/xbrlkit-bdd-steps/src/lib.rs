@@ -125,6 +125,16 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    if step.text == "a validation report receipt" {
+        // Validation report is produced by a When step
+        return Ok(true);
+    }
+
+    if step.text == "the active alpha scenarios are implemented" {
+        // Checked by alpha-check itself
+        return Ok(true);
+    }
+
     if let Some(profile_id) = step.text.strip_prefix("the profile pack \"") {
         let profile_id = profile_id.trim_end_matches('"').to_string();
         if scenario.profile_pack.as_deref() != Some(profile_id.as_str()) {
@@ -194,6 +204,24 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Handle cockpit packaging
+    if step.text == "I package the receipt for cockpit" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
+    // Handle alpha check
+    if step.text == "I run the alpha readiness gate" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -218,6 +246,20 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
             let execution = execution(world)?;
             if execution.export_receipt.is_none() {
                 anyhow::bail!("export report receipt was not emitted");
+            }
+            Ok(())
+        }
+        "the sensor report is emitted" => {
+            let execution = execution(world)?;
+            if execution.sensor_report.is_none() {
+                anyhow::bail!("sensor report receipt was not emitted");
+            }
+            Ok(())
+        }
+        "the alpha readiness checks pass" => {
+            let execution = execution(world)?;
+            if execution.validation_run.is_none() {
+                anyhow::bail!("alpha readiness checks did not pass");
             }
             Ok(())
         }

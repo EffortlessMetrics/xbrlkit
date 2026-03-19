@@ -6,7 +6,8 @@ scenarios:
     ac_id: AC-XK-WORKFLOW-003
     req_id: REQ-XK-WORKFLOW
     crates: [xtask, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps]
-    fixtures: []
+    fixtures: [synthetic/workflow/alpha-check-test]
+    profile_pack: sec/efm-77/opco
     receipts: [scenario.run.v1]
     suite: synthetic
     speed: fast

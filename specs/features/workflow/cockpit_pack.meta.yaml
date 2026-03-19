@@ -3,13 +3,17 @@ layer: workflow
 module: cockpit-pack
 scenarios:
   SCN-XK-WORKFLOW-003:
-    crates: [cockpit-export, receipt-types, xtask]
-    fixtures: []
+    ac_id: AC-XK-WORKFLOW-003
+    req_id: REQ-XK-WORKFLOW
+    crates: [cockpit-export, receipt-types, scenario-runner, xtask]
+    fixtures: [synthetic/workflow/cockpit-test]
+    profile_pack: sec/efm-77/opco
     receipts: [sensor.report.v1, scenario.run.v1]
     suite: synthetic
     speed: fast
     allowed_edit_roots:
       - crates/cockpit-export
       - crates/receipt-types
+      - crates/scenario-runner
       - xtask
       - specs/features/workflow

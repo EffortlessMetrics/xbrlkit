@@ -1,0 +1,34 @@
+wave_id: activation-003
+worktree: /tmp/xbrlkit-wt/test-003
+started_at: 2026-03-19T10:16:00Z
+completed_at: 2026-03-19T10:17:00Z
+duration_seconds: 60
+status: completed
+agents:
+  - id: 0
+    role: tag_adder
+    task: "Add @alpha-active to cockpit_pack.feature"
+    output_path: .mend/wave-outputs/agent-0.md
+    status: success
+    session_key: agent:main:subagent:d1b0968f-2d09-4c32-9c27-a08db6432bf7
+  - id: 1
+    role: alpha_updater
+    task: "Add AC-XK-WORKFLOW-003 to alpha_check.rs"
+    output_path: .mend/wave-outputs/agent-1.md
+    status: success
+    session_key: agent:main:subagent:653fba2e-cf1d-4ced-80c6-7bc1821f5e53
+  - id: 2
+    role: handler_finder
+    task: "Find existing step handlers"
+    output_path: .mend/wave-outputs/agent-2.md
+    status: success
+    session_key: agent:main:subagent:c70c46f8-6e2f-40f6-b722-9669821b2744
+summary:
+  total: 3
+  success: 3
+  failed: 0
+all_complete: true
+next_steps:
+  - Add 3 missing step handlers (cross-cutting concern)
+  - Update cockpit_pack.meta.yaml with fixtures
+  - Run alpha-check

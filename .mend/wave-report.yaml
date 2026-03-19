@@ -1,66 +1,49 @@
----
-wave_id: research-002
-target: SCN-XK-WORKFLOW-002
-completed_at: 2026-03-19T09:52:27+08:00
-summary:
-  workers_total: 3
-  workers_completed: 2
-  workers_failed: 1
-  can_activate: false
+wave_id: activation-003
+status: completed
+started_at: "2026-03-19T10:12:30Z"
+completed_at: "2026-03-19T10:15:30Z"
+duration_seconds: 180
+agents:
+  - id: 0
+    role: tag_adder
+    status: success
+    output_file: /tmp/xbrlkit-wt/test-003/.mend/wave-003/outputs/agent-0.md
+    retry_count: 1
+    summary: Added @alpha-active tag to SCN-XK-WORKFLOW-003 scenario in specs/features/workflow/cockpit_pack.feature
+  - id: 1
+    role: alpha_updater
+    status: success
+    output_file: /tmp/xbrlkit-wt/test-003/.mend/wave-003/outputs/agent-1.md
+    retry_count: 1
+    summary: Added AC-XK-WORKFLOW-003 to ACTIVE_ALPHA_ACS array in xtask/src/alpha_check.rs
+  - id: 2
+    role: step_handler_finder
+    status: success
+    output_file: /tmp/xbrlkit-wt/test-003/.mend/wave-003/outputs/agent-2.md
+    retry_count: 1
+    summary: Analyzed step handlers in crates/xbrlkit-bdd-steps/src/lib.rs - found 3 missing handlers needed for cockpit_pack scenario
 
-worker_results:
-  step_handler_finder:
-    status: completed
-    output: .mend/wave-outputs/step-handlers.md
-    key_findings:
-      - Existing handlers in xbrlkit-bdd-steps/src/lib.rs
-      - Given: profile pack, fixture directory
-      - When: validate filing, resolve DTS, export JSON
-      - Then: validation checks, concept sets, receipts
-      - MISSING: bundle-related step handlers
+outputs_summary:
+  files_modified:
+    - specs/features/workflow/cockpit_pack.feature
+    - xtask/src/alpha_check.rs
+  step_handlers_identified:
+    existing: 11
+    missing: 3
+  missing_handlers:
+    - Given a validation report receipt
+    - When I package the receipt for cockpit
+    - Then the sensor report is emitted
 
-  bundle_api_mapper:
-    status: completed_with_gaps
-    output: .mend/wave-outputs/bundle-api.md
-    key_findings:
-      - bundle-selector crate DOES NOT EXIST
-      - xbrlkit-feature-grid provides FeatureGrid compilation
-      - ScenarioRecord has all necessary metadata fields
-      - Need to implement bundle selection logic
-
-  scenario_analyzer:
-    status: completed
-    output: .mend/wave-outputs/scenario-needs.md
-    key_findings:
-      - SCN-XK-WORKFLOW-002 requires 3 new step handlers
-      - Dependencies: scenario-contract, xbrlkit-feature-grid, xtask
-      - Receipts needed: bundle.manifest.v1, scenario.run.v1
-      - No fixtures required
-
-gap_analysis:
-  critical_gaps:
-    - Step handler: "Given the feature grid is compiled"
-    - Step handler: "When I bundle the selector"
-    - Step handler: "Then the bundle manifest lists scenario"
-    - Crate: bundle-selector (or equivalent)
-    - Receipt type: bundle.manifest.v1
-
-  existing_infrastructure:
-    - xbrlkit-feature-grid: FeatureGrid compilation
-    - xbrlkit-bdd-steps: Step handler framework
-    - scenario-contract: ScenarioRecord types
-    - scenario-runner: Execution framework
-
-recommendation:
-  can_activate: false
-  next_action: IMPLEMENT_STEP_HANDLERS
-  steps:
-    1: Create bundle-selector crate OR add bundle logic to xbrlkit-feature-grid
-    2: Add bundle step handlers to xbrlkit-bdd-steps/src/lib.rs
-    3: Define bundle.manifest.v1 receipt type in scenario-contract
-    4: Run scenario to verify activation
-
-risk_assessment:
-  complexity: medium
-  estimated_effort: 1-2 days
-  blockers: None (all dependencies exist)
+success_criteria_met: true
+recommendation: |
+  Wave completed successfully. All three worker agents finished their tasks:
+  
+  1. Tag added to feature file ✓
+  2. Acceptance criterion added to alpha check ✓
+  3. Step handler analysis complete - 3 handlers need implementation
+  
+  Next steps: Implement the 3 missing step handlers in xbrlkit-bdd-steps:
+  - Given a validation report receipt (low complexity)
+  - When I package the receipt for cockpit (medium complexity - needs cockpit-export integration)
+  - Then the sensor report is emitted (low complexity)

@@ -1,0 +1,34 @@
+{
+  "wave_id": "activation-003",
+  "dispatched_at": "2026-03-19T10:12:30Z",
+  "completed_at": "2026-03-19T10:15:30Z",
+  "agents": [
+    {
+      "id": 0,
+      "role": "tag_adder",
+      "session_key": "rapid-canyon",
+      "status": "completed",
+      "timeout_seconds": 480,
+      "retry_count": 1,
+      "output_file": ".mend/wave-003/outputs/agent-0.md"
+    },
+    {
+      "id": 1,
+      "role": "alpha_updater",
+      "session_key": "gentle-sage",
+      "status": "completed",
+      "timeout_seconds": 480,
+      "retry_count": 1,
+      "output_file": ".mend/wave-003/outputs/agent-1.md"
+    },
+    {
+      "id": 2,
+      "role": "step_handler_finder",
+      "session_key": "keen-cloud",
+      "status": "completed",
+      "timeout_seconds": 480,
+      "retry_count": 1,
+      "output_file": ".mend/wave-003/outputs/agent-2.md"
+    }
+  ]
+}

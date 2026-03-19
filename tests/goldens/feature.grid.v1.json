@@ -453,8 +453,8 @@
     },
     {
       "scenario_id": "SCN-XK-WORKFLOW-003",
-      "ac_id": null,
-      "req_id": null,
+      "ac_id": "AC-XK-WORKFLOW-003",
+      "req_id": "REQ-XK-WORKFLOW",
       "feature_file": "specs/features/workflow/cockpit_pack.feature",
       "sidecar_file": "specs/features/workflow/cockpit_pack.meta.yaml",
       "layer": "workflow",
@@ -462,10 +462,13 @@
       "crates": [
         "cockpit-export",
         "receipt-types",
+        "scenario-runner",
         "xtask"
       ],
-      "fixtures": [],
-      "profile_pack": null,
+      "fixtures": [
+        "synthetic/workflow/cockpit-test"
+      ],
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "sensor.report.v1",
         "scenario.run.v1"
@@ -473,6 +476,7 @@
       "allowed_edit_roots": [
         "crates/cockpit-export",
         "crates/receipt-types",
+        "crates/scenario-runner",
         "xtask",
         "specs/features/workflow"
       ],
@@ -525,8 +529,10 @@
         "xbrlkit-bdd",
         "xbrlkit-bdd-steps"
       ],
-      "fixtures": [],
-      "profile_pack": null,
+      "fixtures": [
+        "synthetic/workflow/alpha-check-test"
+      ],
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "scenario.run.v1"
       ],
