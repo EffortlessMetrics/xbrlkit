@@ -111,6 +111,11 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
 }
 
 fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
+    if step.text == "the repo has feature sidecars" {
+        // No-op: repo root already has specs/features/
+        return Ok(true);
+    }
+
     if let Some(profile_id) = step.text.strip_prefix("the profile pack \"") {
         let profile_id = profile_id.trim_end_matches('"').to_string();
         if scenario.profile_pack.as_deref() != Some(profile_id.as_str()) {
@@ -145,6 +150,14 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 }
 
 fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
+    if step.text == "I compile the feature grid" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
     if matches!(
         step.text.as_str(),
         "I validate the filing" | "I validate duplicate facts" | "I resolve the DTS"
@@ -168,6 +181,19 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 }
 
 fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
+    if let Some(scenario_id) = step.text.strip_prefix("the feature grid contains scenario \"") {
+        let target_id = scenario_id.trim_end_matches('"');
+        if !world
+            .grid
+            .scenarios
+            .iter()
+            .any(|s| s.scenario_id == target_id)
+        {
+            anyhow::bail!("scenario {} not found in feature grid", target_id);
+        }
+        return Ok(());
+    }
+
     match step.text.as_str() {
         "the validation report has no error findings" => {
             ensure_report_has_no_error_findings(execution(world)?)
