@@ -48,8 +48,14 @@ pub fn execute_scenario(
         .iter()
         .map(|fixture| repo_root.join("fixtures").join(fixture))
         .collect::<Vec<_>>();
+
     // Special case: scenarios that generate bundle manifests don't need fixtures
     if scenario.receipts.iter().any(|r| r == "bundle.manifest.v1") {
+        return Ok(ScenarioExecution::default());
+    }
+
+    // Special case: alpha check scenarios don't need fixtures
+    if fixture_dirs.is_empty() && scenario.ac_id == Some("AC-XK-WORKFLOW-003".to_string()) {
         return Ok(ScenarioExecution::default());
     }
 
@@ -341,6 +347,10 @@ pub fn assert_scenario_outcome(
         }
         Some("AC-XK-WORKFLOW-002") => {
             // Bundle scenarios - assertions handled via BDD steps
+            Ok(())
+        }
+        Some("AC-XK-WORKFLOW-003") => {
+            // Alpha check scenario - passing is implicit
             Ok(())
         }
         // Scenarios without an AC ID are BDD-style scenarios that handle

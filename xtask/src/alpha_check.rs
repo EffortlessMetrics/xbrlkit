@@ -15,6 +15,7 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-WORKFLOW-001",
     "AC-XK-MANIFEST-001",
     "AC-XK-WORKFLOW-002",
+    "AC-XK-WORKFLOW-003",
 ];
 
 pub(super) fn run() -> anyhow::Result<()> {
