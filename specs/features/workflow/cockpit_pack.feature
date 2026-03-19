@@ -3,6 +3,7 @@
 Feature: Cockpit pack
 
   @SCN-XK-WORKFLOW-003
+  @alpha-active
   @speed.fast
   Scenario: Wrap a validation report into sensor.report.v1
     Given a validation report receipt

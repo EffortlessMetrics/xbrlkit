@@ -3,7 +3,8 @@ layer: workflow
 module: cockpit-pack
 scenarios:
   SCN-XK-WORKFLOW-003:
-    crates: [cockpit-export, receipt-types, xtask]
+    ac_id: AC-XK-WORKFLOW-003
+    crates: [cockpit-export, receipt-types, xbrlkit-bdd-steps, xtask]
     fixtures: []
     receipts: [sensor.report.v1, scenario.run.v1]
     suite: synthetic
@@ -11,5 +12,6 @@ scenarios:
     allowed_edit_roots:
       - crates/cockpit-export
       - crates/receipt-types
+      - crates/xbrlkit-bdd-steps
       - xtask
       - specs/features/workflow

@@ -1,6 +1,7 @@
 //! Minimal step execution for the active BDD slices.
 
 use anyhow::Context;
+use receipt_types::{Receipt, RunResult};
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use scenario_runner::{
     ScenarioExecution, assert_scenario_outcome, ensure_ixds_member_count,
@@ -24,6 +25,7 @@ pub struct World {
     pub profile_id: Option<String>,
     pub fixture_dirs: Vec<PathBuf>,
     pub execution: Option<ScenarioExecution>,
+    pub cockpit_receipt: Option<Receipt>,
 }
 
 impl World {
@@ -35,6 +37,7 @@ impl World {
             profile_id: None,
             fixture_dirs: Vec::new(),
             execution: None,
+            cockpit_receipt: None,
         }
     }
 }
@@ -58,6 +61,11 @@ pub fn run_scenario(
 
     for step in steps {
         run_step(world, scenario, step)?;
+    }
+
+    // For cockpit-pack scenarios, we don't need a standard execution
+    if scenario.scenario_id == "SCN-XK-WORKFLOW-003" {
+        return Ok(());
     }
 
     let execution = world
@@ -141,6 +149,16 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    if step.text == "a validation report receipt" {
+        // Create a validation report receipt for the cockpit pack scenario
+        world.cockpit_receipt = Some(Receipt::new(
+            "validation.report",
+            "test-validation",
+            RunResult::Success,
+        ));
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -161,6 +179,23 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         let execution = execute_scenario(&world.repo_root, scenario)?;
         write_execution_receipts(&world.repo_root, &execution)?;
         world.execution = Some(execution);
+        return Ok(true);
+    }
+
+    if step.text == "I package the receipt for cockpit" {
+        let receipt = world
+            .cockpit_receipt
+            .as_ref()
+            .context("packaging requires a validation report receipt")?;
+        let sensor_report = cockpit_export::to_sensor_report("xbrlkit", receipt);
+        let sensor_path = world
+            .repo_root
+            .join("artifacts/cockpit/sensor.report.v1.json");
+        std::fs::create_dir_all(sensor_path.parent().expect("parent directory"))?;
+        let bytes =
+            serde_json::to_vec_pretty(&sensor_report).context("serializing sensor report")?;
+        std::fs::write(&sensor_path, bytes)
+            .with_context(|| format!("writing {}", sensor_path.display()))?;
         return Ok(true);
     }
 
@@ -188,6 +223,26 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
             let execution = execution(world)?;
             if execution.export_receipt.is_none() {
                 anyhow::bail!("export report receipt was not emitted");
+            }
+            Ok(())
+        }
+        "the sensor report is emitted" => {
+            let sensor_path = world
+                .repo_root
+                .join("artifacts/cockpit/sensor.report.v1.json");
+            if !sensor_path.exists() {
+                anyhow::bail!("sensor report was not emitted at {}", sensor_path.display());
+            }
+            // Verify it's valid JSON with the expected structure
+            let content = std::fs::read_to_string(&sensor_path)
+                .with_context(|| format!("reading {}", sensor_path.display()))?;
+            let value: serde_json::Value = serde_json::from_str(&content)
+                .with_context(|| format!("parsing {}", sensor_path.display()))?;
+            if value.get("kind").and_then(|v| v.as_str()) != Some("sensor.report") {
+                anyhow::bail!("sensor report has invalid kind");
+            }
+            if value.get("version").and_then(|v| v.as_str()) != Some("v1") {
+                anyhow::bail!("sensor report has invalid version");
             }
             Ok(())
         }

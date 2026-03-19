@@ -12,6 +12,9 @@ path = "src/lib.rs"
 anyhow.workspace = true
 scenario-contract = { path = "../scenario-contract" }
 scenario-runner = { path = "../scenario-runner" }
+receipt-types = { path = "../receipt-types" }
+cockpit-export = { path = "../cockpit-export" }
+serde_json.workspace = true
 
 [lints]
 workspace = true
