@@ -88,7 +88,7 @@ pub fn validate_required_facts(
             findings.push(ValidationFinding {
                 rule_id: format!("SEC.REQUIRED_FACT.{}", sanitize_for_rule_id(required)),
                 severity: "error".to_string(),
-                message: format!("Required fact '{}' is missing", required),
+                message: format!("Required fact '{required}' is missing"),
                 member: None,
                 subject: Some(required.clone()),
             });

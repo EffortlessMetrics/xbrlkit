@@ -241,6 +241,7 @@ pub fn write_execution_receipts(
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn assert_scenario_outcome(
     scenario: &ScenarioRecord,
     execution: &ScenarioExecution,
