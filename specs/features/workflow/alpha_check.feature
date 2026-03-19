@@ -3,6 +3,7 @@
 @suite.synthetic
 Feature: Alpha check
 
+  @alpha-active
   @AC-XK-WORKFLOW-003
   @SCN-XK-WORKFLOW-005
   @speed.fast
