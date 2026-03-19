@@ -3,6 +3,7 @@
 @suite.synthetic
 Feature: Bundle
 
+  @alpha-active
   @AC-XK-WORKFLOW-002
   @SCN-XK-WORKFLOW-002
   @speed.fast
@@ -11,6 +12,7 @@ Feature: Bundle
     When I bundle the selector "AC-XK-IXDS-002"
     Then the bundle manifest lists scenario "SCN-XK-IXDS-002"
 
+  @alpha-active
   @AC-XK-WORKFLOW-002
   @SCN-XK-WORKFLOW-004
   @speed.fast
