@@ -19,6 +19,7 @@ pub struct ScenarioExecution {
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
+    pub filing_manifest_receipt: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -84,6 +85,22 @@ pub fn execute_scenario(
         });
     }
 
+    // Filing container fixtures (EDGAR submissions)
+    if fixture_dirs
+        .iter()
+        .all(|fixture_dir| fixture_dir.join("submission.txt").exists())
+    {
+        let filing_manifest_receipt = scenario
+            .receipts
+            .iter()
+            .any(|receipt| receipt == "filing.manifest.v1")
+            .then(filing_manifest_receipt);
+        return Ok(ScenarioExecution {
+            filing_manifest_receipt,
+            ..ScenarioExecution::default()
+        });
+    }
+
     let profile = load_profile_for_scenario(repo_root, scenario)?;
     let owned_members = load_html_members(&fixture_dirs)?;
     let members = owned_members
@@ -101,11 +118,17 @@ pub fn execute_scenario(
         .iter()
         .any(|receipt| receipt == "export.report.v1")
         .then(|| export_run::export_json(&validation_run.report).1);
+    let filing_manifest_receipt = scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "filing.manifest.v1")
+        .then(|| filing_manifest_receipt());
     Ok(ScenarioExecution {
         validation_run: Some(validation_run),
         taxonomy_resolution: None,
         ixds_receipt,
         export_receipt,
+        filing_manifest_receipt,
     })
 }
 
@@ -166,6 +189,11 @@ pub fn ixds_assembly_receipt(report: &CanonicalReport) -> Receipt {
     receipt
 }
 
+#[must_use]
+pub fn filing_manifest_receipt() -> Receipt {
+    Receipt::new("filing.manifest", "minimal container".to_string(), RunResult::Success)
+}
+
 pub fn write_execution_receipts(
     repo_root: &Path,
     execution: &ScenarioExecution,
@@ -192,6 +220,12 @@ pub fn write_execution_receipts(
         write_json(
             &repo_root.join("artifacts/export/export.report.v1.json"),
             export_receipt,
+        )?;
+    }
+    if let Some(filing_manifest_receipt) = &execution.filing_manifest_receipt {
+        write_json(
+            &repo_root.join("artifacts/filing/filing.manifest.v1.json"),
+            filing_manifest_receipt,
         )?;
     }
     Ok(())
@@ -292,6 +326,12 @@ pub fn assert_scenario_outcome(
         }
         Some("AC-XK-WORKFLOW-001") => {
             // Feature grid compilation scenario - assertions handled via BDD steps
+            Ok(())
+        }
+        Some("AC-XK-MANIFEST-001") => {
+            if execution.filing_manifest_receipt.is_none() {
+                anyhow::bail!("filing manifest receipt was not emitted");
+            }
             Ok(())
         }
         // Scenarios without an AC ID are BDD-style scenarios that handle

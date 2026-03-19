@@ -177,6 +177,14 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I build the filing manifest" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -214,6 +222,13 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
             let execution = execution(world)?;
             if execution.export_receipt.is_none() {
                 anyhow::bail!("export report receipt was not emitted");
+            }
+            Ok(())
+        }
+        "the filing manifest receipt is emitted" => {
+            let execution = execution(world)?;
+            if execution.filing_manifest_receipt.is_none() {
+                anyhow::bail!("filing manifest receipt was not emitted");
             }
             Ok(())
         }
