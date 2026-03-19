@@ -3,6 +3,7 @@ use std::path::Path;
 use std::process::Command;
 
 const ACTIVE_ALPHA_ACS: &[&str] = &[
+    "AC-XK-WORKFLOW-002",
     "AC-XK-SEC-INLINE-001",
     "AC-XK-SEC-REQUIRED-001",
     "AC-XK-SEC-REQUIRED-002",

@@ -24,6 +24,8 @@ pub struct World {
     pub profile_id: Option<String>,
     pub fixture_dirs: Vec<PathBuf>,
     pub execution: Option<ScenarioExecution>,
+    pub bundle: Option<bundle_selector::Bundle>,
+    pub bundle_error: Option<String>,
 }
 
 impl World {
@@ -35,6 +37,8 @@ impl World {
             profile_id: None,
             fixture_dirs: Vec::new(),
             execution: None,
+            bundle: None,
+            bundle_error: None,
         }
     }
 }
@@ -58,6 +62,11 @@ pub fn run_scenario(
 
     for step in steps {
         run_step(world, scenario, step)?;
+    }
+
+    // For bundle scenarios, we don't need a standard execution
+    if scenario.scenario_id == "SCN-XK-WORKFLOW-004" {
+        return Ok(());
     }
 
     let execution = world
@@ -111,6 +120,11 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
 }
 
 fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
+    if step.text == "the feature grid is compiled" {
+        // The grid is already compiled and passed to World::new
+        return Ok(true);
+    }
+
     if let Some(profile_id) = step.text.strip_prefix("the profile pack \"") {
         let profile_id = profile_id.trim_end_matches('"').to_string();
         if scenario.profile_pack.as_deref() != Some(profile_id.as_str()) {
@@ -164,6 +178,22 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Handle bundle selector steps
+    if let Some(selector) = step.text.strip_prefix("I bundle the selector \"") {
+        let selector = selector.trim_end_matches('"');
+        match bundle_selector::select_by_ac(&world.grid, selector) {
+            Ok(bundle) => {
+                world.bundle = Some(bundle);
+                world.bundle_error = None;
+            }
+            Err(e) => {
+                world.bundle_error = Some(e.to_string());
+                world.bundle = None;
+            }
+        }
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -191,11 +221,34 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
             }
             Ok(())
         }
+        "bundling fails because no scenario matches" => {
+            if world.bundle_error.is_none() {
+                anyhow::bail!("expected bundling to fail but it succeeded");
+            }
+            Ok(())
+        }
         _ => handle_parameterized_assertion(world, step),
     }
 }
 
 fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<()> {
+    // Bundle manifest assertions
+    if let Some(scenario_id) = step
+        .text
+        .strip_prefix("the bundle manifest lists scenario \"")
+    {
+        let scenario_id = scenario_id.trim_end_matches('"');
+        let bundle = world.bundle.as_ref().context("no bundle was created")?;
+        if !bundle
+            .scenarios
+            .iter()
+            .any(|s| s.scenario_id == scenario_id)
+        {
+            anyhow::bail!("bundle manifest does not list scenario '{}'", scenario_id);
+        }
+        return Ok(());
+    }
+
     if let Some(rule_id) = step
         .text
         .strip_prefix("the validation report contains rule \"")

@@ -227,51 +227,60 @@ pub fn assert_scenario_outcome(
                 .validation_run
                 .as_ref()
                 .context("missing validation run for required facts scenario")?;
-            ensure_report_contains_rule(validation_run, "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
+            ensure_report_contains_rule(
+                validation_run,
+                "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME",
+            )
         }
-        Some("AC-XK-SEC-REQUIRED-002") => {
-            ensure_report_has_no_error_findings(execution)
-        }
+        Some("AC-XK-SEC-REQUIRED-002") => ensure_report_has_no_error_findings(execution),
         Some("AC-XK-IXDS-001") => {
             ensure_ixds_member_count(execution, 1)?;
             ensure_report_fact_count(execution, 14)?;
-            ensure_report_concept_set(execution, &[
-                "dei:EntityRegistrantName",
-                "dei:DocumentType",
-                "dei:DocumentPeriodEndDate",
-                "dei:AmendmentFlag",
-                "dei:EntityCentralIndexKey",
-                "dei:CurrentFiscalYearEndDate",
-                "dei:DocumentAnnualReport",
-                "dei:EntityAddressAddressLine1",
-                "dei:EntityAddressCityOrTown",
-                "dei:EntityAddressStateOrProvince",
-                "dei:EntityAddressPostalZipCode",
-                "dei:AuditorName",
-                "dei:AuditorFirmId",
-                "dei:AuditorLocation",
-            ])
+            ensure_report_concept_set(
+                execution,
+                &[
+                    "dei:EntityRegistrantName",
+                    "dei:DocumentType",
+                    "dei:DocumentPeriodEndDate",
+                    "dei:AmendmentFlag",
+                    "dei:EntityCentralIndexKey",
+                    "dei:CurrentFiscalYearEndDate",
+                    "dei:DocumentAnnualReport",
+                    "dei:EntityAddressAddressLine1",
+                    "dei:EntityAddressCityOrTown",
+                    "dei:EntityAddressStateOrProvince",
+                    "dei:EntityAddressPostalZipCode",
+                    "dei:AuditorName",
+                    "dei:AuditorFirmId",
+                    "dei:AuditorLocation",
+                ],
+            )
         }
         Some("AC-XK-IXDS-002") => {
             ensure_ixds_member_count(execution, 2)?;
             ensure_report_fact_count(execution, 14)?;
-            ensure_report_concept_set(execution, &[
-                "dei:EntityRegistrantName",
-                "dei:DocumentType",
-                "dei:DocumentPeriodEndDate",
-                "dei:AmendmentFlag",
-                "dei:EntityCentralIndexKey",
-                "dei:CurrentFiscalYearEndDate",
-                "dei:DocumentAnnualReport",
-                "dei:EntityAddressAddressLine1",
-                "dei:EntityAddressCityOrTown",
-                "dei:EntityAddressStateOrProvince",
-                "dei:EntityAddressPostalZipCode",
-                "dei:AuditorName",
-                "dei:AuditorFirmId",
-                "dei:AuditorLocation",
-            ])
+            ensure_report_concept_set(
+                execution,
+                &[
+                    "dei:EntityRegistrantName",
+                    "dei:DocumentType",
+                    "dei:DocumentPeriodEndDate",
+                    "dei:AmendmentFlag",
+                    "dei:EntityCentralIndexKey",
+                    "dei:CurrentFiscalYearEndDate",
+                    "dei:DocumentAnnualReport",
+                    "dei:EntityAddressAddressLine1",
+                    "dei:EntityAddressCityOrTown",
+                    "dei:EntityAddressStateOrProvince",
+                    "dei:EntityAddressPostalZipCode",
+                    "dei:AuditorName",
+                    "dei:AuditorFirmId",
+                    "dei:AuditorLocation",
+                ],
+            )
         }
+        // Bundle workflow scenarios handle assertions via BDD step definitions
+        Some("AC-XK-WORKFLOW-002") => Ok(()),
         // Scenarios without an AC ID are BDD-style scenarios that handle
         // assertions via step definitions rather than scenario-level checks
         None => Ok(()),

@@ -53,7 +53,7 @@
       "fixtures": [
         "synthetic/inline/ixds-single-file-01"
       ],
-      "profile_pack": null,
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "export.report.v1",
         "scenario.run.v1"
@@ -428,17 +428,21 @@
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-BUNDLE:bundle",
       "crates": [
+        "bundle-selector",
         "scenario-contract",
         "xbrlkit-feature-grid",
         "xtask"
       ],
-      "fixtures": [],
-      "profile_pack": null,
+      "fixtures": [
+        "synthetic/workflow/bundle-test"
+      ],
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "bundle.manifest.v1",
         "scenario.run.v1"
       ],
       "allowed_edit_roots": [
+        "crates/bundle-selector",
         "crates/scenario-contract",
         "crates/xbrlkit-feature-grid",
         "xtask",
@@ -484,17 +488,21 @@
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-BUNDLE:bundle",
       "crates": [
+        "bundle-selector",
         "scenario-contract",
         "xbrlkit-feature-grid",
         "xtask"
       ],
-      "fixtures": [],
-      "profile_pack": null,
+      "fixtures": [
+        "synthetic/workflow/bundle-test"
+      ],
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "bundle.manifest.v1",
         "scenario.run.v1"
       ],
       "allowed_edit_roots": [
+        "crates/bundle-selector",
         "crates/scenario-contract",
         "crates/xbrlkit-feature-grid",
         "xtask",
