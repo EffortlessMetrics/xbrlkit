@@ -2,7 +2,7 @@
 
 use anyhow::Context;
 use receipt_types::{Receipt, RunResult};
-use scenario_contract::ScenarioRecord;
+use scenario_contract::{FeatureGrid, ScenarioRecord};
 use sec_profile_types::{ProfilePack, load_profile_from_workspace};
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -19,6 +19,8 @@ pub struct ScenarioExecution {
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
+    pub filing_receipt: Option<Receipt>,
+    pub feature_grid: Option<FeatureGrid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -37,6 +39,19 @@ pub fn execute_scenario(
     repo_root: &Path,
     scenario: &ScenarioRecord,
 ) -> anyhow::Result<ScenarioExecution> {
+    // Feature grid compilation (no fixtures needed)
+    if scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "feature.grid.v1")
+    {
+        let grid = xbrlkit_feature_grid::compile(repo_root)?;
+        return Ok(ScenarioExecution {
+            feature_grid: Some(grid),
+            ..ScenarioExecution::default()
+        });
+    }
+
     let fixture_dirs = scenario
         .fixtures
         .iter()
@@ -79,6 +94,18 @@ pub fn execute_scenario(
         });
     }
 
+    if fixture_dirs
+        .iter()
+        .all(|fixture_dir| fixture_dir.join("submission.txt").exists())
+    {
+        let submission = load_submission(&fixture_dirs)?;
+        let (_manifest, receipt) = filing_load::load_from_submission(&submission);
+        return Ok(ScenarioExecution {
+            filing_receipt: Some(receipt),
+            ..ScenarioExecution::default()
+        });
+    }
+
     let profile = load_profile_for_scenario(repo_root, scenario)?;
     let owned_members = load_html_members(&fixture_dirs)?;
     let members = owned_members
@@ -101,6 +128,8 @@ pub fn execute_scenario(
         taxonomy_resolution: None,
         ixds_receipt,
         export_receipt,
+        filing_receipt: None,
+        feature_grid: None,
     })
 }
 
@@ -148,6 +177,20 @@ pub fn load_html_members(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<(String
     Ok(members)
 }
 
+pub fn load_submission(fixture_dirs: &[PathBuf]) -> anyhow::Result<String> {
+    let mut submissions = Vec::new();
+    for fixture_dir in fixture_dirs {
+        let path = fixture_dir.join("submission.txt");
+        let content = std::fs::read_to_string(&path)
+            .with_context(|| format!("reading {}", path.display()))?;
+        submissions.push(content);
+    }
+    if submissions.is_empty() {
+        anyhow::bail!("no submission files found in fixture directories");
+    }
+    Ok(submissions.join("\n"))
+}
+
 #[must_use]
 pub fn ixds_assembly_receipt(report: &CanonicalReport) -> Receipt {
     let mut receipt = Receipt::new(
@@ -189,9 +232,16 @@ pub fn write_execution_receipts(
             export_receipt,
         )?;
     }
+    if let Some(filing_receipt) = &execution.filing_receipt {
+        write_json(
+            &repo_root.join("artifacts/filing/filing.manifest.v1.json"),
+            filing_receipt,
+        )?;
+    }
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn assert_scenario_outcome(
     scenario: &ScenarioRecord,
     execution: &ScenarioExecution,
@@ -227,50 +277,69 @@ pub fn assert_scenario_outcome(
                 .validation_run
                 .as_ref()
                 .context("missing validation run for required facts scenario")?;
-            ensure_report_contains_rule(validation_run, "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
+            ensure_report_contains_rule(
+                validation_run,
+                "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME",
+            )
         }
-        Some("AC-XK-SEC-REQUIRED-002") => {
-            ensure_report_has_no_error_findings(execution)
+        Some("AC-XK-SEC-REQUIRED-002") => ensure_report_has_no_error_findings(execution),
+        Some("AC-XK-MANIFEST-001") => {
+            if execution.filing_receipt.is_none() {
+                anyhow::bail!("filing manifest receipt was not emitted");
+            }
+            Ok(())
+        }
+        Some("AC-XK-WORKFLOW-001") => {
+            if execution.feature_grid.is_none() {
+                anyhow::bail!("feature grid was not compiled");
+            }
+            Ok(())
         }
         Some("AC-XK-IXDS-001") => {
             ensure_ixds_member_count(execution, 1)?;
             ensure_report_fact_count(execution, 14)?;
-            ensure_report_concept_set(execution, &[
-                "dei:EntityRegistrantName",
-                "dei:DocumentType",
-                "dei:DocumentPeriodEndDate",
-                "dei:AmendmentFlag",
-                "dei:EntityCentralIndexKey",
-                "dei:CurrentFiscalYearEndDate",
-                "dei:DocumentAnnualReport",
-                "dei:EntityAddressAddressLine1",
-                "dei:EntityAddressCityOrTown",
-                "dei:EntityAddressStateOrProvince",
-                "dei:EntityAddressPostalZipCode",
-                "dei:AuditorName",
-                "dei:AuditorFirmId",
-                "dei:AuditorLocation",
-            ])
+            ensure_report_concept_set(
+                execution,
+                &[
+                    "dei:EntityRegistrantName",
+                    "dei:DocumentType",
+                    "dei:DocumentPeriodEndDate",
+                    "dei:AmendmentFlag",
+                    "dei:EntityCentralIndexKey",
+                    "dei:CurrentFiscalYearEndDate",
+                    "dei:DocumentAnnualReport",
+                    "dei:EntityAddressAddressLine1",
+                    "dei:EntityAddressCityOrTown",
+                    "dei:EntityAddressStateOrProvince",
+                    "dei:EntityAddressPostalZipCode",
+                    "dei:AuditorName",
+                    "dei:AuditorFirmId",
+                    "dei:AuditorLocation",
+                ],
+            )
         }
         Some("AC-XK-IXDS-002") => {
             ensure_ixds_member_count(execution, 2)?;
             ensure_report_fact_count(execution, 14)?;
-            ensure_report_concept_set(execution, &[
-                "dei:EntityRegistrantName",
-                "dei:DocumentType",
-                "dei:DocumentPeriodEndDate",
-                "dei:AmendmentFlag",
-                "dei:EntityCentralIndexKey",
-                "dei:CurrentFiscalYearEndDate",
-                "dei:DocumentAnnualReport",
-                "dei:EntityAddressAddressLine1",
-                "dei:EntityAddressCityOrTown",
-                "dei:EntityAddressStateOrProvince",
-                "dei:EntityAddressPostalZipCode",
-                "dei:AuditorName",
-                "dei:AuditorFirmId",
-                "dei:AuditorLocation",
-            ])
+            ensure_report_concept_set(
+                execution,
+                &[
+                    "dei:EntityRegistrantName",
+                    "dei:DocumentType",
+                    "dei:DocumentPeriodEndDate",
+                    "dei:AmendmentFlag",
+                    "dei:EntityCentralIndexKey",
+                    "dei:CurrentFiscalYearEndDate",
+                    "dei:DocumentAnnualReport",
+                    "dei:EntityAddressAddressLine1",
+                    "dei:EntityAddressCityOrTown",
+                    "dei:EntityAddressStateOrProvince",
+                    "dei:EntityAddressPostalZipCode",
+                    "dei:AuditorName",
+                    "dei:AuditorFirmId",
+                    "dei:AuditorLocation",
+                ],
+            )
         }
         // Scenarios without an AC ID are BDD-style scenarios that handle
         // assertions via step definitions rather than scenario-level checks

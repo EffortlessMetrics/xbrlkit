@@ -341,6 +341,7 @@ version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
  "export-run",
+ "filing-load",
  "receipt-types",
  "scenario-contract",
  "sec-profile-types",
@@ -349,6 +350,7 @@ dependencies = [
  "serde_yaml",
  "validation-run",
  "xbrl-report-types",
+ "xbrlkit-feature-grid",
 ]
 
 [[package]]

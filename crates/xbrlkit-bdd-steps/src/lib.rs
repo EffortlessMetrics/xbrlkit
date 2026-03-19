@@ -141,6 +141,15 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    if step.text == "the repo has feature sidecars" {
+        // Verify specs/features directory exists and has sidecars
+        let features_root = world.repo_root.join("specs/features");
+        if !features_root.exists() {
+            anyhow::bail!("specs/features directory does not exist");
+        }
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -157,6 +166,22 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     }
 
     if step.text == "I export the canonical report to JSON" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
+    if step.text == "I build the filing manifest" {
+        assert_declared_inputs_match(world, scenario)?;
+        let execution = execute_scenario(&world.repo_root, scenario)?;
+        write_execution_receipts(&world.repo_root, &execution)?;
+        world.execution = Some(execution);
+        return Ok(true);
+    }
+
+    if step.text == "I compile the feature grid" {
         assert_declared_inputs_match(world, scenario)?;
         let execution = execute_scenario(&world.repo_root, scenario)?;
         write_execution_receipts(&world.repo_root, &execution)?;
@@ -191,11 +216,33 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
             }
             Ok(())
         }
+        "the filing manifest receipt is emitted" => {
+            let execution = execution(world)?;
+            if execution.filing_receipt.is_none() {
+                anyhow::bail!("filing manifest receipt was not emitted");
+            }
+            Ok(())
+        }
         _ => handle_parameterized_assertion(world, step),
     }
 }
 
 fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<()> {
+    if let Some(scenario_id) = step
+        .text
+        .strip_prefix("the feature grid contains scenario \"")
+    {
+        let execution = execution(world)?;
+        let grid = execution
+            .feature_grid
+            .as_ref()
+            .context("feature grid was not compiled")?;
+        let scenario_id = scenario_id.trim_end_matches('"');
+        if !grid.scenarios.iter().any(|s| s.scenario_id == scenario_id) {
+            anyhow::bail!("feature grid does not contain scenario {scenario_id}");
+        }
+        return Ok(());
+    }
     if let Some(rule_id) = step
         .text
         .strip_prefix("the validation report contains rule \"")
