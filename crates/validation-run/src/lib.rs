@@ -7,6 +7,7 @@ use receipt_types::{Receipt, RunResult};
 use sec_profile_types::ProfilePack;
 use taxonomy_dts::{build_dts, nonstandard_entry_points};
 use taxonomy_types::DtsDescriptor;
+use xbrl_contexts::{ContextSet, parse_contexts};
 use xbrl_report_types::{CanonicalReport, ValidationFinding};
 
 #[derive(Debug, Clone)]
@@ -133,4 +134,42 @@ fn run_result(report: &CanonicalReport) -> RunResult {
     } else {
         RunResult::Success
     }
+}
+
+/// Parse and validate contexts from an XBRL instance.
+/// 
+/// # Errors
+/// Returns error if XML parsing fails.
+pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFinding>), String> {
+    let mut findings = Vec::new();
+    
+    let context_set = parse_contexts(xbrl_xml)
+        .map_err(|e| format!("Failed to parse contexts: {e}"))?;
+    
+    // Check for contexts without entity identifiers
+    for context in context_set.iter() {
+        if context.entity.value.is_empty() {
+            findings.push(ValidationFinding {
+                rule_id: "XBRL.CONTEXT.MISSING_ENTITY".to_string(),
+                severity: "error".to_string(),
+                message: format!("Context {} has no entity identifier", context.id),
+                member: None,
+                subject: Some(context.id.clone()),
+            });
+        }
+        
+        // Check for contexts with dimensional information
+        let dim_count = xbrl_contexts::get_dimensional_members(context).len();
+        if dim_count > 0 {
+            findings.push(ValidationFinding {
+                rule_id: "XBRL.CONTEXT.HAS_DIMENSIONS".to_string(),
+                severity: "info".to_string(),
+                message: format!("Context {} has {dim_count} dimensional members", context.id),
+                member: None,
+                subject: Some(context.id.clone()),
+            });
+        }
+    }
+    
+    Ok((context_set, findings))
 }
