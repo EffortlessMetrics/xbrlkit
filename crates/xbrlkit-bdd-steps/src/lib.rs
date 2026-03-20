@@ -184,8 +184,16 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if let Some(concept_part) = step.text.strip_prefix("a fact for concept \"") {
         // Parse "concept" requiring dimension "dim"
-        let concept = concept_part.trim_end_matches('"').to_string();
-        world.dimension_context.concept = Some(concept);
+        // Format: concept" requiring dimension "dim"
+        let parts: Vec<&str> = concept_part.split("\" requiring dimension \"").collect();
+        if parts.len() == 2 {
+            world.dimension_context.concept = Some(parts[0].to_string());
+            world.dimension_context.dimension = Some(parts[1].trim_end_matches('"').to_string());
+        } else {
+            // Fallback: just the concept, no dimension specified
+            let concept = concept_part.trim_end_matches('"').to_string();
+            world.dimension_context.concept = Some(concept);
+        }
         return Ok(true);
     }
 
