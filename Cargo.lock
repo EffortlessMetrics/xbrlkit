@@ -455,6 +455,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "taxonomy-dimensions"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "taxonomy-types",
+ "thiserror",
+]
+
+[[package]]
 name = "taxonomy-dts"
 version = "0.1.0-alpha.1"
 dependencies = [
