@@ -8,7 +8,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use taxonomy_types::NamespaceMapping;
 
 /// A dimension definition (explicit or typed).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
