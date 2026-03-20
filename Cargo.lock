@@ -532,6 +532,7 @@ dependencies = [
  "ixds-assemble",
  "receipt-types",
  "sec-profile-types",
+ "taxonomy-dimensions",
  "taxonomy-dts",
  "taxonomy-types",
  "xbrl-contexts",
