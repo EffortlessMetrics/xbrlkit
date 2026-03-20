@@ -455,6 +455,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "taxonomy-dimensions"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "taxonomy-dts"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -523,6 +531,7 @@ dependencies = [
  "ixds-assemble",
  "receipt-types",
  "sec-profile-types",
+ "taxonomy-dimensions",
  "taxonomy-dts",
  "taxonomy-types",
  "xbrl-contexts",
