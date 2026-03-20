@@ -1,0 +1,75 @@
+feature_id: FEAT-XK-DIMENSIONS
+layer: taxonomy
+module: dimensions
+scenarios:
+  SCN-XK-DIM-001:
+    ac_id: AC-XK-DIM-001
+    req_id: REQ-XK-DIMENSIONS
+    crates: [taxonomy-dimensions, dimensional-rules, xbrl-contexts, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: []
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/taxonomy-dimensions
+      - crates/dimensional-rules
+      - crates/xbrl-contexts
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - xtask
+      - specs/features/taxonomy
+
+  SCN-XK-DIM-002:
+    ac_id: AC-XK-DIM-002
+    req_id: REQ-XK-DIMENSIONS
+    crates: [taxonomy-dimensions, dimensional-rules, xbrl-contexts, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: []
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/taxonomy-dimensions
+      - crates/dimensional-rules
+      - crates/xbrl-contexts
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - xtask
+      - specs/features/taxonomy
+
+  SCN-XK-DIM-003:
+    ac_id: AC-XK-DIM-003
+    req_id: REQ-XK-DIMENSIONS
+    crates: [taxonomy-dimensions, dimensional-rules, xbrl-contexts, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: []
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/taxonomy-dimensions
+      - crates/dimensional-rules
+      - crates/xbrl-contexts
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - xtask
+      - specs/features/taxonomy
+
+  SCN-XK-DIM-004:
+    ac_id: AC-XK-DIM-004
+    req_id: REQ-XK-DIMENSIONS
+    crates: [taxonomy-dimensions, dimensional-rules, xbrl-contexts, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: []
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/taxonomy-dimensions
+      - crates/dimensional-rules
+      - crates/xbrl-contexts
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - xtask
+      - specs/features/taxonomy

@@ -1,5 +1,5 @@
 [package]
-name = "xbrl-contexts"
+name = "dimensional-rules"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,9 +9,11 @@ repository.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-roxmltree = "0.20"
 serde = { workspace = true }
 thiserror = { workspace = true }
+xbrl-contexts = { path = "../xbrl-contexts" }
+taxonomy-dimensions = { path = "../taxonomy-dimensions" }
+xbrl-report-types = { path = "../xbrl-report-types" }
 
 [lints]
 workspace = true

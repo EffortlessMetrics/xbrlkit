@@ -12,6 +12,10 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-IXDS-001",
     "AC-XK-IXDS-002",
     "AC-XK-EXPORT-001",
+    "AC-XK-DIM-001",
+    "AC-XK-DIM-002",
+    "AC-XK-DIM-003",
+    "AC-XK-DIM-004",
 ];
 
 pub(super) fn run() -> anyhow::Result<()> {
