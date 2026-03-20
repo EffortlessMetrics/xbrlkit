@@ -525,6 +525,7 @@ dependencies = [
  "sec-profile-types",
  "taxonomy-dts",
  "taxonomy-types",
+ "xbrl-contexts",
  "xbrl-report-types",
 ]
 
