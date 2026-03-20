@@ -5,6 +5,7 @@ use clap::{Parser, Subcommand};
 use sec_profile_types::{ProfilePack, load_profile_from_workspace};
 use std::path::{Path, PathBuf};
 use validation_run::validate_html_members;
+use xbrl_contexts::{get_dimensional_members, parse_contexts, Period};
 use xbrl_report_types::ValidationFinding;
 
 #[derive(Debug, Parser)]
@@ -30,6 +31,13 @@ enum Command {
     DescribeProfile {
         #[arg(long)]
         profile: String,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Parse and display contexts from an XBRL instance document.
+    InspectContexts {
+        #[arg(required = true)]
+        file: PathBuf,
         #[arg(long)]
         json: bool,
     },
@@ -82,6 +90,42 @@ fn main() -> anyhow::Result<()> {
                 );
             }
             0
+        }
+        Command::InspectContexts { file, json } => {
+            let xml = corpus_fs::read_to_string(&file)?;
+            match parse_contexts(&xml) {
+                Ok(context_set) => {
+                    if json {
+                        let contexts: Vec<&xbrl_contexts::Context> = context_set.iter().collect();
+                        println!("{}", serde_json::to_string_pretty(&contexts).unwrap());
+                    } else {
+                        println!("contexts: {}", context_set.len());
+                        for context in context_set.iter() {
+                            println!("\ncontext: {}", context.id);
+                            println!("  entity: {} / {}", context.entity.scheme, context.entity.value);
+                            match &context.period {
+                                Period::Instant(date) => println!("  period: instant {}", date),
+                                Period::Duration { start, end } => {
+                                    println!("  period: {} to {}", start, end);
+                                }
+                                Period::Forever => println!("  period: forever"),
+                            }
+                            let dims = get_dimensional_members(context);
+                            if !dims.is_empty() {
+                                println!("  dimensions:");
+                                for dim in dims {
+                                    println!("    {} = {}", dim.dimension, dim.member);
+                                }
+                            }
+                        }
+                    }
+                    0
+                }
+                Err(e) => {
+                    eprintln!("error parsing contexts: {}", e);
+                    1
+                }
+            }
         }
     };
     std::process::exit(exit_code)

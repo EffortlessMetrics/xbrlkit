@@ -20,6 +20,7 @@ validation-run = { path = "../validation-run" }
 export-run = { path = "../export-run" }
 render-json = { path = "../render-json" }
 xbrl-report-types = { path = "../xbrl-report-types" }
+xbrl-contexts = { path = "../xbrl-contexts" }
 
 [lints]
 workspace = true
