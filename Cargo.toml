@@ -42,7 +42,7 @@ members = [
   "crates/xbrlkit-conform",
   "crates/xbrlkit-core",
   "crates/xbrlkit-cli",
-  "xtask",
+  "xtask", "crates/dimensional-rules",
 ]
 default-members = ["crates/xbrlkit-cli", "xtask"]
 

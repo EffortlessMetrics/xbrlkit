@@ -1,5 +1,5 @@
 [package]
-name = "xbrl-contexts"
+name = "taxonomy-dimensions"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,9 +9,9 @@ repository.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-roxmltree = "0.20"
 serde = { workspace = true }
 thiserror = { workspace = true }
+taxonomy-types = { path = "../taxonomy-types" }
 
 [lints]
 workspace = true

@@ -139,6 +139,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dimensional-rules"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "taxonomy-dimensions",
+ "thiserror",
+ "xbrl-contexts",
+ "xbrl-report-types",
+]
+
+[[package]]
 name = "duplicate-facts"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -313,6 +324,12 @@ name = "render-md"
 version = "0.1.0-alpha.1"
 
 [[package]]
+name = "roxmltree"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c20b6793b5c2fa6553b250154b78d6d0db37e72700ae35fad9387a46f487c97"
+
+[[package]]
 name = "ryu"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -449,6 +466,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "taxonomy-dimensions"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "taxonomy-types",
+ "thiserror",
+]
+
+[[package]]
 name = "taxonomy-dts"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -468,6 +494,26 @@ name = "taxonomy-types"
 version = "0.1.0-alpha.1"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -539,6 +585,11 @@ dependencies = [
 [[package]]
 name = "xbrl-contexts"
 version = "0.1.0-alpha.1"
+dependencies = [
+ "roxmltree",
+ "serde",
+ "thiserror",
+]
 
 [[package]]
 name = "xbrl-dimensions"
