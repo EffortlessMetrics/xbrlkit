@@ -20,8 +20,6 @@ Analyzed legacy PRs #11-15 against current main state:
 
 **Key finding:** Main already has dimensional scenarios marked @alpha-active, but they weren't actually working due to API drift between BDD steps and the crate APIs. This branch fixes that.
 
-## Actions Taken (Continued)
-
 ### Code Review Completed
 Dispatched agent reviewed `mend/dimension-scenarios-activate`. Findings:
 
@@ -43,15 +41,15 @@ Dispatched agent reviewed `mend/dimension-scenarios-activate`. Findings:
 - `cargo build --workspace`: ✅ PASS (2 minor warnings)
 - `cargo xtask alpha-check`: ✅ PASS (13 scenarios)
 
-### Status
-Branch `mend/dimension-scenarios-activate` is **READY TO MERGE**.
+### Merge
+Branch `mend/dimension-scenarios-activate` **MERGED** to main.
 
 ## Decisions Made
 
-### Immediate (After Review)
-1. Merge `mend/dimension-scenarios-activate` if review passes
+### Immediate
+1. ✅ Merge `mend/dimension-scenarios-activate` — DONE
 2. Close PRs #11, #14, #15 as stale/superseded
-3. Comment on PRs #12, #13 with rebase instructions or evaluate for merge
+3. Comment on PRs #12, #13 with rebase instructions
 
 ### Documentation
 - Writing regular maintenance logs to `.mend/notes/`
@@ -94,7 +92,7 @@ git branch -d feature/descriptive-name
 
 ## Next Maintenance Actions
 
-1. **Wait for code review** — Merge dimensional scenarios if LGTM
+1. ✅ Merge dimensional scenarios — DONE
 2. **Close stale PRs** — #11, #14, #15 (need GitHub API access)
 3. **Evaluate #12, #13** — Check if filing manifest and workflow scenarios are worth activating
 4. **Branch cleanup** — Delete merged/stale branches from origin

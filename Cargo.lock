@@ -139,6 +139,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dimensional-rules"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "taxonomy-dimensions",
+ "thiserror",
+ "xbrl-contexts",
+ "xbrl-report-types",
+]
+
+[[package]]
 name = "duplicate-facts"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -526,6 +537,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 name = "validation-run"
 version = "0.1.0-alpha.1"
 dependencies = [
+ "dimensional-rules",
  "duplicate-facts",
  "efm-rules",
  "ixds-assemble",
@@ -616,8 +628,11 @@ name = "xbrlkit-bdd-steps"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "dimensional-rules",
  "scenario-contract",
  "scenario-runner",
+ "taxonomy-dimensions",
+ "xbrl-contexts",
 ]
 
 [[package]]
