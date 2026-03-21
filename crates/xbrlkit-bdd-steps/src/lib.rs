@@ -297,7 +297,10 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         }
         
         // Validate
-        let result = validate_context_dimensions(&context, dimension, &taxonomy);
+        // Note: concept is empty here because this step validates dimension-member
+        // pairs independently of any concept. Required dimension checking happens
+        // in "I validate the fact dimensions" which provides a concept.
+        let result = validate_context_dimensions(&context, "", &taxonomy);
         for finding in result.findings {
             world.dimension_context.validation_findings.push(finding.rule_id.clone());
         }

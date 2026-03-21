@@ -199,53 +199,9 @@ pub fn validate_dimensions(
         for finding in result.findings {
             findings.push(finding);
         }
-        // Also report missing required dimensions as explicit findings
-        for missing_dim in result.missing_dimensions {
-            findings.push(ValidationFinding {
-                rule_id: "XBRL.DIMENSION.MISSING_REQUIRED".to_string(),
-                severity: "error".to_string(),
-                message: format!("Required dimension {missing_dim} is missing"),
-                member: Some(missing_dim.clone()),
-                subject: Some(result.context_id.clone()),
-            });
-        }
+        // Note: MISSING_REQUIRED findings are already included in result.findings
+        // by validate_context_dimensions, so we don't need to add them again
     }
 
     findings
-}
-
-/// Convert dimension validation error to finding.
-fn dimension_error_to_finding(
-    error: &DimensionValidationError,
-    context_ref: &str,
-) -> ValidationFinding {
-    match error {
-        DimensionValidationError::UnknownDimension { dimension } => ValidationFinding {
-            rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
-            severity: "error".to_string(),
-            message: format!("Unknown dimension: {dimension}"),
-            member: Some(dimension.clone()),
-            subject: Some(context_ref.to_string()),
-        },
-        DimensionValidationError::NoDomain { dimension } => ValidationFinding {
-            rule_id: "XBRL.DIMENSION.NO_DOMAIN".to_string(),
-            severity: "error".to_string(),
-            message: format!("Dimension {dimension} has no domain"),
-            member: Some(dimension.clone()),
-            subject: Some(context_ref.to_string()),
-        },
-        DimensionValidationError::InvalidMember {
-            dimension,
-            member,
-            domain,
-        } => ValidationFinding {
-            rule_id: "XBRL.DIMENSION.INVALID_MEMBER".to_string(),
-            severity: "error".to_string(),
-            message: format!(
-                "Member {member} is not valid for dimension {dimension} in domain {domain}"
-            ),
-            member: Some(member.clone()),
-            subject: Some(context_ref.to_string()),
-        },
-    }
 }
