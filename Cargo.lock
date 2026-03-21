@@ -628,8 +628,11 @@ name = "xbrlkit-bdd-steps"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "dimensional-rules",
  "scenario-contract",
  "scenario-runner",
+ "taxonomy-dimensions",
+ "xbrl-contexts",
 ]
 
 [[package]]
