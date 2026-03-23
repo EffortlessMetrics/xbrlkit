@@ -19,8 +19,11 @@ sec-profile-types = { path = "../sec-profile-types" }
 validation-run = { path = "../validation-run" }
 export-run = { path = "../export-run" }
 render-json = { path = "../render-json" }
+render-md = { path = "../render-md" }
 xbrl-report-types = { path = "../xbrl-report-types" }
 xbrl-contexts = { path = "../xbrl-contexts" }
+taxonomy-loader = { path = "../taxonomy-loader" }
+taxonomy-dimensions = { path = "../taxonomy-dimensions" }
 
 [lints]
 workspace = true

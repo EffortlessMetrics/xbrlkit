@@ -482,6 +482,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "taxonomy-loader"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "roxmltree",
+ "serde_json",
+ "taxonomy-dimensions",
+ "thiserror",
+]
+
+[[package]]
 name = "taxonomy-package"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -644,9 +654,12 @@ dependencies = [
  "corpus-fs",
  "export-run",
  "render-json",
+ "render-md",
  "sec-profile-types",
  "serde_json",
  "serde_yaml",
+ "taxonomy-dimensions",
+ "taxonomy-loader",
  "validation-run",
  "xbrl-contexts",
  "xbrl-report-types",
