@@ -372,6 +372,53 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-SEC-INLINE-002",
+      "ac_id": "AC-XK-SEC-INLINE-002",
+      "req_id": "REQ-XK-SEC-INLINE",
+      "feature_file": "specs/features/sec/inline_restrictions.feature",
+      "sidecar_file": "specs/features/sec/inline_restrictions.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-SEC-INLINE:inline-restrictions",
+      "crates": [
+        "ixhtml-scan",
+        "ixds-assemble",
+        "efm-rules",
+        "validation-run",
+        "sec-profile-types",
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xbrlkit-cli",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/sec/inline/ix-tuple-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "validation.report.v1",
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/ixhtml-scan",
+        "crates/ixds-assemble",
+        "crates/efm-rules",
+        "crates/validation-run",
+        "crates/sec-profile-types",
+        "crates/xbrl-report-types",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "crates/xbrlkit-cli",
+        "xtask",
+        "specs/features/sec",
+        "profiles/sec/efm-77/opco"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-SEC-REQUIRED-001",
       "ac_id": "AC-XK-SEC-REQUIRED-001",
       "req_id": "REQ-XK-SEC-REQUIRED",

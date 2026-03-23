@@ -14,24 +14,24 @@
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
-| #28 | #9 | ✅ Merged | `b3bde6a` | Unit tests for required facts |
-| #26 | - | ✅ Merged | `bad1dbe` | Lint cleanup |
+| #30 | #8 | ✅ Merged | `e6d1b06` | Worktree-aware repo root |
+| #28 | #9 | ✅ Merged | `b3bde6a` | Required facts unit tests |
 | #27 | - | ✅ Merged | `9bd61ba` | Pre-push script |
+| #26 | - | ✅ Merged | `bad1dbe` | Lint cleanup |
 
 ## Current Queue
 
 | # | Issue | Stream | Stage | Ready |
 |---|-------|--------|-------|-------|
-| 1 | #8 | B: DevEx | 📋 Ready | xtask worktree-aware |
-| 2 | #7 | C: Test Infra | 📋 Ready | Synthetic fixture |
-| 3 | - | D: Taxonomy | 📋 Discovery | Create research issue |
+| 1 | #7 | C: Test Infra | 📋 Ready | Synthetic fixture |
+| 2 | - | D: Taxonomy | 📋 Discovery | Create research issue |
 
 ## Parallel Work Streams
 
 | Stream | Focus | Status |
 |--------|-------|--------|
 | **A: SEC Compliance** | Required facts | ✅ Complete |
-| **B: Developer Experience** | xtask worktree, pre-push | 📋 Ready |
+| **B: Developer Experience** | xtask worktree, pre-push | ✅ Complete |
 | **C: Test Infrastructure** | Synthetic fixtures | 📋 Ready |
 | **D: Taxonomy Core** | Dimension loading | 📋 Discovery |
 
@@ -59,9 +59,7 @@
 
 ## Next (Awaiting Pick)
 
-Options:
-1. **#8** — xtask worktree-aware (DevEx, quick win)
-2. **#7** — Synthetic fixture (Test Infra, foundation)
-3. **New issue** — Taxonomy loader research (Core, high value)
+1. **#7** — Synthetic fixture (Test Infra, 2-3h)
+2. **New issue** — Taxonomy loader research (Core, high value)
 
-Your call, or I'll pick highest value ready item.
+Or say "proceed" and I'll pick highest value ready item.
