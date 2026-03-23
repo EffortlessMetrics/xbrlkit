@@ -127,14 +127,14 @@ impl TaxonomyLoader {
         if path.starts_with("http://") || path.starts_with("https://") {
             self.fetch_url(path)
         } else {
-            self.fetch_file(path)
+            TaxonomyLoader::fetch_file(path)
         }
     }
 
     fn fetch_url(&self, url: &str) -> Result<String, TaxonomyLoaderError> {
         // Try cache first
         if let Some(ref cache_dir) = self.cache_dir {
-            let cache_path = self.url_to_cache_path(url, cache_dir);
+            let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
             if cache_path.exists() {
                 return std::fs::read_to_string(&cache_path).map_err(|e| {
                     TaxonomyLoaderError::Io(cache_path.to_string_lossy().to_string(), e)
@@ -147,11 +147,11 @@ impl TaxonomyLoader {
         Err(TaxonomyLoaderError::UnsupportedUrl(url.to_string()))
     }
 
-    fn fetch_file(&self, path: &str) -> Result<String, TaxonomyLoaderError> {
+    fn fetch_file(path: &str) -> Result<String, TaxonomyLoaderError> {
         std::fs::read_to_string(path).map_err(|e| TaxonomyLoaderError::Io(path.to_string(), e))
     }
 
-    fn url_to_cache_path(&self, url: &str, cache_dir: &Path) -> std::path::PathBuf {
+    fn url_to_cache_path(url: &str, cache_dir: &Path) -> std::path::PathBuf {
         // Simple cache path generation based on URL
         let filename = url.replace(['/', ':', '?', '&', '='], "_");
         cache_dir.join(filename)

@@ -35,7 +35,6 @@ pub fn parse_definition_linkbase(
             parse_definition_link(node, &ns_map, taxonomy)?;
         }
     }
-
     Ok(())
 }
 
@@ -52,14 +51,13 @@ fn parse_definition_link(
     for node in link_node.children() {
         let tag_name = node.tag_name().name();
         if tag_name == "definitionArc" {
-            parse_definition_arc(node, &locators, taxonomy)?;
+            parse_definition_arc(node, &locators, taxonomy);
         }
     }
-
     Ok(())
 }
 
-/// Extracts locator elements mapping xlink:label to QName.
+/// Extracts locator elements mapping xlink:label to `QName`.
 fn extract_locators(
     link_node: Node<'_, '_>,
     ns_map: &HashMap<String, String>,
@@ -90,7 +88,7 @@ fn extract_locators(
     locators
 }
 
-/// Extracts QName from href like "schema.xsd#us-gaap_StatementTable".
+/// Extracts `QName` from href like "schema.xsd#us-gaap_StatementTable".
 fn extract_qname_from_href(href: &str, ns_map: &HashMap<String, String>) -> String {
     // Parse the fragment identifier
     if let Some((_schema, fragment)) = href.split_once('#') {
@@ -100,10 +98,10 @@ fn extract_qname_from_href(href: &str, ns_map: &HashMap<String, String>) -> Stri
             // Map prefix to namespace if available
             if let Some(ns) = ns_map.get(prefix) {
                 // Extract just the prefix part from the namespace for display
-                let ns_prefix = ns.split('/').last().unwrap_or(prefix);
-                return format!("{}:{}", ns_prefix, local);
+                let ns_prefix = ns.split('/').next_back().unwrap_or(prefix);
+                return format!("{ns_prefix}:{local}");
             }
-            return format!("{}:{}", prefix, local);
+            return format!("{prefix}:{local}");
         }
         return fragment.to_string();
     }
@@ -116,7 +114,7 @@ fn parse_definition_arc(
     arc_node: Node<'_, '_>,
     locators: &HashMap<String, String>,
     taxonomy: &mut taxonomy_dimensions::DimensionTaxonomy,
-) -> Result<(), TaxonomyLoaderError> {
+) {
     // Try to get arcrole with namespace first, then without
     let arcrole = arc_node
         .attribute("{http://www.w3.org/1999/xlink}arcrole")
@@ -158,7 +156,7 @@ fn parse_definition_arc(
     let to_qname = locators.get(to_label).cloned().unwrap_or_default();
 
     if from_qname.is_empty() || to_qname.is_empty() {
-        return Ok(());
+        return;
     }
 
     match arcrole {
@@ -191,8 +189,6 @@ fn parse_definition_arc(
             // Unknown arcrole, ignore
         }
     }
-
-    Ok(())
 }
 
 /// Links a hypercube to a dimension.
@@ -316,18 +312,16 @@ pub fn extract_linkbase_refs(
             }
         }
     }
-
     Ok(refs)
 }
 
 /// Resolves a relative path against a base directory.
 fn resolve_path(base_dir: &str, relative: &str) -> String {
-    if relative.starts_with("http://") || relative.starts_with("https://") {
-        relative.to_string()
-    } else if base_dir.is_empty() {
+    if (relative.starts_with("http://") || relative.starts_with("https://")) || base_dir.is_empty()
+    {
         relative.to_string()
     } else {
-        format!("{}/{}", base_dir, relative)
+        format!("{base_dir}/{relative}")
     }
 }
 

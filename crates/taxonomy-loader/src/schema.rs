@@ -108,25 +108,23 @@ fn parse_element(
 /// Checks if substitution group is xbrldt:hypercubeItem.
 fn is_hypercube_item(substitution_group: &str, ns_map: &HashMap<String, String>) -> bool {
     resolve_qname(substitution_group, ns_map)
-        .map(|(ns, local)| ns.contains("xbrl.org/2005/xbrldt") && local == "hypercubeItem")
-        .unwrap_or(false)
+        .is_some_and(|(ns, local)| ns.contains("xbrl.org/2005/xbrldt") && local == "hypercubeItem")
 }
 
 /// Checks if substitution group is xbrldt:dimensionItem.
 fn is_dimension_item(substitution_group: &str, ns_map: &HashMap<String, String>) -> bool {
     resolve_qname(substitution_group, ns_map)
-        .map(|(ns, local)| ns.contains("xbrl.org/2005/xbrldt") && local == "dimensionItem")
-        .unwrap_or(false)
+        .is_some_and(|(ns, local)| ns.contains("xbrl.org/2005/xbrldt") && local == "dimensionItem")
 }
 
 /// Checks if type is xbrli:domainItemType.
 fn is_domain_item_type(type_attr: &str, ns_map: &HashMap<String, String>) -> bool {
-    resolve_qname(type_attr, ns_map)
-        .map(|(ns, local)| ns.contains("xbrl.org/2001/instance") && local == "domainItemType")
-        .unwrap_or(false)
+    resolve_qname(type_attr, ns_map).is_some_and(|(ns, local)| {
+        ns.contains("xbrl.org/2001/instance") && local == "domainItemType"
+    })
 }
 
-/// Resolves a QName to (namespace, local_name).
+/// Resolves a `QName` to (namespace, `local_name`).
 fn resolve_qname(qname: &str, ns_map: &HashMap<String, String>) -> Option<(String, String)> {
     if let Some((prefix, local)) = qname.split_once(':') {
         ns_map.get(prefix).map(|ns| (ns.clone(), local.to_string()))
@@ -171,13 +169,12 @@ pub fn extract_import_refs(
 }
 
 /// Resolves a relative path against a base directory.
+/// Resolves a relative path against a base directory.
 fn resolve_path(base_dir: &str, relative: &str) -> String {
-    if relative.starts_with("http://") || relative.starts_with("https://") {
-        relative.to_string()
-    } else if base_dir.is_empty() {
+    if relative.starts_with("http://") || relative.starts_with("https://") || base_dir.is_empty() {
         relative.to_string()
     } else {
-        format!("{}/{}", base_dir, relative)
+        format!("{base_dir}/{relative}")
     }
 }
 
