@@ -55,31 +55,27 @@ pub fn validate_fact_dimensions(
         validated_contexts.insert(fact.context_ref.clone());
 
         // Get the context
-        let context = match context_set.get(&fact.context_ref) {
-            Some(ctx) => ctx,
-            None => {
-                results.push(DimensionalValidationResult {
-                    context_id: fact.context_ref.clone(),
-                    findings: vec![ValidationFinding {
-                        rule_id: "XBRL.DIMENSION.MISSING_CONTEXT".to_string(),
-                        severity: "error".to_string(),
-                        message: format!("Context {} not found for fact {}", fact.context_ref, fact.concept),
-                        member: Some(fact.concept.clone()),
-                        subject: Some(fact.context_ref.clone()),
-                    }],
-                    present_dimensions: Vec::new(),
-                    missing_dimensions: Vec::new(),
-                });
-                continue;
-            }
+        let Some(context) = context_set.get(&fact.context_ref) else {
+            results.push(DimensionalValidationResult {
+                context_id: fact.context_ref.clone(),
+                findings: vec![ValidationFinding {
+                    rule_id: "XBRL.DIMENSION.MISSING_CONTEXT".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Context {} not found for fact {}",
+                        fact.context_ref, fact.concept
+                    ),
+                    member: Some(fact.concept.clone()),
+                    subject: Some(fact.context_ref.clone()),
+                }],
+                present_dimensions: Vec::new(),
+                missing_dimensions: Vec::new(),
+            });
+            continue;
         };
 
         // Validate this context's dimensions for this fact's concept
-        let result = validate_context_dimensions(
-            context,
-            &fact.concept,
-            dim_taxonomy,
-        );
+        let result = validate_context_dimensions(context, &fact.concept, dim_taxonomy);
         results.push(result);
     }
 
@@ -90,7 +86,7 @@ pub fn validate_fact_dimensions(
 ///
 /// # Arguments
 /// * `context` - The context to validate
-/// * `concept_qname` - The concept QName to check required dimensions for
+/// * `concept_qname` - The concept `QName` to check required dimensions for
 /// * `dim_taxonomy` - The dimension taxonomy
 ///
 /// # Returns
@@ -103,12 +99,10 @@ pub fn validate_context_dimensions(
 ) -> DimensionalValidationResult {
     let mut findings = Vec::new();
     let dim_members = get_dimensional_members(context);
-    
+
     // Build set of present dimensions
-    let present_dimensions: Vec<String> = dim_members
-        .iter()
-        .map(|dm| dm.dimension.clone())
-        .collect();
+    let present_dimensions: Vec<String> =
+        dim_members.iter().map(|dm| dm.dimension.clone()).collect();
 
     // Get required dimensions for this concept
     let required_dims = dim_taxonomy.required_dimensions_for_concept(concept_qname);
@@ -194,10 +188,7 @@ fn validate_dimension_member(
     Err(ValidationFinding {
         rule_id: "XBRL.DIMENSION.NO_DOMAIN".to_string(),
         severity: "error".to_string(),
-        message: format!(
-            "Dimension {} has no domain defined",
-            dim_member.dimension
-        ),
+        message: format!("Dimension {} has no domain defined", dim_member.dimension),
         member: Some(dim_member.dimension.clone()),
         subject: Some(dim_member.member.clone()),
     })
@@ -205,12 +196,10 @@ fn validate_dimension_member(
 
 /// Check if a member is a descendant of another member in a domain.
 #[must_use]
-pub fn is_descendant_member(
-    domain: &Domain,
-    ancestor: &str,
-    descendant: &str,
-) -> bool {
-    domain.descendants(ancestor).contains(&descendant.to_string())
+pub fn is_descendant_member(domain: &Domain, ancestor: &str, descendant: &str) -> bool {
+    domain
+        .descendants(ancestor)
+        .contains(&descendant.to_string())
 }
 
 /// Get all validation findings from a set of dimensional validation results.
@@ -249,7 +238,9 @@ pub fn summarize_results(results: &[DimensionalValidationResult]) -> Dimensional
         }
         if !result.missing_dimensions.is_empty() {
             summary.contexts_with_missing_dims += 1;
-            summary.unique_missing_dimensions.extend(result.missing_dimensions.clone());
+            summary
+                .unique_missing_dimensions
+                .extend(result.missing_dimensions.clone());
         }
     }
 
@@ -300,11 +291,7 @@ mod tests {
         taxonomy.add_hypercube(hypercube);
 
         // Associate concept with hypercube
-        taxonomy.associate_concept_hypercube(
-            "us-gaap:Revenue",
-            "us-gaap:StatementTable",
-            true,
-        );
+        taxonomy.associate_concept_hypercube("us-gaap:Revenue", "us-gaap:StatementTable", true);
 
         taxonomy
     }
@@ -340,16 +327,18 @@ mod tests {
         let taxonomy = create_test_taxonomy();
         let context = create_test_context_with_dims(
             "ctx-1",
-            vec![("us-gaap:StatementScenarioAxis", "us-gaap:ScenarioActualMember")],
+            vec![(
+                "us-gaap:StatementScenarioAxis",
+                "us-gaap:ScenarioActualMember",
+            )],
         );
 
-        let result = validate_context_dimensions(
-            &context,
-            "us-gaap:Revenue",
-            &taxonomy,
-        );
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
 
-        assert!(result.findings.is_empty(), "Expected no findings for valid dimensions");
+        assert!(
+            result.findings.is_empty(),
+            "Expected no findings for valid dimensions"
+        );
         assert_eq!(result.present_dimensions.len(), 1);
         assert!(result.missing_dimensions.is_empty());
     }
@@ -359,15 +348,17 @@ mod tests {
         let taxonomy = create_test_taxonomy();
         let context = create_test_context_with_dims("ctx-1", vec![]);
 
-        let result = validate_context_dimensions(
-            &context,
-            "us-gaap:Revenue",
-            &taxonomy,
-        );
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
 
-        assert!(!result.findings.is_empty(), "Expected findings for missing dimension");
+        assert!(
+            !result.findings.is_empty(),
+            "Expected findings for missing dimension"
+        );
         assert_eq!(result.missing_dimensions.len(), 1);
-        assert_eq!(result.missing_dimensions[0], "us-gaap:StatementScenarioAxis");
+        assert_eq!(
+            result.missing_dimensions[0],
+            "us-gaap:StatementScenarioAxis"
+        );
     }
 
     #[test]
@@ -378,16 +369,16 @@ mod tests {
             vec![("us-gaap:StatementScenarioAxis", "us-gaap:InvalidMember")],
         );
 
-        let result = validate_context_dimensions(
-            &context,
-            "us-gaap:Revenue",
-            &taxonomy,
-        );
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
 
-        assert!(!result.findings.is_empty(), "Expected findings for invalid member");
-        let has_invalid_member = result.findings.iter().any(|f| {
-            f.rule_id == "XBRL.DIMENSION.INVALID_MEMBER"
-        });
+        assert!(
+            !result.findings.is_empty(),
+            "Expected findings for invalid member"
+        );
+        let has_invalid_member = result
+            .findings
+            .iter()
+            .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_MEMBER");
         assert!(has_invalid_member, "Expected INVALID_MEMBER finding");
     }
 

@@ -5,7 +5,7 @@ use clap::{Parser, Subcommand};
 use sec_profile_types::{ProfilePack, load_profile_from_workspace};
 use std::path::{Path, PathBuf};
 use validation_run::validate_html_members;
-use xbrl_contexts::{get_dimensional_members, parse_contexts, Period};
+use xbrl_contexts::{Period, get_dimensional_members, parse_contexts};
 use xbrl_report_types::ValidationFinding;
 
 #[derive(Debug, Parser)]
@@ -102,11 +102,14 @@ fn main() -> anyhow::Result<()> {
                         println!("contexts: {}", context_set.len());
                         for context in context_set.iter() {
                             println!("\ncontext: {}", context.id);
-                            println!("  entity: {} / {}", context.entity.scheme, context.entity.value);
+                            println!(
+                                "  entity: {} / {}",
+                                context.entity.scheme, context.entity.value
+                            );
                             match &context.period {
-                                Period::Instant(date) => println!("  period: instant {}", date),
+                                Period::Instant(date) => println!("  period: instant {date}"),
                                 Period::Duration { start, end } => {
-                                    println!("  period: {} to {}", start, end);
+                                    println!("  period: {start} to {end}");
                                 }
                                 Period::Forever => println!("  period: forever"),
                             }
@@ -122,7 +125,7 @@ fn main() -> anyhow::Result<()> {
                     0
                 }
                 Err(e) => {
-                    eprintln!("error parsing contexts: {}", e);
+                    eprintln!("error parsing contexts: {e}");
                     1
                 }
             }

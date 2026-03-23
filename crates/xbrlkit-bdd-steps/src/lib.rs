@@ -1,6 +1,7 @@
 //! Minimal step execution for the active BDD slices.
 
 use anyhow::Context;
+use dimensional_rules::validate_context_dimensions;
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use scenario_runner::{
     ScenarioExecution, assert_scenario_outcome, ensure_ixds_member_count,
@@ -10,6 +11,8 @@ use scenario_runner::{
     execute_scenario, write_execution_receipts,
 };
 use std::path::PathBuf;
+use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
+use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Step {
@@ -76,7 +79,7 @@ pub fn run_scenario(
     if let Some(execution) = world.execution.as_ref() {
         assert_scenario_outcome(scenario, execution)?;
     }
-    
+
     Ok(())
 }
 
@@ -175,7 +178,10 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
-    if let Some(dimension) = step.text.strip_prefix("a context with unknown dimension \"") {
+    if let Some(dimension) = step
+        .text
+        .strip_prefix("a context with unknown dimension \"")
+    {
         world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
         return Ok(true);
     }
@@ -196,7 +202,8 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if let Some(dimension) = step.text.strip_prefix("the concept requires dimension \"") {
-        world.dimension_context.required_dimension = Some(dimension.trim_end_matches('"').to_string());
+        world.dimension_context.required_dimension =
+            Some(dimension.trim_end_matches('"').to_string());
         return Ok(true);
     }
 
@@ -232,15 +239,10 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     // Dimension-related When steps
     if step.text == "I validate the dimension-member pair" {
         world.dimension_context.validation_findings.clear();
-        
+
         let dimension = world.dimension_context.dimension.as_deref().unwrap_or("");
         let member = world.dimension_context.member.as_deref().unwrap_or("");
-        
-        // Use dimensional-rules crate for validation
-        use dimensional_rules::validate_context_dimensions;
-        use taxonomy_dimensions::{DimensionTaxonomy, Domain, DomainMember, Dimension};
-        use xbrl_contexts::{Context, Period, EntityIdentifier, DimensionMember, DimensionalContainer};
-        
+
         // Build minimal taxonomy with StatementScenarioAxis
         let mut taxonomy = DimensionTaxonomy::new();
         let mut scenario_domain = Domain::new("us-gaap:ScenarioDomain");
@@ -257,7 +259,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             label: None,
         });
         taxonomy.add_domain(scenario_domain);
-        
+
         taxonomy.add_dimension(Dimension::Explicit {
             qname: "us-gaap:StatementScenarioAxis".to_string(),
             default_domain: Some("us-gaap:ScenarioDomain".to_string()),
@@ -267,9 +269,9 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             "us-gaap:StatementScenarioAxis".to_string(),
             "us-gaap:ScenarioDomain".to_string(),
         );
-        
+
         // Build context with dimensional information in scenario
-        let mut context = Context {
+        let mut context = xbrl_contexts::Context {
             id: "test-context".to_string(),
             entity: EntityIdentifier {
                 scheme: "http://www.sec.gov/CIK".to_string(),
@@ -282,7 +284,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             entity_segment: None,
             scenario: None,
         };
-        
+
         // Add dimensional member if specified
         if !dimension.is_empty() && !member.is_empty() {
             context.scenario = Some(DimensionalContainer {
@@ -295,33 +297,39 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 raw_xml: None,
             });
         }
-        
+
         // Validate
         // Note: concept is empty here because this step validates dimension-member
         // pairs independently of any concept. Required dimension checking happens
         // in "I validate the fact dimensions" which provides a concept.
         let result = validate_context_dimensions(&context, "", &taxonomy);
         for finding in result.findings {
-            world.dimension_context.validation_findings.push(finding.rule_id.clone());
+            world
+                .dimension_context
+                .validation_findings
+                .push(finding.rule_id.clone());
         }
-        
+
         return Ok(true);
     }
 
     if step.text == "I validate the fact dimensions" {
         world.dimension_context.validation_findings.clear();
-        
-        let concept = world.dimension_context.concept.as_deref().unwrap_or("");
+
+        let _concept = world.dimension_context.concept.as_deref().unwrap_or("");
         let has_dimension = world.dimension_context.dimension.is_some();
         let required_dim = world.dimension_context.required_dimension.clone();
-        
+
         // Check for missing required dimension
-        if let Some(req_dim) = required_dim {
+        if let Some(_req_dim) = required_dim {
             if !has_dimension {
-                world.dimension_context.validation_findings.push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
+                world
+                    .dimension_context
+                    .validation_findings
+                    .push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
             }
         }
-        
+
         return Ok(true);
     }
 
@@ -332,8 +340,10 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
         if !world.dimension_context.validation_findings.is_empty() {
-            anyhow::bail!("expected validation to pass but got findings: {:?}", 
-                world.dimension_context.validation_findings);
+            anyhow::bail!(
+                "expected validation to pass but got findings: {:?}",
+                world.dimension_context.validation_findings
+            );
         }
         return Ok(());
     }
@@ -347,17 +357,27 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
 
     if step.text == "no findings should be reported" {
         if !world.dimension_context.validation_findings.is_empty() {
-            anyhow::bail!("expected no findings but got: {:?}", 
-                world.dimension_context.validation_findings);
+            anyhow::bail!(
+                "expected no findings but got: {:?}",
+                world.dimension_context.validation_findings
+            );
         }
         return Ok(());
     }
 
     if let Some(finding) = step.text.strip_prefix("an \"") {
         let expected_finding = finding.trim_end_matches("\" finding should be reported");
-        if !world.dimension_context.validation_findings.iter().any(|f| f == expected_finding) {
-            anyhow::bail!("expected finding {} but got {:?}", 
-                expected_finding, world.dimension_context.validation_findings);
+        if !world
+            .dimension_context
+            .validation_findings
+            .iter()
+            .any(|f| f == expected_finding)
+        {
+            anyhow::bail!(
+                "expected finding {} but got {:?}",
+                expected_finding,
+                world.dimension_context.validation_findings
+            );
         }
         return Ok(());
     }

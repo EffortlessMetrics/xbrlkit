@@ -5,7 +5,7 @@ use efm_rules::{validate_inline_restrictions, validate_required_facts, validate_
 use ixds_assemble::assemble;
 use receipt_types::{Receipt, RunResult};
 use sec_profile_types::ProfilePack;
-use taxonomy_dimensions::{DimensionTaxonomy, DimensionValidationError};
+use taxonomy_dimensions::DimensionTaxonomy;
 use taxonomy_dts::{build_dts, nonstandard_entry_points};
 use taxonomy_types::DtsDescriptor;
 use xbrl_contexts::{ContextSet, parse_contexts};
@@ -143,10 +143,10 @@ fn run_result(report: &CanonicalReport) -> RunResult {
 /// Returns error if XML parsing fails.
 pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFinding>), String> {
     let mut findings = Vec::new();
-    
-    let context_set = parse_contexts(xbrl_xml)
-        .map_err(|e| format!("Failed to parse contexts: {e}"))?;
-    
+
+    let context_set =
+        parse_contexts(xbrl_xml).map_err(|e| format!("Failed to parse contexts: {e}"))?;
+
     // Check for contexts without entity identifiers
     for context in context_set.iter() {
         if context.entity.value.is_empty() {
@@ -158,7 +158,7 @@ pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFi
                 subject: Some(context.id.clone()),
             });
         }
-        
+
         // Check for contexts with dimensional information
         let dim_count = xbrl_contexts::get_dimensional_members(context).len();
         if dim_count > 0 {
@@ -171,7 +171,7 @@ pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFi
             });
         }
     }
-    
+
     Ok((context_set, findings))
 }
 
