@@ -36,7 +36,7 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| 1 | - | D: Taxonomy | 📋 Ready | None — Create research issue |
+| 1 | [Research: Taxonomy Dimension Loading](.mend/research/taxonomy-dimension-loading.md) | D: Taxonomy | 📐 Plan | None — Ready for plan review |
 
 ## In Progress
 
@@ -51,7 +51,7 @@
 | **A: SEC Compliance** | Required facts | ✅ Complete |
 | **B: Developer Experience** | xtask worktree, pre-push | ✅ Complete |
 | **C: Test Infrastructure** | Synthetic fixtures | ✅ Complete |
-| **D: Taxonomy Core** | Dimension loading | 📋 Ready |
+| **D: Taxonomy Core** | Dimension loading | 📐 Plan — Research complete |
 
 ## Autonomous Infrastructure
 
@@ -66,7 +66,7 @@
 ## Cron Schedule
 
 | Job | Frequency | Purpose |
-|-----|-----------|---------|
+|-----|-----------|--------|
 | xbrlkit-ci-health | 1h | Monitor CI |
 | xbrlkit-queue-check | 2h | Pick ready items |
 
@@ -84,4 +84,6 @@
 
 ## Next
 
-Create research issue for **Stream D: Taxonomy Core** — loading dimensions from actual taxonomy files.
+**Ready for Plan Review:**
+- [Research: Taxonomy Dimension Loading](.mend/research/taxonomy-dimension-loading.md)
+- Decision needed: Create new `taxonomy-loader` crate vs extend existing crates
