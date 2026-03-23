@@ -24,28 +24,23 @@ pub struct EntityIdentifier {
 }
 
 /// Time period for a context.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum Period {
     /// A specific instant in time (e.g., 2024-12-31)
     Instant(String),
     /// A duration with start and end dates
     Duration { start: String, end: String },
     /// Forever (rarely used)
+    #[default]
     Forever,
-}
-
-impl Default for Period {
-    fn default() -> Self {
-        Self::Forever
-    }
 }
 
 /// A dimensional member reference.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct DimensionMember {
-    /// The dimension QName (e.g., "us-gaap:StatementScenarioAxis")
+    /// The dimension `QName` (e.g., "us-gaap:StatementScenarioAxis")
     pub dimension: String,
-    /// The member QName (e.g., "us-gaap:ScenarioActualMember")
+    /// The member `QName` (e.g., "us-gaap:ScenarioActualMember")
     pub member: String,
     /// Whether this is a typed dimension value vs explicit member
     pub is_typed: bool,
@@ -140,8 +135,7 @@ pub fn parse_contexts(xml: &str) -> Result<ContextSet, ContextError> {
         return Ok(set);
     }
 
-    let doc = roxmltree::Document::parse(xml)
-        .map_err(|e| ContextError::Xml(e.to_string()))?;
+    let doc = roxmltree::Document::parse(xml).map_err(|e| ContextError::Xml(e.to_string()))?;
 
     // Find all context elements anywhere in the document
     for node in doc.descendants() {
@@ -157,22 +151,22 @@ pub fn parse_contexts(xml: &str) -> Result<ContextSet, ContextError> {
 }
 
 /// Parse a single context element.
-fn parse_context_element(node: &roxmltree::Node<'_, '_>, id: &str) -> Result<Context, ContextError> {
+fn parse_context_element(
+    node: &roxmltree::Node<'_, '_>,
+    id: &str,
+) -> Result<Context, ContextError> {
     let entity_node = find_child(node, "entity")
         .ok_or_else(|| ContextError::MissingElement("entity".to_string()))?;
 
     let entity = parse_entity(&entity_node)?;
-    let entity_segment = find_child(&entity_node, "segment")
-        .map(|n| parse_dimensional_container(&n))
-        .transpose()?;
+    let entity_segment =
+        find_child(&entity_node, "segment").map(|n| parse_dimensional_container(&n));
 
     let period_node = find_child(node, "period")
         .ok_or_else(|| ContextError::MissingElement("period".to_string()))?;
     let period = parse_period(&period_node)?;
 
-    let scenario = find_child(node, "scenario")
-        .map(|n| parse_dimensional_container(&n))
-        .transpose()?;
+    let scenario = find_child(node, "scenario").map(|n| parse_dimensional_container(&n));
 
     Ok(Context {
         id: normalize_context_id(id),
@@ -233,10 +227,10 @@ fn parse_period(node: &roxmltree::Node<'_, '_>) -> Result<Period, ContextError> 
 }
 
 /// Parse dimensional container (segment or scenario).
-fn parse_dimensional_container(node: &roxmltree::Node<'_, '_>) -> Result<DimensionalContainer, ContextError> {
+fn parse_dimensional_container(node: &roxmltree::Node<'_, '_>) -> DimensionalContainer {
     let mut dimensions = Vec::new();
 
-    for child in node.children().filter(|n| n.is_element()) {
+    for child in node.children().filter(roxmltree::Node::is_element) {
         // Look for explicitMember elements (XBRL Dimensions)
         if child.tag_name().name() == "explicitMember" {
             if let Some(dim_attr) = child.attribute("dimension") {
@@ -256,14 +250,17 @@ fn parse_dimensional_container(node: &roxmltree::Node<'_, '_>) -> Result<Dimensi
         // TODO: Handle typedMember for typed dimensions
     }
 
-    Ok(DimensionalContainer {
+    DimensionalContainer {
         dimensions,
         raw_xml: None,
-    })
+    }
 }
 
 /// Find a child element by name (local name only).
-fn find_child<'a, 'b>(node: &roxmltree::Node<'a, 'b>, name: &str) -> Option<roxmltree::Node<'a, 'b>> {
+fn find_child<'a, 'b>(
+    node: &roxmltree::Node<'a, 'b>,
+    name: &str,
+) -> Option<roxmltree::Node<'a, 'b>> {
     node.children()
         .find(|n| n.is_element() && n.tag_name().name() == name)
 }
@@ -272,15 +269,15 @@ fn find_child<'a, 'b>(node: &roxmltree::Node<'a, 'b>, name: &str) -> Option<roxm
 #[must_use]
 pub fn get_dimensional_members(context: &Context) -> Vec<&DimensionMember> {
     let mut members = Vec::new();
-    
+
     if let Some(segment) = &context.entity_segment {
         members.extend(segment.dimensions.iter());
     }
-    
+
     if let Some(scenario) = &context.scenario {
         members.extend(scenario.dimensions.iter());
     }
-    
+
     members
 }
 
@@ -344,7 +341,7 @@ mod tests {
         let ctx = set.get("ctx-2024").unwrap();
         assert_eq!(ctx.entity.value, "0000320193");
         assert!(!has_dimensions(ctx));
-        
+
         match &ctx.period {
             Period::Instant(date) => assert_eq!(date, "2024-12-31"),
             _ => panic!("Expected instant period"),
@@ -369,7 +366,7 @@ mod tests {
 
         let set = parse_contexts(xml).unwrap();
         let ctx = set.get("ctx-duration").unwrap();
-        
+
         match &ctx.period {
             Period::Duration { start, end } => {
                 assert_eq!(start, "2024-01-01");
@@ -402,9 +399,9 @@ mod tests {
 
         let set = parse_contexts(xml).unwrap();
         let ctx = set.get("ctx-dim").unwrap();
-        
+
         assert!(has_dimensions(ctx));
-        
+
         let members = get_dimensional_members(ctx);
         assert_eq!(members.len(), 1);
         assert_eq!(members[0].dimension, "us-gaap:StatementScenarioAxis");

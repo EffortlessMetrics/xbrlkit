@@ -5,7 +5,7 @@ use efm_rules::{validate_inline_restrictions, validate_required_facts, validate_
 use ixds_assemble::assemble;
 use receipt_types::{Receipt, RunResult};
 use sec_profile_types::ProfilePack;
-use taxonomy_dimensions::{DimensionTaxonomy, DimensionValidationError};
+use taxonomy_dimensions::DimensionTaxonomy;
 use taxonomy_dts::{build_dts, nonstandard_entry_points};
 use taxonomy_types::DtsDescriptor;
 use xbrl_contexts::{ContextSet, parse_contexts};
@@ -143,10 +143,10 @@ fn run_result(report: &CanonicalReport) -> RunResult {
 /// Returns error if XML parsing fails.
 pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFinding>), String> {
     let mut findings = Vec::new();
-    
-    let context_set = parse_contexts(xbrl_xml)
-        .map_err(|e| format!("Failed to parse contexts: {e}"))?;
-    
+
+    let context_set =
+        parse_contexts(xbrl_xml).map_err(|e| format!("Failed to parse contexts: {e}"))?;
+
     // Check for contexts without entity identifiers
     for context in context_set.iter() {
         if context.entity.value.is_empty() {
@@ -158,7 +158,7 @@ pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFi
                 subject: Some(context.id.clone()),
             });
         }
-        
+
         // Check for contexts with dimensional information
         let dim_count = xbrl_contexts::get_dimensional_members(context).len();
         if dim_count > 0 {
@@ -171,86 +171,37 @@ pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFi
             });
         }
     }
-    
+
     Ok((context_set, findings))
 }
 
-/// Validate dimensional aspects of facts.
+/// Validate dimensional aspects of facts using dimensional-rules crate.
 ///
 /// # Arguments
 /// * `facts` - The facts to validate
+/// * `context_set` - The contexts referenced by the facts
 /// * `dim_taxonomy` - The dimension taxonomy for validation
-/// * `context_lookup` - Function to get context dimensional members
 ///
 /// # Returns
 /// Vector of validation findings for dimensional errors.
 #[must_use]
 pub fn validate_dimensions(
     facts: &[Fact],
+    context_set: &ContextSet,
     dim_taxonomy: &DimensionTaxonomy,
-    _context_lookup: &dyn Fn(&str) -> Vec<(String, String)>,
 ) -> Vec<ValidationFinding> {
+    use dimensional_rules::validate_fact_dimensions;
+
+    let results = validate_fact_dimensions(facts, context_set, dim_taxonomy);
     let mut findings = Vec::new();
 
-    for fact in facts {
-        // Get required dimensions for this concept
-        let required_dims = dim_taxonomy.required_dimensions_for_concept(&fact.concept
-        );
-
-        // Note: In full implementation, we'd look up the actual context
-        // dimensions using context_lookup(fact.context_ref)
-        // For now, we just check that the concept has dimension metadata
-        
-        if !required_dims.is_empty() {
-            findings.push(ValidationFinding {
-                rule_id: "XBRL.DIMENSION.REQUIRED_CHECK".to_string(),
-                severity: "info".to_string(),
-                message: format!(
-                    "Concept {} requires dimensions: {:?}",
-                    fact.concept,
-                    required_dims
-                ),
-                member: Some(fact.concept.clone()),
-                subject: Some(fact.context_ref.clone()),
-            });
+    for result in results {
+        for finding in result.findings {
+            findings.push(finding);
         }
+        // Note: MISSING_REQUIRED findings are already included in result.findings
+        // by validate_context_dimensions, so we don't need to add them again
     }
 
     findings
-}
-
-/// Convert dimension validation error to finding.
-fn dimension_error_to_finding(
-    error: &DimensionValidationError,
-    context_ref: &str,
-) -> ValidationFinding {
-    match error {
-        DimensionValidationError::UnknownDimension { dimension } => ValidationFinding {
-            rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
-            severity: "error".to_string(),
-            message: format!("Unknown dimension: {dimension}"),
-            member: Some(dimension.clone()),
-            subject: Some(context_ref.to_string()),
-        },
-        DimensionValidationError::NoDomain { dimension } => ValidationFinding {
-            rule_id: "XBRL.DIMENSION.NO_DOMAIN".to_string(),
-            severity: "error".to_string(),
-            message: format!("Dimension {dimension} has no domain"),
-            member: Some(dimension.clone()),
-            subject: Some(context_ref.to_string()),
-        },
-        DimensionValidationError::InvalidMember {
-            dimension,
-            member,
-            domain,
-        } => ValidationFinding {
-            rule_id: "XBRL.DIMENSION.INVALID_MEMBER".to_string(),
-            severity: "error".to_string(),
-            message: format!(
-                "Member {member} is not valid for dimension {dimension} in domain {domain}"
-            ),
-            member: Some(member.clone()),
-            subject: Some(context_ref.to_string()),
-        },
-    }
 }

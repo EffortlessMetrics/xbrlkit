@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub enum Dimension {
     /// Explicit dimension with a defined domain of members
     Explicit {
-        /// Dimension QName (e.g., "us-gaap:StatementScenarioAxis")
+        /// Dimension `QName` (e.g., "us-gaap:StatementScenarioAxis")
         qname: String,
         /// Default domain if no member specified
         default_domain: Option<String>,
@@ -23,7 +23,7 @@ pub enum Dimension {
     },
     /// Typed dimension with a value space (e.g., dates, strings)
     Typed {
-        /// Dimension QName
+        /// Dimension `QName`
         qname: String,
         /// Type of the dimension value (e.g., "xs:date", "xs:string")
         value_type: String,
@@ -33,7 +33,7 @@ pub enum Dimension {
 }
 
 impl Dimension {
-    /// Get the QName of this dimension.
+    /// Get the `QName` of this dimension.
     #[must_use]
     pub fn qname(&self) -> &str {
         match self {
@@ -59,9 +59,9 @@ impl Dimension {
 /// A member in a domain hierarchy.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct DomainMember {
-    /// Member QName (e.g., "us-gaap:ScenarioActualMember")
+    /// Member `QName` (e.g., "us-gaap:ScenarioActualMember")
     pub qname: String,
-    /// Parent member QName (None for root members)
+    /// Parent member `QName` (None for root members)
     pub parent: Option<String>,
     /// Order in the presentation hierarchy
     pub order: i32,
@@ -72,9 +72,9 @@ pub struct DomainMember {
 /// A domain containing a hierarchy of members.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct Domain {
-    /// Domain QName
+    /// Domain `QName`
     pub qname: String,
-    /// Members in this domain (indexed by QName)
+    /// Members in this domain (indexed by `QName`)
     pub members: BTreeMap<String, DomainMember>,
     /// Root members (those without parents)
     pub roots: Vec<String>,
@@ -99,7 +99,7 @@ impl Domain {
         self.members.insert(member.qname.clone(), member);
     }
 
-    /// Check if a QName is a valid member of this domain.
+    /// Check if a `QName` is a valid member of this domain.
     #[must_use]
     pub fn contains(&self, qname: &str) -> bool {
         self.members.contains_key(qname)
@@ -123,7 +123,7 @@ impl Domain {
     pub fn path_to(&self, qname: &str) -> Vec<String> {
         let mut path = Vec::new();
         let mut current = qname;
-        
+
         while let Some(member) = self.members.get(current) {
             path.push(current.to_string());
             match &member.parent {
@@ -131,7 +131,7 @@ impl Domain {
                 None => break,
             }
         }
-        
+
         path.reverse();
         path
     }
@@ -140,9 +140,9 @@ impl Domain {
 /// A hypercube defines which dimensions apply to a concept.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct Hypercube {
-    /// Hypercube QName
+    /// Hypercube `QName`
     pub qname: String,
-    /// Dimensions in this hypercube (QName -> is_required)
+    /// Dimensions in this hypercube (`QName` -> `is_required`)
     pub dimensions: BTreeMap<String, bool>,
     /// Human-readable label
     pub label: Option<String>,
@@ -164,7 +164,7 @@ impl Hypercube {
         self.dimensions.insert(qname.into(), required);
     }
 
-    /// Get all dimension QNames.
+    /// Get all dimension `QNames`.
     #[must_use]
     pub fn dimension_qnames(&self) -> Vec<String> {
         self.dimensions.keys().cloned().collect()
@@ -184,22 +184,22 @@ impl Hypercube {
 /// Association between a concept and its hypercubes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct ConceptHypercubes {
-    /// Concept QName
+    /// Concept `QName`
     pub concept_qname: String,
-    /// Hypercubes that apply (QName -> is_all)
-    /// is_all=true means all dimensions are required (closed hypercube)
-    /// is_all=false means dimensions are optional (open hypercube)
+    /// Hypercubes that apply (`QName` -> `is_all`)
+    /// `is_all=true` means all dimensions are required (closed hypercube)
+    /// `is_all=false` means dimensions are optional (open hypercube)
     pub hypercubes: BTreeMap<String, bool>,
 }
 
 /// Complete dimension taxonomy for a DTS.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct DimensionTaxonomy {
-    /// All dimensions (indexed by QName)
+    /// All dimensions (indexed by `QName`)
     pub dimensions: BTreeMap<String, Dimension>,
-    /// All domains (indexed by QName)
+    /// All domains (indexed by `QName`)
     pub domains: BTreeMap<String, Domain>,
-    /// All hypercubes (indexed by QName)
+    /// All hypercubes (indexed by `QName`)
     pub hypercubes: BTreeMap<String, Hypercube>,
     /// Concept-to-hypercube associations
     pub concept_hypercubes: BTreeMap<String, ConceptHypercubes>,
@@ -216,7 +216,8 @@ impl DimensionTaxonomy {
 
     /// Add a dimension.
     pub fn add_dimension(&mut self, dimension: Dimension) {
-        self.dimensions.insert(dimension.qname().to_string(), dimension);
+        self.dimensions
+            .insert(dimension.qname().to_string(), dimension);
     }
 
     /// Add a domain.
@@ -238,7 +239,7 @@ impl DimensionTaxonomy {
     ) {
         let concept_qname = concept_qname.into();
         let hypercube_qname = hypercube_qname.into();
-        
+
         let entry = self
             .concept_hypercubes
             .entry(concept_qname.clone())
@@ -246,7 +247,7 @@ impl DimensionTaxonomy {
                 concept_qname,
                 hypercubes: BTreeMap::new(),
             });
-        
+
         entry.hypercubes.insert(hypercube_qname, is_all);
     }
 
@@ -273,7 +274,7 @@ impl DimensionTaxonomy {
     #[must_use]
     pub fn required_dimensions_for_concept(&self, concept_qname: &str) -> Vec<String> {
         let mut required = BTreeSet::new();
-        
+
         if let Some(ch) = self.concept_hypercubes.get(concept_qname) {
             for (hypercube_qname, is_all) in &ch.hypercubes {
                 if let Some(hypercube) = self.hypercubes.get(hypercube_qname) {
@@ -287,7 +288,7 @@ impl DimensionTaxonomy {
                 }
             }
         }
-        
+
         required.into_iter().collect()
     }
 
@@ -298,12 +299,11 @@ impl DimensionTaxonomy {
         member_qname: &str,
     ) -> Result<(), DimensionValidationError> {
         // Check dimension exists
-        let dimension = self
-            .dimensions
-            .get(dimension_qname)
-            .ok_or_else(|| DimensionValidationError::UnknownDimension {
+        let dimension = self.dimensions.get(dimension_qname).ok_or_else(|| {
+            DimensionValidationError::UnknownDimension {
                 dimension: dimension_qname.to_string(),
-            })?;
+            }
+        })?;
 
         // Typed dimensions accept any value of the correct type
         if dimension.is_typed() {
@@ -335,10 +335,10 @@ impl DimensionTaxonomy {
 pub enum DimensionValidationError {
     #[error("unknown dimension: {dimension}")]
     UnknownDimension { dimension: String },
-    
+
     #[error("dimension {dimension} has no domain defined")]
     NoDomain { dimension: String },
-    
+
     #[error("invalid member {member} for dimension {dimension} in domain {domain}")]
     InvalidMember {
         dimension: String,
@@ -354,51 +354,55 @@ mod tests {
     #[test]
     fn test_domain_hierarchy() {
         let mut domain = Domain::new("us-gaap:StatementScenarioDomain");
-        
+
         domain.add_member(DomainMember {
             qname: "us-gaap:ScenarioActualMember".to_string(),
             parent: None,
             order: 1,
             label: Some("Actual".to_string()),
         });
-        
+
         domain.add_member(DomainMember {
             qname: "us-gaap:ScenarioBudgetMember".to_string(),
             parent: None,
             order: 2,
             label: Some("Budget".to_string()),
         });
-        
+
         assert!(domain.contains("us-gaap:ScenarioActualMember"));
         assert!(domain.contains("us-gaap:ScenarioBudgetMember"));
         assert!(!domain.contains("us-gaap:NonExistentMember"));
-        
+
         assert_eq!(domain.roots.len(), 2);
     }
 
     #[test]
     fn test_hypercube_dimensions() {
         let mut hypercube = Hypercube::new("us-gaap:StatementTable");
-        
+
         hypercube.add_dimension("us-gaap:StatementScenarioAxis", true);
         hypercube.add_dimension("us-gaap:StatementPeriodAxis", false);
-        
+
         assert_eq!(hypercube.dimension_qnames().len(), 2);
         assert_eq!(hypercube.required_dimensions().len(), 1);
-        assert!(hypercube.required_dimensions().contains(&"us-gaap:StatementScenarioAxis".to_string()));
+        assert!(
+            hypercube
+                .required_dimensions()
+                .contains(&"us-gaap:StatementScenarioAxis".to_string())
+        );
     }
 
     #[test]
     fn test_dimension_taxonomy() {
         let mut taxonomy = DimensionTaxonomy::new();
-        
+
         // Add dimension
         taxonomy.add_dimension(Dimension::Explicit {
             qname: "us-gaap:StatementScenarioAxis".to_string(),
             default_domain: Some("us-gaap:StatementScenarioDomain".to_string()),
             required: true,
         });
-        
+
         // Add domain
         let mut domain = Domain::new("us-gaap:StatementScenarioDomain");
         domain.add_member(DomainMember {
@@ -408,23 +412,28 @@ mod tests {
             label: None,
         });
         taxonomy.add_domain(domain);
-        
+
         // Link dimension to domain
         taxonomy.link_dimension_domain(
             "us-gaap:StatementScenarioAxis",
             "us-gaap:StatementScenarioDomain",
         );
-        
+
         // Validate valid member
-        assert!(taxonomy.validate_member(
-            "us-gaap:StatementScenarioAxis",
-            "us-gaap:ScenarioActualMember"
-        ).is_ok());
-        
+        assert!(
+            taxonomy
+                .validate_member(
+                    "us-gaap:StatementScenarioAxis",
+                    "us-gaap:ScenarioActualMember"
+                )
+                .is_ok()
+        );
+
         // Validate invalid member
-        assert!(taxonomy.validate_member(
-            "us-gaap:StatementScenarioAxis",
-            "us-gaap:InvalidMember"
-        ).is_err());
+        assert!(
+            taxonomy
+                .validate_member("us-gaap:StatementScenarioAxis", "us-gaap:InvalidMember")
+                .is_err()
+        );
     }
 }

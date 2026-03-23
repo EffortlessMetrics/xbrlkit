@@ -19,6 +19,7 @@ xbrl-contexts = { path = "../xbrl-contexts" }
 taxonomy-dts = { path = "../taxonomy-dts" }
 taxonomy-types = { path = "../taxonomy-types" }
 taxonomy-dimensions = { path = "../taxonomy-dimensions" }
+dimensional-rules = { path = "../dimensional-rules" }
 
 [lints]
 workspace = true

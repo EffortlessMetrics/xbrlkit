@@ -12,6 +12,9 @@ path = "src/lib.rs"
 anyhow.workspace = true
 scenario-contract = { path = "../scenario-contract" }
 scenario-runner = { path = "../scenario-runner" }
+dimensional-rules = { path = "../dimensional-rules" }
+taxonomy-dimensions = { path = "../taxonomy-dimensions" }
+xbrl-contexts = { path = "../xbrl-contexts" }
 
 [lints]
 workspace = true
