@@ -4,6 +4,7 @@ use std::process::Command;
 
 const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-SEC-INLINE-001",
+    "AC-XK-SEC-INLINE-002",
     "AC-XK-SEC-REQUIRED-001",
     "AC-XK-SEC-REQUIRED-002",
     "AC-XK-TAXONOMY-001",

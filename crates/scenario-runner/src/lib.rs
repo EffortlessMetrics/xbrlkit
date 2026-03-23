@@ -192,6 +192,7 @@ pub fn write_execution_receipts(
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn assert_scenario_outcome(
     scenario: &ScenarioRecord,
     execution: &ScenarioExecution,
@@ -203,6 +204,13 @@ pub fn assert_scenario_outcome(
                 .as_ref()
                 .context("missing validation run for inline restriction scenario")?;
             ensure_report_contains_rule(validation_run, "SEC.INLINE.NO_IX_FRACTION")
+        }
+        Some("AC-XK-SEC-INLINE-002") => {
+            let validation_run = execution
+                .validation_run
+                .as_ref()
+                .context("missing validation run for inline restriction scenario")?;
+            ensure_report_contains_rule(validation_run, "SEC.INLINE.NO_IX_TUPLE")
         }
         Some("AC-XK-TAXONOMY-001") => {
             ensure_taxonomy_resolution_succeeds(execution)?;
