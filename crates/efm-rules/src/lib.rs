@@ -135,8 +135,9 @@ fn sanitize_for_rule_id(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_inline_restrictions, validate_taxonomy_years};
+    use super::{validate_inline_restrictions, validate_required_facts, validate_taxonomy_years};
     use sec_profile_types::{AcceptedTaxonomies, InlineRules, ProfilePack};
+    use xbrl_report_types::Fact;
 
     fn profile() -> ProfilePack {
         ProfilePack {
@@ -151,6 +152,26 @@ mod tests {
             accepted_taxonomies: AcceptedTaxonomies::default(),
             standard_taxonomy_uris: Vec::new(),
             required_facts: Vec::new(),
+        }
+    }
+
+    fn profile_with_required_facts() -> ProfilePack {
+        ProfilePack {
+            id: "sec/efm-77/opco".to_string(),
+            label: "SEC EFM 77 operating companies".to_string(),
+            forms: Vec::new(),
+            enabled_rule_families: vec!["required_facts".to_string()],
+            inline_rules: InlineRules {
+                banned_elements: Vec::new(),
+                banned_attributes: Vec::new(),
+            },
+            accepted_taxonomies: AcceptedTaxonomies::default(),
+            standard_taxonomy_uris: Vec::new(),
+            required_facts: vec![
+                "dei:EntityRegistrantName".to_string(),
+                "dei:EntityCentralIndexKey".to_string(),
+                "dei:DocumentType".to_string(),
+            ],
         }
     }
 
@@ -185,5 +206,72 @@ mod tests {
                 .iter()
                 .any(|finding| finding.rule_id == "SEC.TAXONOMY.SAME_YEAR")
         );
+    }
+
+    #[test]
+    fn flags_missing_required_facts() {
+        let facts = vec![
+            Fact {
+                concept: "dei:EntityRegistrantName".to_string(),
+                value: "Example Corp".to_string(),
+                unit_ref: None,
+                context_ref: "ctx-1".to_string(),
+                decimals: None,
+                member: String::new(),
+            },
+            // Missing: dei:EntityCentralIndexKey, dei:DocumentType
+        ];
+
+        let findings = validate_required_facts(&facts, &profile_with_required_facts());
+
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.rule_id == "SEC.REQUIRED_FACT.DEI_ENTITYCENTRALINDEXKEY")
+        );
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.rule_id == "SEC.REQUIRED_FACT.DEI_DOCUMENTTYPE")
+        );
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.rule_id == "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
+        );
+    }
+
+    #[test]
+    fn passes_with_all_required_facts() {
+        let facts = vec![
+            Fact {
+                concept: "dei:EntityRegistrantName".to_string(),
+                value: "Example Corp".to_string(),
+                unit_ref: None,
+                context_ref: "ctx-1".to_string(),
+                decimals: None,
+                member: String::new(),
+            },
+            Fact {
+                concept: "dei:EntityCentralIndexKey".to_string(),
+                value: "0001234567".to_string(),
+                unit_ref: None,
+                context_ref: "ctx-1".to_string(),
+                decimals: None,
+                member: String::new(),
+            },
+            Fact {
+                concept: "dei:DocumentType".to_string(),
+                value: "10-K".to_string(),
+                unit_ref: None,
+                context_ref: "ctx-1".to_string(),
+                decimals: None,
+                member: String::new(),
+            },
+        ];
+
+        let findings = validate_required_facts(&facts, &profile_with_required_facts());
+
+        assert!(findings.is_empty());
     }
 }
