@@ -1,49 +1,53 @@
 # xbrlkit Autonomous PR Queue
 
-**Mission:** Use this repo to refine high-quality autonomous PR workflows. Quality > quantity. Log all friction.
+**Mission:** Build a modern Rust XBRL processor through agentic quality.
+**Principle:** Smooth → Clean → Researched → Verified → Stateful = Parallelizable Throughput
+**Process:** Issue → Research → Plan → Build → Review → Merge. See `.mend/workflow.md`
 
-## Active Queue
+## Quality Gates (Non-Negotiable)
+1. `cargo fmt --all --check`
+2. `cargo clippy --workspace --all-targets -- -D warnings`
+3. `cargo test --workspace`
+4. `cargo xtask alpha-check`
 
-| # | PR | Branch | Status | Blocker | Notes |
-|---|----|--------|--------|---------|-------|
-| 1 | #26 | `mend/merge-dimensional-validation` | 🔄 Fixing clippy | None | Lint cleanup + doc fixes |
-| 2 | - | `cleanup/remove-personal-docs` | ⏳ Pending | #26 merge | Close #14, clean house |
-| 3 | - | `refactor/reorganize-agent-directories` | ⏳ Pending | #26 merge | Close #15, .kimi → .mend |
-| 4 | - | `feat/activate-feature-grid` | ⏳ Pending | Review | SCN-XK-WORKFLOW-001, likely stale |
-| 5 | - | `feat/activate-filing-manifest` | ⏳ Pending | Review | SCN-XK-MANIFEST-001, likely stale |
+## Parallel Work Streams
 
-## Friction Log
+| Stream | Focus | Current | Blockers |
+|--------|-------|---------|----------|
+| **A: SEC Compliance** | Required facts, inline restrictions | #9 research complete | User decision: close or expand |
+| **B: Developer Experience** | xtask worktree, pre-push hooks | #8 ready | None |
+| **C: Test Infrastructure** | Synthetic fixtures, scenarios | #7 ready | None |
+| **D: Taxonomy Core** | Dimension loading, validation | Discovery | Needs research issue |
 
-### 2026-03-23: PR #26 Clippy Errors
-**What happened:** Formatting passed, but clippy failed on doc markdown (QName → `QName`, is_all → `is_all`)
+## Issue Queue
 
-**Friction:** 
-- Local clippy didn't catch these before push? (Need: pre-push hook)
-- Multiple round trips: format → push → fail → fix → push → fail → fix
-- No cargo/rust in env initially - had to install rustup mid-flow
+| # | Issue | Stream | Stage | Notes |
+|---|-------|--------|-------|-------|
+| 9 | Required Facts Validation | A | 🔍 Research Complete | Implementation done — close or expand scope? |
+| 8 | xtask worktree-aware | B | 📋 Ready | Runtime worktree detection |
+| 7 | Synthetic fixture | C | 📋 Ready | Active alpha validation path |
+| - | Taxonomy Loader | D | 📋 Discovery | Load dimensions from actual files |
 
-**Fix applied:** Fixed all doc markdown issues, converted `match` to `let...else`, removed manual Default impl
+## Definition of Done (Per Issue)
 
-**Pattern to refine:** Pre-push should run: fmt → clippy → test → alpha-check
+- [ ] Research comment on issue (findings, spec refs, prior art)
+- [ ] Plan comment on issue (approach, API, tests, risks)
+- [ ] Build PR (implementation + tests + docs)
+- [ ] Review comments (issues found + explanations)
+- [ ] Refine commits (fixes + what/why explanations)
+- [ ] CI green (all 4 gates)
+- [ ] Merge with detailed summary
+- [ ] Update this queue
 
-## Workflow Iterations
+## Parallelization Rules
 
-### v1.0 (Current)
-- Spawn per PR
-- Report back on completion or block
-- Manual queue tracking in this file
+1. **Stream Isolation:** Different crates = no conflict
+2. **Interface First:** Define API before parallel implementation
+3. **No Shared State:** Each issue owns its context
+4. **Friction Logs:** Shared learning, not shared work
 
-### v1.1 (Next)
-- [ ] Pre-push checklist script (`scripts/pre-push-check.sh`)
-- [ ] Automated queue progression
-- [ ] Friction auto-logging to `.mend/friction/`
+## Next Actions (Awaiting User)
 
-## Quality Gates (xbrlkit-specific)
-
-Before ANY push:
-1. `cargo fmt --all --check` passes
-2. `cargo clippy --workspace --all-targets -- -D warnings` passes  
-3. `cargo test --workspace` passes
-4. `cargo xtask alpha-check` passes
-
-Merge authority: CI green = merge. No human gate.
+1. **Issue #9:** Close as complete, or expand required facts list?
+2. **Stream Priority:** Which stream should I pursue first?
+3. **New Issues:** Create taxonomy loader research issue?
