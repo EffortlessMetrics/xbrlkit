@@ -66,6 +66,20 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn repo_root() -> PathBuf {
+    // Use git to detect worktree root at runtime
+    // This correctly handles git worktrees where the compile-time CARGO_MANIFEST_DIR
+    // points to the anchor clone, but we want artifacts in the active worktree
+    if let Ok(output) = std::process::Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+    {
+        if output.status.success() {
+            let path = String::from_utf8_lossy(&output.stdout);
+            return PathBuf::from(path.trim());
+        }
+    }
+
+    // Fallback: compile-time path for non-git environments
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .expect("xtask has a parent workspace root")
