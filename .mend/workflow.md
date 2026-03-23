@@ -75,6 +75,61 @@
 **Who:** Maintainer (with authority)
 **Action:** Squash merge, delete branch, update queue
 
+## Special Patterns
+
+### Adding New Scenarios (Golden Files)
+
+When adding a new BDD scenario that updates the feature grid:
+
+```bash
+# 1. Run feature-grid to generate new grid
+cargo xtask feature-grid
+
+# 2. Copy to golden file
+cp artifacts/feature.grid.v1.json tests/goldens/feature.grid.v1.json
+
+# 3. Include in PR
+git add tests/goldens/feature.grid.v1.json
+```
+
+**Why:** Alpha-check compares generated grid against golden. New scenarios change the grid.
+
+### Issue Comments with Complex Markdown
+
+For multi-line comments with code blocks, tables, etc.:
+
+```bash
+# Write to temp file
+cat > /tmp/issue-{N}-research.md << 'EOF'
+## Research Findings
+
+| Item | Status |
+|------|--------|
+| Foo | ✅ |
+
+```rust
+fn example() {}
+```
+EOF
+
+# Use body-file, not inline --body
+gh issue comment {N} --body-file /tmp/issue-{N}-research.md
+```
+
+**Why:** Avoids shell escaping nightmares with backticks and quotes.
+
+### Queue State Management
+
+When picking up work:
+1. Move issue from "Current Queue" to "In Progress"
+2. Update stage: 📋 → 🔍 (Research)
+3. Create branch: `mend/issue-{N}-brief-description`
+
+When completing:
+1. Move to "Completed" section
+2. Update stage: 🔄 → ✅ (Complete)
+3. Update queue timestamp
+
 ## Documentation Requirements
 
 Every PR must update:

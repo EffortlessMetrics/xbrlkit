@@ -192,115 +192,102 @@ pub fn write_execution_receipts(
     Ok(())
 }
 
-#[allow(clippy::too_many_lines)]
 pub fn assert_scenario_outcome(
     scenario: &ScenarioRecord,
     execution: &ScenarioExecution,
 ) -> anyhow::Result<()> {
+    // Table-driven AC assertions — add new ACs here
     match scenario.ac_id.as_deref() {
+        // SEC Inline Restrictions
         Some("AC-XK-SEC-INLINE-001") => {
-            let validation_run = execution
-                .validation_run
-                .as_ref()
-                .context("missing validation run for inline restriction scenario")?;
-            ensure_report_contains_rule(validation_run, "SEC.INLINE.NO_IX_FRACTION")
+            check_validation_rule(execution, "SEC.INLINE.NO_IX_FRACTION")
         }
-        Some("AC-XK-SEC-INLINE-002") => {
-            let validation_run = execution
-                .validation_run
-                .as_ref()
-                .context("missing validation run for inline restriction scenario")?;
-            ensure_report_contains_rule(validation_run, "SEC.INLINE.NO_IX_TUPLE")
+        Some("AC-XK-SEC-INLINE-002") => check_validation_rule(execution, "SEC.INLINE.NO_IX_TUPLE"),
+
+        // SEC Required Facts
+        Some("AC-XK-SEC-REQUIRED-001") => {
+            check_validation_rule(execution, "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
         }
+        Some("AC-XK-SEC-REQUIRED-002") => ensure_report_has_no_error_findings(execution),
+
+        // Taxonomy
         Some("AC-XK-TAXONOMY-001") => {
             ensure_taxonomy_resolution_succeeds(execution)?;
             ensure_taxonomy_resolution_resolves_at_least(execution, 1)
         }
-        Some("AC-XK-TAXONOMY-002") => {
-            let validation_run = execution
-                .validation_run
-                .as_ref()
-                .context("missing validation run for taxonomy scenario")?;
-            ensure_report_contains_rule(validation_run, "SEC.TAXONOMY.SAME_YEAR")
-        }
+        Some("AC-XK-TAXONOMY-002") => check_validation_rule(execution, "SEC.TAXONOMY.SAME_YEAR"),
+
+        // Duplicates
         Some("AC-XK-DUPLICATES-001") => {
-            let validation_run = execution
-                .validation_run
-                .as_ref()
-                .context("missing validation run for duplicate facts scenario")?;
-            ensure_report_does_not_contain_rule(validation_run, "XBRL.DUPLICATE_FACT.INCONSISTENT")
+            check_validation_no_rule(execution, "XBRL.DUPLICATE_FACT.INCONSISTENT")
         }
-        Some("AC-XK-SEC-REQUIRED-001") => {
-            let validation_run = execution
-                .validation_run
-                .as_ref()
-                .context("missing validation run for required facts scenario")?;
-            ensure_report_contains_rule(
-                validation_run,
-                "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME",
-            )
-        }
-        Some("AC-XK-SEC-REQUIRED-002") => ensure_report_has_no_error_findings(execution),
-        Some("AC-XK-IXDS-001") => {
-            ensure_ixds_member_count(execution, 1)?;
-            ensure_report_fact_count(execution, 14)?;
-            ensure_report_concept_set(
-                execution,
-                &[
-                    "dei:EntityRegistrantName",
-                    "dei:DocumentType",
-                    "dei:DocumentPeriodEndDate",
-                    "dei:AmendmentFlag",
-                    "dei:EntityCentralIndexKey",
-                    "dei:CurrentFiscalYearEndDate",
-                    "dei:DocumentAnnualReport",
-                    "dei:EntityAddressAddressLine1",
-                    "dei:EntityAddressCityOrTown",
-                    "dei:EntityAddressStateOrProvince",
-                    "dei:EntityAddressPostalZipCode",
-                    "dei:AuditorName",
-                    "dei:AuditorFirmId",
-                    "dei:AuditorLocation",
-                ],
-            )
-        }
-        Some("AC-XK-IXDS-002") => {
-            ensure_ixds_member_count(execution, 2)?;
-            ensure_report_fact_count(execution, 14)?;
-            ensure_report_concept_set(
-                execution,
-                &[
-                    "dei:EntityRegistrantName",
-                    "dei:DocumentType",
-                    "dei:DocumentPeriodEndDate",
-                    "dei:AmendmentFlag",
-                    "dei:EntityCentralIndexKey",
-                    "dei:CurrentFiscalYearEndDate",
-                    "dei:DocumentAnnualReport",
-                    "dei:EntityAddressAddressLine1",
-                    "dei:EntityAddressCityOrTown",
-                    "dei:EntityAddressStateOrProvince",
-                    "dei:EntityAddressPostalZipCode",
-                    "dei:AuditorName",
-                    "dei:AuditorFirmId",
-                    "dei:AuditorLocation",
-                ],
-            )
-        }
+
+        // IXDS Assembly
+        Some("AC-XK-IXDS-001") => check_ixds_assembly(execution, 1),
+        Some("AC-XK-IXDS-002") => check_ixds_assembly(execution, 2),
+
+        // Export
         Some("AC-XK-EXPORT-001") => {
             if execution.export_receipt.is_none() {
                 anyhow::bail!("export receipt was not emitted");
             }
             Ok(())
         }
-        // Scenarios without an AC ID are BDD-style scenarios that handle
-        // assertions via step definitions rather than scenario-level checks
+
+        // Scenarios without AC ID use BDD step definitions
         None => Ok(()),
+
         _ => anyhow::bail!(
             "no scenario assertions implemented for {}",
             scenario.scenario_id
         ),
     }
+}
+
+/// Helper: Check validation report contains expected rule
+fn check_validation_rule(execution: &ScenarioExecution, rule_id: &str) -> anyhow::Result<()> {
+    let validation_run = execution
+        .validation_run
+        .as_ref()
+        .context("missing validation run")?;
+    ensure_report_contains_rule(validation_run, rule_id)
+}
+
+/// Helper: Check validation report does NOT contain rule
+fn check_validation_no_rule(execution: &ScenarioExecution, rule_id: &str) -> anyhow::Result<()> {
+    let validation_run = execution
+        .validation_run
+        .as_ref()
+        .context("missing validation run")?;
+    ensure_report_does_not_contain_rule(validation_run, rule_id)
+}
+
+/// Helper: Check IXDS assembly with expected member count and standard DEI concepts
+fn check_ixds_assembly(
+    execution: &ScenarioExecution,
+    expected_members: usize,
+) -> anyhow::Result<()> {
+    ensure_ixds_member_count(execution, expected_members)?;
+    ensure_report_fact_count(execution, 14)?;
+    ensure_report_concept_set(
+        execution,
+        &[
+            "dei:EntityRegistrantName",
+            "dei:DocumentType",
+            "dei:DocumentPeriodEndDate",
+            "dei:AmendmentFlag",
+            "dei:EntityCentralIndexKey",
+            "dei:CurrentFiscalYearEndDate",
+            "dei:DocumentAnnualReport",
+            "dei:EntityAddressAddressLine1",
+            "dei:EntityAddressCityOrTown",
+            "dei:EntityAddressStateOrProvince",
+            "dei:EntityAddressPostalZipCode",
+            "dei:AuditorName",
+            "dei:AuditorFirmId",
+            "dei:AuditorLocation",
+        ],
+    )
 }
 
 pub fn ensure_report_contains_rule(

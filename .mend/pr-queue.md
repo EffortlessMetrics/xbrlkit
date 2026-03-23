@@ -4,27 +4,45 @@
 **Principle:** Smooth → Clean → Researched → Verified → Stateful = Parallelizable Throughput
 **Process:** Issue → Research → Plan → Build → Review → Merge. See `.mend/workflow.md`
 
+## State Definitions
+
+| Stage | Emoji | Meaning |
+|-------|-------|---------|
+| 📋 Ready | Ready for research/pickup | No blockers |
+| 🔍 Research | Investigating, commenting findings | Issue analysis |
+| 📐 Plan | Designing approach | API, tests, risks |
+| 🔨 Build | Implementing | Code in progress |
+| 🔄 Review | CI running, critique | PR open |
+| ✅ Complete | Merged, closed | Done |
+| ⏳ Blocked | Waiting on dependency | Human attention needed |
+
 ## Quality Gates (Non-Negotiable)
 1. `cargo fmt --all --check`
 2. `cargo clippy --workspace --all-targets -- -D warnings`
 3. `cargo test --workspace`
 4. `cargo xtask alpha-check`
 
-## Completed Today
+## Completed Recently
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
-| #32 | #7 | ✅ Merged | `2eeb94f` | Synthetic fixture ix:tuple |
-| #30 | #8 | ✅ Merged | `e6d1b06` | Worktree-aware repo root |
-| #28 | #9 | ✅ Merged | `b3bde6a` | Required facts unit tests |
-| #27 | - | ✅ Merged | `9bd61ba` | Pre-push script |
-| #26 | - | ✅ Merged | `bad1dbe` | Lint cleanup |
+| #32 | #7 | ✅ Complete | `2eeb94f` | Synthetic fixture ix:tuple |
+| #30 | #8 | ✅ Complete | `e6d1b06` | Worktree-aware repo root |
+| #28 | #9 | ✅ Complete | `b3bde6a` | Required facts unit tests |
+| #27 | - | ✅ Complete | `9bd61ba` | Pre-push script |
+| #26 | - | ✅ Complete | `bad1dbe` | Lint cleanup |
 
 ## Current Queue
 
-| # | Issue | Stream | Stage | Ready |
-|---|-------|--------|-------|-------|
-| 1 | - | D: Taxonomy | 📋 Discovery | Create research issue |
+| # | Issue | Stream | Stage | Blocker |
+|---|-------|--------|-------|---------|
+| 1 | - | D: Taxonomy | 📋 Ready | None — Create research issue |
+
+## In Progress
+
+| # | Issue | Stream | Stage | Started |
+|---|-------|--------|-------|---------|
+| - | - | - | - | - |
 
 ## Parallel Work Streams
 
@@ -33,7 +51,7 @@
 | **A: SEC Compliance** | Required facts | ✅ Complete |
 | **B: Developer Experience** | xtask worktree, pre-push | ✅ Complete |
 | **C: Test Infrastructure** | Synthetic fixtures | ✅ Complete |
-| **D: Taxonomy Core** | Dimension loading | 📋 Discovery |
+| **D: Taxonomy Core** | Dimension loading | 📋 Ready |
 
 ## Autonomous Infrastructure
 
@@ -41,27 +59,29 @@
 |------|---------|
 | `scripts/pre-push.sh` | Quality gates |
 | `scripts/autonomous-pr.sh` | Full workflow |
+| `scripts/update-queue.sh` | State management |
 | `.mend/workflow.md` | Process definition |
 | `.mend/mission.md` | Project mission |
-| `.mend/pr-queue.md` | This queue |
 
-## Autonomous Mode Active
+## Cron Schedule
 
-**Triggers for action:**
+| Job | Frequency | Purpose |
+|-----|-----------|---------|
+| xbrlkit-ci-health | 1h | Monitor CI |
+| xbrlkit-queue-check | 2h | Pick ready items |
+
+## Autonomous Rules
+
+**Will act:**
 - CI green → auto-merge
-- Issue ready with AC → start research
-- User says "proceed" / "continue"
+- 📋 Ready + no In Progress → start research
+- User says "proceed"
 
-**Triggers for human contact:**
+**Will contact human:**
+- ⏳ Blocked
 - CI failure needing intervention
-- Architecture decision required
 - Confidence < 60%
 
-## Next (Awaiting Pick)
+## Next
 
-**Stream D: Taxonomy Core**
-- Create research issue for taxonomy loader
-- Load dimensions from actual taxonomy files
-- High value, foundational work
-
-Or specify a different direction.
+Create research issue for **Stream D: Taxonomy Core** — loading dimensions from actual taxonomy files.
