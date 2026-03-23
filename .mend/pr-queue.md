@@ -14,6 +14,7 @@
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
+| #32 | #7 | ✅ Merged | `2eeb94f` | Synthetic fixture ix:tuple |
 | #30 | #8 | ✅ Merged | `e6d1b06` | Worktree-aware repo root |
 | #28 | #9 | ✅ Merged | `b3bde6a` | Required facts unit tests |
 | #27 | - | ✅ Merged | `9bd61ba` | Pre-push script |
@@ -23,8 +24,7 @@
 
 | # | Issue | Stream | Stage | Ready |
 |---|-------|--------|-------|-------|
-| 1 | #7 | C: Test Infra | 📋 Ready | Synthetic fixture |
-| 2 | - | D: Taxonomy | 📋 Discovery | Create research issue |
+| 1 | - | D: Taxonomy | 📋 Discovery | Create research issue |
 
 ## Parallel Work Streams
 
@@ -32,7 +32,7 @@
 |--------|-------|--------|
 | **A: SEC Compliance** | Required facts | ✅ Complete |
 | **B: Developer Experience** | xtask worktree, pre-push | ✅ Complete |
-| **C: Test Infrastructure** | Synthetic fixtures | 📋 Ready |
+| **C: Test Infrastructure** | Synthetic fixtures | ✅ Complete |
 | **D: Taxonomy Core** | Dimension loading | 📋 Discovery |
 
 ## Autonomous Infrastructure
@@ -59,7 +59,9 @@
 
 ## Next (Awaiting Pick)
 
-1. **#7** — Synthetic fixture (Test Infra, 2-3h)
-2. **New issue** — Taxonomy loader research (Core, high value)
+**Stream D: Taxonomy Core**
+- Create research issue for taxonomy loader
+- Load dimensions from actual taxonomy files
+- High value, foundational work
 
-Or say "proceed" and I'll pick highest value ready item.
+Or specify a different direction.
