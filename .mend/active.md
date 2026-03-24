@@ -6,29 +6,29 @@
 
 | Item | Value |
 |------|-------|
-| **Issue** | Filing manifest (SCN-XK-MANIFEST-001) |
-| **AC** | AC-XK-MANIFEST-001 |
-| **Stream** | Manifest |
+| **Issue** | Feature grid (SCN-XK-WORKFLOW-001) |
+| **AC** | AC-XK-WORKFLOW-001 |
+| **Stream** | Workflow |
 | **Stage** | 🔍 Research |
 | **Started** | 2026-03-24 |
 
 ## Scope
 
-Activate filing_manifest.feature scenario:
-- SCN-XK-MANIFEST-001: Build a manifest from a minimal filing container
+Activate feature_grid.feature scenario:
+- SCN-XK-WORKFLOW-001: Generate a feature grid from active BDD feature files
 
 ## Research Findings
 
 ### Current State
-- Feature file: `specs/features/foundation/filing_manifest.feature`
-- `filing-load` crate exists
+- Feature file: `specs/features/workflow/feature_grid.feature`
+- Grid generation likely exists (xtask feature-grid command)
 - No `@alpha-active` tag
 - Step handlers NOT implemented
 
 ### Required Work
-1. Research filing container structure
+1. Research feature grid structure and existing generation
 2. Add step handlers to xbrlkit-bdd-steps
-3. Implement manifest building logic
+3. Implement grid validation logic
 4. Add @alpha-active tag
 
 ---
