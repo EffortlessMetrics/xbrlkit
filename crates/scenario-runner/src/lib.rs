@@ -234,6 +234,12 @@ pub fn assert_scenario_outcome(
             Ok(())
         }
 
+        // Filing Manifest
+        Some("AC-XK-MANIFEST-001") => {
+            // BDD steps handle the assertions
+            Ok(())
+        }
+
         // Scenarios without AC ID use BDD step definitions
         None => Ok(()),
 

@@ -6,6 +6,7 @@ Feature: Filing manifest
   @AC-XK-MANIFEST-001
   @SCN-XK-MANIFEST-001
   @speed.fast
+  @alpha-active
   Scenario: Build a manifest from a minimal filing container
     Given the fixture "synthetic/filing/minimal-container-01"
     When I build the filing manifest
