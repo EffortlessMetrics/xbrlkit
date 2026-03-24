@@ -26,6 +26,7 @@
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
+| #40 | SCN-XK-WORKFLOW-002/004 | ✅ Complete | `d966f3a` | Bundle scenarios activated |
 | #37 | #35 | ✅ Complete | `5a577da` | Taxonomy loader crate |
 | #32 | #7 | ✅ Complete | `2eeb94f` | Synthetic fixture ix:tuple |
 | #30 | #8 | ✅ Complete | `e6d1b06` | Worktree-aware repo root |
@@ -37,7 +38,9 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| - | - | - | - | - |
+| 1 | SCN-XK-WORKFLOW-003 | Workflow | 📋 Ready | None |
+| 2 | SCN-XK-MANIFEST-001 | Manifest | 📋 Ready | None |
+| 3 | SCN-XK-WORKFLOW-001 | Workflow | 📋 Ready | None |
 
 ## In Progress
 
