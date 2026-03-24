@@ -13,6 +13,7 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-IXDS-001",
     "AC-XK-IXDS-002",
     "AC-XK-EXPORT-001",
+    // AC-XK-WORKFLOW-002 is tested via @alpha-active BDD tag (no fixtures)
 ];
 
 pub(super) fn run() -> anyhow::Result<()> {

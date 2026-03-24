@@ -6,6 +6,7 @@ Feature: Bundle
   @AC-XK-WORKFLOW-002
   @SCN-XK-WORKFLOW-002
   @speed.fast
+  @alpha-active
   Scenario: Bundle an AC into a bounded context packet
     Given the feature grid is compiled
     When I bundle the selector "AC-XK-IXDS-002"
@@ -14,6 +15,7 @@ Feature: Bundle
   @AC-XK-WORKFLOW-002
   @SCN-XK-WORKFLOW-004
   @speed.fast
+  @alpha-active
   Scenario: Reject a selector that matches no scenarios
     Given the feature grid is compiled
     When I bundle the selector "AC-XK-DOES-NOT-EXIST"

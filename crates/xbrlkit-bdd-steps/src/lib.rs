@@ -2,7 +2,7 @@
 
 use anyhow::Context;
 use dimensional_rules::validate_context_dimensions;
-use scenario_contract::{FeatureGrid, ScenarioRecord};
+use scenario_contract::{BundleManifest, FeatureGrid, ScenarioRecord};
 use scenario_runner::{
     ScenarioExecution, assert_scenario_outcome, ensure_ixds_member_count,
     ensure_report_concept_set, ensure_report_contains_rule, ensure_report_does_not_contain_rule,
@@ -28,6 +28,7 @@ pub struct World {
     pub fixture_dirs: Vec<PathBuf>,
     pub execution: Option<ScenarioExecution>,
     pub dimension_context: DimensionContext,
+    pub bundle_manifest: Option<BundleManifest>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -49,6 +50,7 @@ impl World {
             fixture_dirs: Vec::new(),
             execution: None,
             dimension_context: DimensionContext::default(),
+            bundle_manifest: None,
         }
     }
 }
@@ -213,9 +215,19 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    // Bundle-related Given steps
+    if step.text == "the feature grid is compiled" {
+        // Grid is already loaded in World, just verify it's not empty
+        if world.grid.scenarios.is_empty() {
+            anyhow::bail!("feature grid is empty");
+        }
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
+#[allow(clippy::too_many_lines)]
 fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
     if matches!(
         step.text.as_str(),
@@ -333,6 +345,17 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Bundle-related When steps
+    if let Some(selector) = step.text.strip_prefix("I bundle the selector \"") {
+        let selector = selector.trim_end_matches('"').to_string();
+        let scenarios = select_matching_scenarios(&world.grid, &selector);
+        world.bundle_manifest = Some(BundleManifest {
+            selector,
+            scenarios,
+        });
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -405,6 +428,19 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
             }
             Ok(())
         }
+        "bundling fails because no scenario matches" => {
+            let manifest = world
+                .bundle_manifest
+                .as_ref()
+                .context("bundle step requires a prior bundle operation")?;
+            if !manifest.scenarios.is_empty() {
+                anyhow::bail!(
+                    "expected bundling to fail but found {} matching scenario(s)",
+                    manifest.scenarios.len()
+                );
+            }
+            Ok(())
+        }
         _ => handle_parameterized_assertion(world, step),
     }
 }
@@ -450,6 +486,30 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         return ensure_report_fact_count(execution(world)?, fact_count);
     }
 
+    // Bundle-related assertions
+    if let Some(scenario_id) = step
+        .text
+        .strip_prefix("the bundle manifest lists scenario \"")
+    {
+        let scenario_id = scenario_id.trim_end_matches('"');
+        let manifest = world
+            .bundle_manifest
+            .as_ref()
+            .context("bundle assertion requires a prior bundle operation")?;
+        if !manifest
+            .scenarios
+            .iter()
+            .any(|s| s.scenario_id == scenario_id)
+        {
+            anyhow::bail!(
+                "scenario {} not found in bundle manifest (contains {} scenario(s))",
+                scenario_id,
+                manifest.scenarios.len()
+            );
+        }
+        return Ok(());
+    }
+
     anyhow::bail!("unsupported BDD step: {}", step.text)
 }
 
@@ -462,4 +522,25 @@ fn parse_count_suffix(step: &str, prefix: &str, noun_stem: &str) -> Option<usize
         .unwrap_or_default()
         .trim_end_matches('s');
     if noun == noun_stem { Some(count) } else { None }
+}
+
+/// Select scenarios matching a selector (`scenario_id`, `ac_id`, `req_id`, or tag)
+fn select_matching_scenarios(grid: &FeatureGrid, selector: &str) -> Vec<ScenarioRecord> {
+    grid.scenarios
+        .iter()
+        .filter(|scenario| selector_matches(scenario, selector))
+        .cloned()
+        .collect()
+}
+
+/// Check if a scenario matches the given selector
+fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
+    scenario.scenario_id == selector
+        || scenario.ac_id.as_deref() == Some(selector)
+        || scenario.req_id.as_deref() == Some(selector)
+        || format!("@{}", scenario.scenario_id) == selector
+        || scenario
+            .ac_id
+            .as_ref()
+            .is_some_and(|ac| format!("@{ac}") == selector)
 }
