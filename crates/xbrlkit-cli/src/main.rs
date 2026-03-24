@@ -1,4 +1,5 @@
 //! CLI edge for xbrlkit.
+#![allow(clippy::too_many_lines)]
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -204,14 +205,14 @@ fn print_taxonomy_summary(taxonomy: &taxonomy_dimensions::DimensionTaxonomy) {
 
     println!("  dimensions: {}", taxonomy.dimensions.len());
     for qname in taxonomy.dimensions.keys() {
-        println!("    {}", qname);
+        println!("    {qname}");
     }
 
     println!("  domains: {}", taxonomy.domains.len());
     for (qname, domain) in &taxonomy.domains {
         println!("    {} ({} members)", qname, domain.members.len());
         for root in &domain.roots {
-            println!("      - {}", root);
+            println!("      - {root}");
         }
     }
 

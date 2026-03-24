@@ -182,7 +182,7 @@ fn resolve_path(base_dir: &str, relative: &str) -> String {
 mod tests {
     use super::*;
 
-    const TEST_SCHEMA: &str = r##"<?xml version="1.0" encoding="UTF-8"?>
+    const TEST_SCHEMA: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:xbrli="http://www.xbrl.org/2001/instance"
             xmlns:xbrldt="http://xbrl.org/2005/xbrldt"
@@ -210,7 +210,7 @@ mod tests {
                  abstract="true"/>
 
 </xsd:schema>
-"##;
+"#;
 
     #[test]
     fn test_parse_schema_detects_hypercube() {

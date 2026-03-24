@@ -32,7 +32,7 @@ pub fn parse_definition_linkbase(
     // Process all link:definitionLink elements
     for node in doc.root_element().descendants() {
         if node.tag_name().name() == "definitionLink" {
-            parse_definition_link(node, &ns_map, taxonomy)?;
+            parse_definition_link(node, &ns_map, taxonomy);
         }
     }
     Ok(())
@@ -43,7 +43,7 @@ fn parse_definition_link(
     link_node: Node<'_, '_>,
     ns_map: &HashMap<String, String>,
     taxonomy: &mut taxonomy_dimensions::DimensionTaxonomy,
-) -> Result<(), TaxonomyLoaderError> {
+) {
     // Collect all locators (xlink:href -> QName mappings)
     let locators = extract_locators(link_node, ns_map);
 
@@ -54,7 +54,6 @@ fn parse_definition_link(
             parse_definition_arc(node, &locators, taxonomy);
         }
     }
-    Ok(())
 }
 
 /// Extracts locator elements mapping xlink:label to `QName`.
@@ -329,7 +328,7 @@ fn resolve_path(base_dir: &str, relative: &str) -> String {
 mod tests {
     use super::*;
 
-    const TEST_LINKBASE: &str = r##"<?xml version="1.0" encoding="UTF-8"?>
+    const TEST_LINKBASE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 <link:linkbase xmlns:link="http://www.xbrl.org/2003/linkbase"
                xmlns:xlink="http://www.w3.org/1999/xlink"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -381,7 +380,7 @@ mod tests {
     </link:definitionLink>
 
 </link:linkbase>
-"##;
+"#;
 
     #[test]
     fn test_parse_definition_linkbase() {
@@ -420,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_extract_linkbase_refs() {
-        let schema = r##"<?xml version="1.0" encoding="UTF-8"?>
+        let schema = r#"<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:link="http://www.xbrl.org/2003/linkbase"
             xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -435,7 +434,7 @@ mod tests {
                       xlink:role="http://www.xbrl.org/2003/role/presentationLinkbaseRef"/>
 
 </xsd:schema>
-        "##;
+        "#;
 
         let refs = extract_linkbase_refs(schema, "test.xsd").unwrap();
         assert_eq!(refs.len(), 1);
