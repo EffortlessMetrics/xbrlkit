@@ -6,33 +6,29 @@
 
 | Item | Value |
 |------|-------|
-| **Issue** | #55 — HTTP fetching for taxonomy-loader |
-| **Stream** | Taxonomy Core |
-| **Stage** | 📋 Ready |
-| **Wave** | Phase 2, Wave 2 |
-| **Blocked by** | #5 (nearly complete) |
+| **Issues** | #5 (validator summary), #55 (HTTP fetching) |
+| **Streams** | Infra, Taxonomy Core |
+| **Stage** | 🔨 Build |
+| **Wave** | Phase 2 |
 
-## Scope
+## Parallel Work
 
-Add HTTP fetching capability to taxonomy-loader crate:
-- Add reqwest or similar HTTP client
-- Implement async fetching for remote taxonomy files
-- Add local caching
-- Handle errors gracefully
+### Issue #5 — Post-merge validator summary
+- Subagent debugging summary file creation
+- Adding chrono for timestamps
+- Expected: PR within 30 minutes
 
-## Research Findings
+### Issue #55 — HTTP fetching for taxonomy-loader
+- Subagent started research
+- Will add reqwest + caching
+- Expected: PR within 60 minutes
 
-- Current taxonomy-loader only handles local files
-- reqwest is the standard Rust HTTP client
-- Should use async/await pattern
-- Cache directory: ~/.cache/xbrlkit/ or similar
+## Success Criteria
 
-## Next Actions
-
-1. Wait for #5 to complete
-2. Start research on taxonomy-loader HTTP implementation
-3. Design caching strategy
-4. Implement and test
+- [ ] #5 merged: alpha-check emits JSON summary
+- [ ] #55 merged: taxonomy-loader fetches remote files
+- [ ] 21+ scenarios still passing
+- [ ] No regressions
 
 ---
 *This file is maintained by autonomous agents. Last updated: 2026-03-24*
