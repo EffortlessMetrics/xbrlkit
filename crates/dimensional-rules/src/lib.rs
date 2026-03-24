@@ -159,10 +159,9 @@ fn validate_dimension_member(
     // Get the dimension definition
     let dimension = dim_taxonomy.dimensions.get(&dim_member.dimension).unwrap();
 
-    // If it's a typed dimension, the member is a value, not a QName
+    // If it's a typed dimension, validate the value against the expected type
     if dimension.is_typed() {
-        // TODO: Add typed value validation based on dimension's value_type
-        return Ok(());
+        return validate_typed_dimension_value(dim_member, dimension);
     }
 
     // For explicit dimensions, validate the member against the domain
@@ -191,6 +190,227 @@ fn validate_dimension_member(
         message: format!("Dimension {} has no domain defined", dim_member.dimension),
         member: Some(dim_member.dimension.clone()),
         subject: Some(dim_member.member.clone()),
+    })
+}
+
+/// Validate a typed dimension value against its declared `value_type`.
+fn validate_typed_dimension_value(
+    dim_member: &DimensionMember,
+    dimension: &taxonomy_dimensions::Dimension,
+) -> Result<(), ValidationFinding> {
+    let value = dim_member
+        .typed_value
+        .as_deref()
+        .unwrap_or(&dim_member.member);
+
+    // Get the value_type from the typed dimension
+    let value_type = match dimension {
+        taxonomy_dimensions::Dimension::Typed { value_type, .. } => value_type.as_str(),
+        taxonomy_dimensions::Dimension::Explicit { .. } => return Ok(()), // Should not happen since we checked is_typed()
+    };
+
+    // Check for empty value
+    if value.trim().is_empty() {
+        return Err(ValidationFinding {
+            rule_id: "XBRL.DIMENSION.EMPTY_TYPED_VALUE".to_string(),
+            severity: "error".to_string(),
+            message: format!("Typed dimension {} has empty value", dim_member.dimension),
+            member: Some(dim_member.dimension.clone()),
+            subject: Some(value.to_string()),
+        });
+    }
+
+    // Validate based on value_type
+    match value_type {
+        "xs:string" | "string" => Ok(()), // Any non-empty string is valid
+        "xs:decimal" | "decimal" => validate_decimal(value, dim_member),
+        "xs:integer" | "integer" => validate_integer(value, dim_member),
+        "xs:date" | "date" => validate_date(value, dim_member),
+        "xs:dateTime" | "dateTime" => validate_datetime(value, dim_member),
+        "xs:boolean" | "boolean" => validate_boolean(value, dim_member),
+        "xs:anyURI" | "anyURI" => validate_uri(value, dim_member),
+        _ => {
+            // Unknown types pass validation (extensibility)
+            Ok(())
+        }
+    }
+}
+
+/// Validate decimal format.
+fn validate_decimal(value: &str, dim_member: &DimensionMember) -> Result<(), ValidationFinding> {
+    // Check for valid decimal pattern: optional sign, digits, optional decimal point and digits
+    let trimmed = value.trim();
+    if trimmed
+        .chars()
+        .all(|c| c.is_ascii_digit() || c == '.' || c == '-' || c == '+')
+        && trimmed.chars().filter(|&c| c == '.').count() <= 1
+        && !trimmed.starts_with("..")
+        && !trimmed.ends_with('.')
+        && trimmed != "-"
+        && trimmed != "+"
+        && trimmed != "."
+        && trimmed != "-."
+        && trimmed != "+."
+    {
+        // Try to parse to ensure it's a valid number
+        if trimmed.parse::<f64>().is_ok() {
+            return Ok(());
+        }
+    }
+
+    Err(ValidationFinding {
+        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
+        severity: "error".to_string(),
+        message: format!(
+            "Value '{}' is not a valid decimal for dimension {}",
+            value, dim_member.dimension
+        ),
+        member: Some(dim_member.dimension.clone()),
+        subject: Some(value.to_string()),
+    })
+}
+
+/// Validate integer format.
+fn validate_integer(value: &str, dim_member: &DimensionMember) -> Result<(), ValidationFinding> {
+    let trimmed = value.trim();
+    if !trimmed.is_empty()
+        && trimmed
+            .chars()
+            .skip_while(|&c| c == '-' || c == '+')
+            .all(|c| c.is_ascii_digit())
+        && trimmed != "-"
+        && trimmed != "+"
+        && trimmed.parse::<i64>().is_ok()
+    {
+        return Ok(());
+    }
+
+    Err(ValidationFinding {
+        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
+        severity: "error".to_string(),
+        message: format!(
+            "Value '{}' is not a valid integer for dimension {}",
+            value, dim_member.dimension
+        ),
+        member: Some(dim_member.dimension.clone()),
+        subject: Some(value.to_string()),
+    })
+}
+
+/// Validate date format (ISO 8601: YYYY-MM-DD).
+fn validate_date(value: &str, dim_member: &DimensionMember) -> Result<(), ValidationFinding> {
+    let trimmed = value.trim();
+
+    // Basic pattern check for YYYY-MM-DD
+    if trimmed.len() == 10 {
+        let parts: Vec<&str> = trimmed.split('-').collect();
+        if parts.len() == 3 {
+            // Validate year, month, day are numeric
+            if parts[0].len() == 4
+                && parts[0].chars().all(|c| c.is_ascii_digit())
+                && parts[1].len() == 2
+                && parts[1].chars().all(|c| c.is_ascii_digit())
+                && parts[2].len() == 2
+                && parts[2].chars().all(|c| c.is_ascii_digit())
+            {
+                // Additional validation for valid date ranges
+                if let (Ok(_year), Ok(month), Ok(day)) = (
+                    parts[0].parse::<u32>(),
+                    parts[1].parse::<u32>(),
+                    parts[2].parse::<u32>(),
+                ) {
+                    if (1..=12).contains(&month) && (1..=31).contains(&day) {
+                        // Basic check passed (full calendar validation optional)
+                        return Ok(());
+                    }
+                }
+            }
+        }
+    }
+
+    Err(ValidationFinding {
+        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
+        severity: "error".to_string(),
+        message: format!(
+            "Value '{}' is not a valid date (expected YYYY-MM-DD) for dimension {}",
+            value, dim_member.dimension
+        ),
+        member: Some(dim_member.dimension.clone()),
+        subject: Some(value.to_string()),
+    })
+}
+
+/// Validate datetime format (ISO 8601).
+fn validate_datetime(value: &str, dim_member: &DimensionMember) -> Result<(), ValidationFinding> {
+    let trimmed = value.trim();
+
+    // Check for 'T' separator
+    if trimmed.contains('T') {
+        let parts: Vec<&str> = trimmed.split('T').collect();
+        if parts.len() == 2 {
+            // Validate date portion
+            if validate_date(parts[0], dim_member).is_ok() {
+                // Time portion: HH:MM:SS or HH:MM:SS.sss with optional timezone
+                let time_part = parts[1];
+                if !time_part.is_empty() {
+                    // Basic time validation - could be extended for full RFC 3339
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Err(ValidationFinding {
+        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
+        severity: "error".to_string(),
+        message: format!(
+            "Value '{}' is not a valid dateTime for dimension {}",
+            value, dim_member.dimension
+        ),
+        member: Some(dim_member.dimension.clone()),
+        subject: Some(value.to_string()),
+    })
+}
+
+/// Validate boolean format.
+fn validate_boolean(value: &str, dim_member: &DimensionMember) -> Result<(), ValidationFinding> {
+    let trimmed = value.trim().to_lowercase();
+
+    if matches!(trimmed.as_str(), "true" | "false" | "1" | "0") {
+        return Ok(());
+    }
+
+    Err(ValidationFinding {
+        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
+        severity: "error".to_string(),
+        message: format!(
+            "Value '{}' is not a valid boolean (expected true/false/1/0) for dimension {}",
+            value, dim_member.dimension
+        ),
+        member: Some(dim_member.dimension.clone()),
+        subject: Some(value.to_string()),
+    })
+}
+
+/// Validate URI format.
+fn validate_uri(value: &str, dim_member: &DimensionMember) -> Result<(), ValidationFinding> {
+    // Basic URI validation: must have scheme:// or be an absolute/relative path
+    let trimmed = value.trim();
+
+    // Check for common URI patterns
+    if trimmed.contains("://") || trimmed.starts_with('/') || trimmed.starts_with("./") {
+        return Ok(());
+    }
+
+    Err(ValidationFinding {
+        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
+        severity: "error".to_string(),
+        message: format!(
+            "Value '{}' is not a valid URI for dimension {}",
+            value, dim_member.dimension
+        ),
+        member: Some(dim_member.dimension.clone()),
+        subject: Some(value.to_string()),
     })
 }
 
@@ -412,5 +632,239 @@ mod tests {
         assert_eq!(summary.contexts_with_missing_dims, 1);
         assert_eq!(summary.total_findings, 1);
         assert!(summary.unique_missing_dimensions.contains("dim1"));
+    }
+
+    fn create_test_typed_taxonomy(value_type: &str) -> DimensionTaxonomy {
+        let mut taxonomy = DimensionTaxonomy::new();
+
+        taxonomy.add_dimension(Dimension::Typed {
+            qname: "dim:TypedAxis".to_string(),
+            value_type: value_type.to_string(),
+            required: true,
+        });
+
+        taxonomy
+    }
+
+    fn create_test_context_with_typed_dim(id: &str, value: &str) -> Context {
+        Context {
+            id: id.to_string(),
+            entity: EntityIdentifier {
+                scheme: "http://www.sec.gov/CIK".to_string(),
+                value: "0000320193".to_string(),
+            },
+            entity_segment: None,
+            period: Period::Instant("2024-12-31".to_string()),
+            scenario: Some(DimensionalContainer {
+                dimensions: vec![DimensionMember {
+                    dimension: "dim:TypedAxis".to_string(),
+                    member: value.to_string(),
+                    is_typed: true,
+                    typed_value: Some(value.to_string()),
+                }],
+                raw_xml: None,
+            }),
+        }
+    }
+
+    #[test]
+    fn test_validate_typed_string_value() {
+        let taxonomy = create_test_typed_taxonomy("xs:string");
+        let context = create_test_context_with_typed_dim("ctx-1", "Any string value");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            result.findings.is_empty(),
+            "Expected no findings for valid string value"
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_decimal_value_valid() {
+        let taxonomy = create_test_typed_taxonomy("xs:decimal");
+        let context = create_test_context_with_typed_dim("ctx-1", "123.45");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            result.findings.is_empty(),
+            "Expected no findings for valid decimal value"
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_decimal_value_invalid() {
+        let taxonomy = create_test_typed_taxonomy("xs:decimal");
+        let context = create_test_context_with_typed_dim("ctx-1", "not-a-number");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            !result.findings.is_empty(),
+            "Expected findings for invalid decimal value"
+        );
+        let has_invalid_value = result
+            .findings
+            .iter()
+            .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE");
+        assert!(has_invalid_value, "Expected INVALID_TYPED_VALUE finding");
+    }
+
+    #[test]
+    fn test_validate_typed_integer_value_valid() {
+        let taxonomy = create_test_typed_taxonomy("xs:integer");
+        let context = create_test_context_with_typed_dim("ctx-1", "-42");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            result.findings.is_empty(),
+            "Expected no findings for valid integer value"
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_integer_value_invalid() {
+        let taxonomy = create_test_typed_taxonomy("xs:integer");
+        let context = create_test_context_with_typed_dim("ctx-1", "3.14");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            !result.findings.is_empty(),
+            "Expected findings for invalid integer value"
+        );
+        assert!(
+            result
+                .findings
+                .iter()
+                .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE")
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_date_value_valid() {
+        let taxonomy = create_test_typed_taxonomy("xs:date");
+        let context = create_test_context_with_typed_dim("ctx-1", "2024-03-15");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            result.findings.is_empty(),
+            "Expected no findings for valid date value"
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_date_value_invalid() {
+        let taxonomy = create_test_typed_taxonomy("xs:date");
+        let context = create_test_context_with_typed_dim("ctx-1", "15-03-2024");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            !result.findings.is_empty(),
+            "Expected findings for invalid date value"
+        );
+        assert!(
+            result
+                .findings
+                .iter()
+                .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE")
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_boolean_value_valid() {
+        let taxonomy = create_test_typed_taxonomy("xs:boolean");
+
+        for value in ["true", "false", "1", "0", "TRUE", "False"] {
+            let context = create_test_context_with_typed_dim("ctx-1", value);
+            let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+            assert!(
+                result.findings.is_empty(),
+                "Expected no findings for valid boolean value '{value}'"
+            );
+        }
+    }
+
+    #[test]
+    fn test_validate_typed_boolean_value_invalid() {
+        let taxonomy = create_test_typed_taxonomy("xs:boolean");
+        let context = create_test_context_with_typed_dim("ctx-1", "yes");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            !result.findings.is_empty(),
+            "Expected findings for invalid boolean value"
+        );
+        assert!(
+            result
+                .findings
+                .iter()
+                .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE")
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_empty_value() {
+        let taxonomy = create_test_typed_taxonomy("xs:string");
+        let context = create_test_context_with_typed_dim("ctx-1", "   ");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            !result.findings.is_empty(),
+            "Expected findings for empty typed value"
+        );
+        assert!(
+            result
+                .findings
+                .iter()
+                .any(|f| f.rule_id == "XBRL.DIMENSION.EMPTY_TYPED_VALUE")
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_unknown_type() {
+        // Unknown types should pass validation (extensibility)
+        let taxonomy = create_test_typed_taxonomy("custom:CustomType");
+        let context = create_test_context_with_typed_dim("ctx-1", "any value");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            result.findings.is_empty(),
+            "Expected no findings for unknown type (extensibility)"
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_datetime_value_valid() {
+        let taxonomy = create_test_typed_taxonomy("xs:dateTime");
+        let context = create_test_context_with_typed_dim("ctx-1", "2024-03-15T10:30:00");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            result.findings.is_empty(),
+            "Expected no findings for valid datetime value"
+        );
+    }
+
+    #[test]
+    fn test_validate_typed_uri_value_valid() {
+        let taxonomy = create_test_typed_taxonomy("xs:anyURI");
+
+        for uri in ["http://example.com", "https://test.org/path", "/local/path"] {
+            let context = create_test_context_with_typed_dim("ctx-1", uri);
+            let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+            assert!(
+                result.findings.is_empty(),
+                "Expected no findings for valid URI '{uri}'"
+            );
+        }
     }
 }

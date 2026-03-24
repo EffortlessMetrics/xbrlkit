@@ -46,6 +46,7 @@ pub struct DimensionContext {
     pub concept: Option<String>,
     pub required_dimension: Option<String>,
     pub validation_findings: Vec<String>,
+    pub typed_value_type: Option<String>, // Added for typed value validation
 }
 
 impl World {
@@ -229,6 +230,24 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     if step.text == "a context without that dimension" {
         // Ensure dimension is not set (or clear it)
         world.dimension_context.dimension = None;
+        return Ok(true);
+    }
+
+    // Typed dimension Given steps
+    if let Some(dimension) = step.text.strip_prefix("a context with typed dimension \"") {
+        let rest = dimension.trim_end_matches('"');
+        // Handle "dim:Axis" of type "xs:type" format
+        if let Some((dim, type_part)) = rest.split_once("\" of type \"") {
+            world.dimension_context.dimension = Some(dim.to_string());
+            world.dimension_context.typed_value_type = Some(type_part.to_string());
+        } else {
+            world.dimension_context.dimension = Some(rest.to_string());
+        }
+        return Ok(true);
+    }
+
+    if let Some(value) = step.text.strip_prefix("the typed member value \"") {
+        world.dimension_context.member = Some(value.trim_end_matches('"').to_string());
         return Ok(true);
     }
 
@@ -433,6 +452,60 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                     .validation_findings
                     .push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
             }
+        }
+
+        return Ok(true);
+    }
+
+    if step.text == "I validate the typed dimension value" {
+        world.dimension_context.validation_findings.clear();
+
+        let dimension = world.dimension_context.dimension.as_deref().unwrap_or("");
+        let value = world.dimension_context.member.as_deref().unwrap_or("");
+        let value_type = world
+            .dimension_context
+            .typed_value_type
+            .as_deref()
+            .unwrap_or("xs:string");
+
+        // Build taxonomy with typed dimension
+        let mut taxonomy = DimensionTaxonomy::new();
+        taxonomy.add_dimension(Dimension::Typed {
+            qname: dimension.to_string(),
+            value_type: value_type.to_string(),
+            required: false,
+        });
+
+        // Build context with typed dimension
+        let context = xbrl_contexts::Context {
+            id: "test-context".to_string(),
+            entity: EntityIdentifier {
+                scheme: "http://www.sec.gov/CIK".to_string(),
+                value: "0001234567".to_string(),
+            },
+            period: Period::Duration {
+                start: "2024-01-01".to_string(),
+                end: "2024-12-31".to_string(),
+            },
+            entity_segment: None,
+            scenario: Some(DimensionalContainer {
+                dimensions: vec![DimensionMember {
+                    dimension: dimension.to_string(),
+                    member: value.to_string(),
+                    is_typed: true,
+                    typed_value: Some(value.to_string()),
+                }],
+                raw_xml: None,
+            }),
+        };
+
+        // Validate
+        let result = validate_context_dimensions(&context, "", &taxonomy);
+        for finding in result.findings {
+            world
+                .dimension_context
+                .validation_findings
+                .push(finding.rule_id.clone());
         }
 
         return Ok(true);
