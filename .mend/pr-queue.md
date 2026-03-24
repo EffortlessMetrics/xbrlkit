@@ -22,62 +22,39 @@
 3. `cargo test --workspace`
 4. `cargo xtask alpha-check`
 
-## Completed Recently
+## Completed Recently (Phase 2)
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
+| #74 | - | ✅ Complete | `02b8882` | Phase 2 complete marker |
+| #72 | #6 | ✅ Complete | `abc337b` | Bundle + impact workflow docs |
+| #70 | #2 | ✅ Complete | `1e0d050` | Maintainer command docs |
+| #68 | - | ✅ Complete | `bf14912` | Roadmap Wave 2 complete |
+| #67 | #57 | ✅ Complete | `ded1840` | Typed value validation |
+| #65 | #56 | ✅ Complete | `05e974d` | Typed member handling |
+| #63 | #55 | ✅ Complete | `65f3baf` | HTTP fetching for taxonomy-loader |
+| #61 | #5 | ✅ Complete | `3828c3e` | Alpha-check JSON summary |
 | #53 | SCN-XK-WORKFLOW-005 | ✅ Complete | `7379cc0` | Alpha gate scenario |
-| #51 | #4 | ✅ Complete | `4a82af7` | Maintainer wrappers (make quick/full) |
-| #48 | #3 | ✅ Complete | `677fc87` | describe-profile --json acceptance slice |
-| #46 | SCN-XK-WORKFLOW-001 | ✅ Complete | `0f3b522` | Feature grid scenario |
-| #44 | SCN-XK-MANIFEST-001 | ✅ Complete | `1cade92` | Filing manifest scenario |
-| #42 | SCN-XK-WORKFLOW-003 | ✅ Complete | `0ec270a` | Cockpit pack scenario |
-| #40 | SCN-XK-WORKFLOW-002/004 | ✅ Complete | `d966f3a` | Bundle scenarios activated |
-| #37 | #35 | ✅ Complete | `5a577da` | Taxonomy loader crate |
-| #32 | #7 | ✅ Complete | `2eeb94f` | Synthetic fixture ix:tuple |
-| #30 | #8 | ✅ Complete | `e6d1b06` | Worktree-aware repo root |
-| #28 | #9 | ✅ Complete | `b3bde6a` | Required facts unit tests |
-| #27 | - | ✅ Complete | `9bd61ba` | Pre-push script |
-| #26 | - | ✅ Complete | `bad1dbe` | Lint cleanup |
+| #51 | #4 | ✅ Complete | `4a82af7` | Maintainer wrappers |
 
-## Current Queue
+## Current State
 
-| # | Issue | Stream | Stage | Blocker |
-|---|-------|--------|-------|---------|
-| 1 | #5 | Infra | 📐 Plan | None |
+**Phase 2: COMPLETE ✅**
+- Wave 1 (Infrastructure): 3/3 ✅
+- Wave 2 (Technical Debt): 3/3 ✅  
+- Wave 3 (Documentation): 2/2 ✅
 
-*Wave 1 complete (3/3). Starting Wave 2. See `.mend/roadmap-phase-2.md` for full plan.*
+**Metrics:**
+- 21 @alpha-active scenarios passing
+- 60+ tests passing
+- CI: Green
 
-## In Progress
-
-| # | Issue | Stream | Stage | Started |
-|---|-------|--------|-------|---------|
-| 1 | #5 | Infra | 📐 Plan | 2026-03-24 |
-
-## Parallel Work Streams
-
-| Stream | Focus | Status |
-|--------|-------|--------|
-| **A: SEC Compliance** | Required facts | ✅ Complete |
-| **B: Developer Experience** | xtask worktree, pre-push | ✅ Complete |
-| **C: Test Infrastructure** | Synthetic fixtures | ✅ Complete |
-| **D: Taxonomy Core** | Dimension loading | ✅ Complete |
-
-## Autonomous Infrastructure
-
-| File | Purpose |
-|------|---------|
-| `scripts/pre-push.sh` | Quality gates |
-| `scripts/autonomous-pr.sh` | Full workflow |
-| `scripts/update-queue.sh` | State management |
-| `.mend/workflow.md` | Process definition |
-| `.mend/mission.md` | Project mission |
-| `.mend/plans/taxonomy-loader.md` | Current plan |
+**Next:** Phase 3 planning
 
 ## Cron Schedule
 
 | Job | Frequency | Purpose |
-|-----|-----------|--------|
+|-----|-----------|---------|
 | xbrlkit-ci-health | 1h | Monitor CI |
 | xbrlkit-queue-check | 2h | Pick ready items |
 
@@ -95,7 +72,5 @@
 
 ## Next
 
-**In Progress:**
-- Issue #5: Alpha-check machine-readable summary — research complete, planning approach
-- Building `taxonomy-loader` crate — see `.mend/plans/taxonomy-loader.md`
-- Will create PR `mend/issue-35-taxonomy-loader` when ready
+**Phase 3 planning required.**
+See `.mend/roadmap-phase-3.md` when created.
