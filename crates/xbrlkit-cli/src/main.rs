@@ -1,4 +1,5 @@
 //! CLI edge for xbrlkit.
+#![allow(clippy::too_many_lines)]
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -38,6 +39,13 @@ enum Command {
     InspectContexts {
         #[arg(required = true)]
         file: PathBuf,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Load and display taxonomy structure from an XSD entrypoint.
+    InspectTaxonomy {
+        #[arg(required = true)]
+        entrypoint: String,
         #[arg(long)]
         json: bool,
     },
@@ -130,6 +138,22 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+        Command::InspectTaxonomy { entrypoint, json } => {
+            match taxonomy_loader::load_taxonomy(&entrypoint) {
+                Ok(taxonomy) => {
+                    if json {
+                        println!("{}", serde_json::to_string_pretty(&taxonomy).unwrap());
+                    } else {
+                        print_taxonomy_summary(&taxonomy);
+                    }
+                    0
+                }
+                Err(e) => {
+                    eprintln!("error loading taxonomy: {e}");
+                    1
+                }
+            }
+        }
     };
     std::process::exit(exit_code)
 }
@@ -163,4 +187,39 @@ fn print_validation_summary(profile: &ProfilePack, run: &validation_run::Validat
 
 fn exit_code_from_findings(findings: &[ValidationFinding]) -> i32 {
     i32::from(findings.iter().any(|finding| finding.severity == "error"))
+}
+
+fn print_taxonomy_summary(taxonomy: &taxonomy_dimensions::DimensionTaxonomy) {
+    println!("taxonomy summary:");
+    println!("  hypercubes: {}", taxonomy.hypercubes.len());
+    for (qname, hypercube) in &taxonomy.hypercubes {
+        println!("    {} ({} dimensions)", qname, hypercube.dimensions.len());
+        for (dim_qname, required) in &hypercube.dimensions {
+            println!(
+                "      - {} {}",
+                dim_qname,
+                if *required { "(required)" } else { "" }
+            );
+        }
+    }
+
+    println!("  dimensions: {}", taxonomy.dimensions.len());
+    for qname in taxonomy.dimensions.keys() {
+        println!("    {qname}");
+    }
+
+    println!("  domains: {}", taxonomy.domains.len());
+    for (qname, domain) in &taxonomy.domains {
+        println!("    {} ({} members)", qname, domain.members.len());
+        for root in &domain.roots {
+            println!("      - {root}");
+        }
+    }
+
+    if !taxonomy.concept_hypercubes.is_empty() {
+        println!(
+            "  concept-hypercube associations: {}",
+            taxonomy.concept_hypercubes.len()
+        );
+    }
 }

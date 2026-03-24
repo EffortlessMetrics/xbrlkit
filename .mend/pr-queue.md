@@ -36,13 +36,13 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| 1 | - | D: Taxonomy | 📋 Ready | None — Create research issue |
+| - | - | - | - | - |
 
 ## In Progress
 
 | # | Issue | Stream | Stage | Started |
 |---|-------|--------|-------|---------|
-| - | - | - | - | - |
+| 1 | [#35: Taxonomy Dimension Loading](https://github.com/EffortlessMetrics/xbrlkit/issues/35) | D: Taxonomy | 🔨 Build | 2026-03-23 |
 
 ## Parallel Work Streams
 
@@ -51,7 +51,7 @@
 | **A: SEC Compliance** | Required facts | ✅ Complete |
 | **B: Developer Experience** | xtask worktree, pre-push | ✅ Complete |
 | **C: Test Infrastructure** | Synthetic fixtures | ✅ Complete |
-| **D: Taxonomy Core** | Dimension loading | 📋 Ready |
+| **D: Taxonomy Core** | Dimension loading | 🔨 Build — In Progress |
 
 ## Autonomous Infrastructure
 
@@ -62,11 +62,12 @@
 | `scripts/update-queue.sh` | State management |
 | `.mend/workflow.md` | Process definition |
 | `.mend/mission.md` | Project mission |
+| `.mend/plans/taxonomy-loader.md` | Current plan |
 
 ## Cron Schedule
 
 | Job | Frequency | Purpose |
-|-----|-----------|---------|
+|-----|-----------|--------|
 | xbrlkit-ci-health | 1h | Monitor CI |
 | xbrlkit-queue-check | 2h | Pick ready items |
 
@@ -84,4 +85,6 @@
 
 ## Next
 
-Create research issue for **Stream D: Taxonomy Core** — loading dimensions from actual taxonomy files.
+**In Progress:**
+- Building `taxonomy-loader` crate — see `.mend/plans/taxonomy-loader.md`
+- Will create PR `mend/issue-35-taxonomy-loader` when ready
