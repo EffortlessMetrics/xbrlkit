@@ -44,7 +44,7 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| 1 | #5 | Infra | 🔍 Research | None |
+| 1 | #5 | Infra | 📐 Plan | None |
 
 *Wave 1 complete (3/3). Starting Wave 2. See `.mend/roadmap-phase-2.md` for full plan.*
 
@@ -52,7 +52,7 @@
 
 | # | Issue | Stream | Stage | Started |
 |---|-------|--------|-------|---------|
-| - | - | - | - | - |
+| 1 | #5 | Infra | 📐 Plan | 2026-03-24 |
 
 ## Parallel Work Streams
 
@@ -96,5 +96,6 @@
 ## Next
 
 **In Progress:**
+- Issue #5: Alpha-check machine-readable summary — research complete, planning approach
 - Building `taxonomy-loader` crate — see `.mend/plans/taxonomy-loader.md`
 - Will create PR `mend/issue-35-taxonomy-loader` when ready
