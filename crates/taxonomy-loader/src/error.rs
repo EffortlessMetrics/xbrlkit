@@ -15,6 +15,14 @@ pub enum TaxonomyLoaderError {
     #[error("unsupported URL: {0}")]
     UnsupportedUrl(String),
 
+    /// HTTP request failed.
+    #[error("HTTP request failed for {0}: {1}")]
+    HttpError(String, String),
+
+    /// URL parsing error.
+    #[error("URL parsing error: {0}")]
+    UrlParse(#[from] url::ParseError),
+
     /// Missing required element or attribute.
     #[error("missing required element: {0}")]
     MissingElement(String),
