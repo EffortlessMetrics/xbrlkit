@@ -18,6 +18,8 @@ taxonomy-dimensions = { path = "../taxonomy-dimensions" }
 xbrl-contexts = { path = "../xbrl-contexts" }
 cockpit-export = { path = "../cockpit-export" }
 receipt-types = { path = "../receipt-types" }
+filing-load = { path = "../filing-load" }
+edgar-attachments = { path = "../edgar-attachments" }
 
 [lints]
 workspace = true

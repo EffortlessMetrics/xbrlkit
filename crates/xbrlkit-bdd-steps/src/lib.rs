@@ -31,6 +31,8 @@ pub struct World {
     pub bundle_manifest: Option<BundleManifest>,
     pub validation_receipt: Option<receipt_types::Receipt>,
     pub sensor_report: Option<serde_json::Value>,
+    pub filing_manifest: Option<edgar_attachments::FilingManifest>,
+    pub filing_receipt: Option<receipt_types::Receipt>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -55,6 +57,8 @@ impl World {
             bundle_manifest: None,
             validation_receipt: None,
             sensor_report: None,
+            filing_manifest: None,
+            filing_receipt: None,
         }
     }
 }
@@ -370,6 +374,21 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I build the filing manifest" {
+        let fixture_dir = world.fixture_dirs.first().context("no fixture loaded")?;
+        let submission_path = fixture_dir.join("submission.txt");
+        let submission = std::fs::read_to_string(&submission_path).with_context(|| {
+            format!(
+                "failed to read submission.txt from {}",
+                fixture_dir.display()
+            )
+        })?;
+        let (manifest, receipt) = filing_load::load_from_submission(&submission);
+        world.filing_manifest = Some(manifest);
+        world.filing_receipt = Some(receipt);
+        return Ok(true);
+    }
+
     // Cockpit pack When steps
     if step.text == "I package the receipt for cockpit" {
         let receipt = world
@@ -468,6 +487,19 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
         "the sensor report is emitted" => {
             if world.sensor_report.is_none() {
                 anyhow::bail!("sensor report was not emitted");
+            }
+            Ok(())
+        }
+        "the filing manifest receipt is emitted" => {
+            let receipt = world
+                .filing_receipt
+                .as_ref()
+                .context("filing manifest receipt was not emitted")?;
+            if receipt.kind != "filing.manifest" {
+                anyhow::bail!(
+                    "expected receipt kind 'filing.manifest', got '{}'",
+                    receipt.kind
+                );
             }
             Ok(())
         }

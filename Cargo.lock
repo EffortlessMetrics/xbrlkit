@@ -640,6 +640,8 @@ dependencies = [
  "anyhow",
  "cockpit-export",
  "dimensional-rules",
+ "edgar-attachments",
+ "filing-load",
  "receipt-types",
  "scenario-contract",
  "scenario-runner",
