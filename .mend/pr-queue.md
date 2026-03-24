@@ -42,9 +42,11 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| - | - | - | - | - |
+| 1 | #4 | DevEx | 📋 Ready | None |
+| 2 | SCN-XK-WORKFLOW-005 | Workflow | 📋 Ready | None |
+| 3 | #5 | Infra | 📋 Ready | None |
 
-*Queue empty. All scenarios activated.*
+*See `.mend/roadmap-phase-2.md` for full Phase 2 plan.*
 
 ## In Progress
 
