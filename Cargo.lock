@@ -638,9 +638,12 @@ name = "xbrlkit-bdd-steps"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "cockpit-export",
  "dimensional-rules",
+ "receipt-types",
  "scenario-contract",
  "scenario-runner",
+ "serde_json",
  "taxonomy-dimensions",
  "xbrl-contexts",
 ]

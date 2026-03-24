@@ -10,11 +10,14 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow.workspace = true
+serde_json.workspace = true
 scenario-contract = { path = "../scenario-contract" }
 scenario-runner = { path = "../scenario-runner" }
 dimensional-rules = { path = "../dimensional-rules" }
 taxonomy-dimensions = { path = "../taxonomy-dimensions" }
 xbrl-contexts = { path = "../xbrl-contexts" }
+cockpit-export = { path = "../cockpit-export" }
+receipt-types = { path = "../receipt-types" }
 
 [lints]
 workspace = true
