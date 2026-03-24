@@ -26,6 +26,7 @@
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
+| #46 | SCN-XK-WORKFLOW-001 | ✅ Complete | `0f3b522` | Feature grid scenario |
 | #44 | SCN-XK-MANIFEST-001 | ✅ Complete | `1cade92` | Filing manifest scenario |
 | #42 | SCN-XK-WORKFLOW-003 | ✅ Complete | `0ec270a` | Cockpit pack scenario |
 | #40 | SCN-XK-WORKFLOW-002/004 | ✅ Complete | `d966f3a` | Bundle scenarios activated |
@@ -40,7 +41,9 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| 1 | SCN-XK-WORKFLOW-001 | Workflow | 📋 Ready | None |
+| - | - | - | - | - |
+
+*Queue empty. All scenarios activated.*
 
 ## In Progress
 
