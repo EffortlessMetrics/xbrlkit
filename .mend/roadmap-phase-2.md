@@ -21,15 +21,15 @@
 |---|-------|--------|-------------|--------|
 | 1 | #4 | DevEx | Add maintainer wrappers for quick/full gate | ✅ Merged #51 |
 | 2 | SCN-XK-WORKFLOW-005 | Workflow | Activate alpha gate scenario | ✅ Merged #53 |
-| 3 | #5 | Infra | Post-merge validator summary | 🔄 In Progress |
+| 3 | #5 | Infra | Post-merge validator summary | ✅ Merged #61 |
 
 ### Wave 2: Technical Debt 🔄 IN PROGRESS
 
-| # | Issue | Stream | Description | Est |
-|---|-------|--------|-------------|-----|
-| 4 | #55 | Taxonomy | HTTP fetching for taxonomy-loader | 4h |
-| 5 | #56 | Dimensions | Typed member handling | 6h |
-| 6 | #57 | Validation | Typed value validation | 4h |
+| # | Issue | Stream | Description | Status |
+|---|-------|--------|-------------|--------|
+| 4 | #55 | Taxonomy | HTTP fetching for taxonomy-loader | ✅ Merged #63 |
+| 5 | #56 | Dimensions | Typed member handling | 🔍 In Progress |
+| 6 | #57 | Validation | Typed value validation | 📋 Ready |
 
 ### Wave 3: Documentation 📋 READY
 
