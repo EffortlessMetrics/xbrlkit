@@ -18,6 +18,17 @@
 
 ## Commands
 
+### Maintainer Shortcuts
+
+For quick iteration, use the Makefile wrappers:
+
+```bash
+make quick    # Run quality gates (fmt, clippy, test) - fast feedback
+make full     # Run full alpha gate validation
+```
+
+### Direct Commands
+
 ```bash
 cargo xtask doctor
 cargo xtask feature-grid
