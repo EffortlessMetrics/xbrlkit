@@ -27,6 +27,11 @@ make quick    # Run quality gates (fmt, clippy, test) - fast feedback
 make full     # Run full alpha gate validation
 ```
 
+See [docs/how-to/maintainer-commands.md](./docs/how-to/maintainer-commands.md) for comprehensive documentation on all maintainer commands, including:
+- When to use `make quick` vs `make full`
+- All `cargo xtask` commands with examples
+- Common workflows and troubleshooting
+
 ### Direct Commands
 
 ```bash
