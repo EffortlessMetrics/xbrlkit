@@ -6,31 +6,33 @@
 
 | Item | Value |
 |------|-------|
-| **Issue** | #5 — Post-merge validator summary |
-| **Stream** | Infra |
-| **Stage** | 🔍 Research |
-| **Started** | 2026-03-24 |
-| **Wave** | Phase 2, Wave 1 (last item) |
+| **Issue** | #55 — HTTP fetching for taxonomy-loader |
+| **Stream** | Taxonomy Core |
+| **Stage** | 📋 Ready |
+| **Wave** | Phase 2, Wave 2 |
+| **Blocked by** | #5 (nearly complete) |
 
 ## Scope
 
-Emit a machine-readable post-merge validator summary for alpha-check:
-- The validator leaves a machine-readable summary or receipt
-- The summary reflects the existing `cargo xtask alpha-check` result
-- Stays scoped to post-merge validation ergonomics
+Add HTTP fetching capability to taxonomy-loader crate:
+- Add reqwest or similar HTTP client
+- Implement async fetching for remote taxonomy files
+- Add local caching
+- Handle errors gracefully
 
 ## Research Findings
 
-- Alpha-check already generates receipts in artifacts/
-- Need to make post-merge summary more automation-friendly
-- Could emit JSON summary to artifacts/cockpit/ or similar
+- Current taxonomy-loader only handles local files
+- reqwest is the standard Rust HTTP client
+- Should use async/await pattern
+- Cache directory: ~/.cache/xbrlkit/ or similar
 
 ## Next Actions
 
-1. Research current receipt structure
-2. Design machine-readable summary format
-3. Implement in xtask
-4. Test and create PR
+1. Wait for #5 to complete
+2. Start research on taxonomy-loader HTTP implementation
+3. Design caching strategy
+4. Implement and test
 
 ---
 *This file is maintained by autonomous agents. Last updated: 2026-03-24*
