@@ -6,6 +6,7 @@ Feature: Feature grid
   @AC-XK-WORKFLOW-001
   @SCN-XK-WORKFLOW-001
   @speed.fast
+  @alpha-active
   Scenario: Compile a feature grid
     Given the repo has feature sidecars
     When I compile the feature grid

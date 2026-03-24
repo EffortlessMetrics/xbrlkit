@@ -33,6 +33,7 @@ pub struct World {
     pub sensor_report: Option<serde_json::Value>,
     pub filing_manifest: Option<edgar_attachments::FilingManifest>,
     pub filing_receipt: Option<receipt_types::Receipt>,
+    pub compiled_grid: Option<FeatureGrid>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -59,6 +60,7 @@ impl World {
             sensor_report: None,
             filing_manifest: None,
             filing_receipt: None,
+            compiled_grid: None,
         }
     }
 }
@@ -232,6 +234,27 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    // Feature grid Given steps
+    if step.text == "the repo has feature sidecars" {
+        // Check that at least one .meta.yaml file exists in specs/features
+        let features_root = world.repo_root.join("specs/features");
+        let has_sidecars = walkdir::WalkDir::new(&features_root)
+            .into_iter()
+            .filter_map(Result::ok)
+            .any(|entry: walkdir::DirEntry| {
+                let path = entry.path();
+                path.extension().is_some_and(|ext| ext == "yaml")
+                    && path
+                        .file_name()
+                        .and_then(|n: &std::ffi::OsStr| n.to_str())
+                        .is_some_and(|n: &str| n.ends_with(".meta.yaml"))
+            });
+        if !has_sidecars {
+            anyhow::bail!("no feature sidecars found in {}", features_root.display());
+        }
+        return Ok(true);
+    }
+
     // Cockpit pack Given steps
     if step.text == "a validation report receipt" {
         world.validation_receipt = Some(receipt_types::Receipt::new(
@@ -263,6 +286,12 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         let execution = execute_scenario(&world.repo_root, scenario)?;
         write_execution_receipts(&world.repo_root, &execution)?;
         world.execution = Some(execution);
+        return Ok(true);
+    }
+
+    // Feature grid When steps
+    if step.text == "I compile the feature grid" {
+        world.compiled_grid = Some(xbrlkit_feature_grid::compile(&world.repo_root)?);
         return Ok(true);
     }
 
@@ -567,6 +596,26 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 "scenario {} not found in bundle manifest (contains {} scenario(s))",
                 scenario_id,
                 manifest.scenarios.len()
+            );
+        }
+        return Ok(());
+    }
+
+    // Feature grid assertions
+    if let Some(scenario_id) = step
+        .text
+        .strip_prefix("the feature grid contains scenario \"")
+    {
+        let scenario_id = scenario_id.trim_end_matches('"');
+        let grid = world
+            .compiled_grid
+            .as_ref()
+            .context("feature grid assertion requires a prior compile operation")?;
+        if !grid.scenarios.iter().any(|s| s.scenario_id == scenario_id) {
+            anyhow::bail!(
+                "scenario {} not found in feature grid (contains {} scenario(s))",
+                scenario_id,
+                grid.scenarios.len()
             );
         }
         return Ok(());

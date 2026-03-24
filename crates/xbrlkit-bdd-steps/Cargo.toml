@@ -11,6 +11,7 @@ path = "src/lib.rs"
 [dependencies]
 anyhow.workspace = true
 serde_json.workspace = true
+walkdir.workspace = true
 scenario-contract = { path = "../scenario-contract" }
 scenario-runner = { path = "../scenario-runner" }
 dimensional-rules = { path = "../dimensional-rules" }
@@ -20,6 +21,7 @@ cockpit-export = { path = "../cockpit-export" }
 receipt-types = { path = "../receipt-types" }
 filing-load = { path = "../filing-load" }
 edgar-attachments = { path = "../edgar-attachments" }
+xbrlkit-feature-grid = { path = "../xbrlkit-feature-grid" }
 
 [lints]
 workspace = true
