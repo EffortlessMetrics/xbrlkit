@@ -37,7 +37,10 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| - | - | - | - | - |
+| 1 | SCN-XK-WORKFLOW-002/004 | Workflow | 📋 Ready | None |
+| 2 | SCN-XK-WORKFLOW-003 | Workflow | 📋 Ready | None |
+| 3 | SCN-XK-MANIFEST-001 | Manifest | 📋 Ready | None |
+| 4 | SCN-XK-WORKFLOW-001 | Workflow | 📋 Ready | None |
 
 ## In Progress
 
