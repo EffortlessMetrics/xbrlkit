@@ -2,6 +2,49 @@
 
 ## Issue #56: Handle typedMember for typed dimensions
 
+**Status:** ✅ COMPLETE
+
+## Summary
+
+Successfully implemented typedMember parsing for XBRL dimensional contexts in the xbrl-contexts crate.
+
+## Changes Made
+
+### 1. Modified `crates/xbrl-contexts/src/lib.rs`
+
+- Added `TypedMemberValue` struct to hold parsed typed values
+- Added `parse_typed_member()` function to extract typed values from nested elements
+- Updated `parse_dimensional_container()` to handle both `explicitMember` and `typedMember` elements
+- Populated `DimensionMember` fields correctly:
+  - `is_typed: true` for typed members
+  - `typed_value: Some(...)` with the extracted value
+  - `member` field contains the typed value string
+
+### 2. Added Unit Tests (5 new tests)
+
+- `test_parse_typed_member_context` - Simple typed member in segment
+- `test_parse_typed_member_in_scenario` - Typed member in scenario container
+- `test_parse_mixed_explicit_and_typed_members` - Mixed explicit and typed
+- `test_parse_typed_member_with_namespace_prefix` - Real-world NBB example
+- `test_parse_typed_member_empty_value` - Empty value handling
+
+### 3. Added BDD Scenarios
+
+4 new scenarios in `specs/features/taxonomy/dimensions.feature`:
+- SCN-XK-DIM-005: Typed member dimension is parsed correctly
+- SCN-XK-DIM-006: Mixed explicit and typed members in same context
+- SCN-XK-DIM-007: Typed member in segment container
+- SCN-XK-DIM-008: Empty typed member value is handled
+
+### 4. Added Test Fixture
+
+Created `fixtures/synthetic/dimensions/typed-member-dimensions/typed-member-dimensions.html` with:
+- Typed member in segment
+- Typed member in scenario
+- Mixed explicit and typed members
+- Empty typed member
+- Explicit-only context (backward compatibility)
+
 ## XBRL Specification
 
 Typed dimensions use `xbrldi:typedMember` elements with nested typed values, unlike explicit members that reference domain members via QName.
@@ -14,7 +57,7 @@ Typed dimensions use `xbrldi:typedMember` elements with nested typed values, unl
     us-gaap:ScenarioActualMember
 </xbrldi:explicitMember>
 
-<!-- Typed member (needs implementation) -->
+<!-- Typed member (implemented) -->
 <xbrldi:typedMember dimension="dim:CustomerAxis">
     <cust:customerId>12345</cust:customerId>
 </xbrldi:typedMember>
@@ -45,104 +88,17 @@ From NBB Belgium:
 </xbrldi:typedMember>
 ```
 
-From XBRL-CSV context:
-```xml
-<xbrldi:typedMember dimension="dim-int:openAxis1_Taxis">
-    <dim-int:typedMember1>123</dim-int:typedMember1>
-</xbrldi:typedMember>
-```
-
-## Current Implementation
-
-Location: `crates/xbrl-contexts/src/lib.rs`
-
-The `DimensionMember` struct already supports typed dimensions:
-```rust
-pub struct DimensionMember {
-    pub dimension: String,
-    pub member: String,
-    pub is_typed: bool,
-    pub typed_value: Option<String>,
-}
-```
-
-But parsing only handles `explicitMember`:
-```rust
-fn parse_dimensional_container(node: &roxmltree::Node) -> DimensionalContainer {
-    // ...
-    if child.tag_name().name() == "explicitMember" {
-        // Handle explicit member
-    }
-    // TODO: Handle typedMember for typed dimensions
-}
-```
-
-## Implementation Approach
-
-1. **Parse typedMember elements**: Detect `typedMember` tag name
-2. **Extract typed value**: Get text content from nested element
-3. **Store raw XML**: Preserve full typed member XML for complex cases
-4. **Update DimensionMember**: Set `is_typed=true` and populate `typed_value`
-
-### Parsing Strategy
-
-For typed members:
-- The `dimension` attribute contains the dimension QName
-- The member value comes from the first child element's text content
-- The `member` field should store the typed value
-- The `is_typed` flag should be `true`
-
-Example:
-```xml
-<xbrldi:typedMember dimension="tax:dCustomer">
-    <cust>12345</cust>
-</xbrldi:typedMember>
-```
-
-Should produce:
-```rust
-DimensionMember {
-    dimension: "tax:dCustomer",
-    member: "12345",
-    is_typed: true,
-    typed_value: Some("12345"),
-}
-```
-
-### Handling Complex Typed Members
-
-Some typed members may have complex nested structures:
-```xml
-<xbrldi:typedMember dimension="tax:dPhone">
-    <phone>
-        <country>7</country>
-        <city>7</city>
-        <number>5555555</number>
-    </phone>
-</xbrldi:typedMember>
-```
-
-For these cases:
-1. Extract text from first child as the primary value
-2. Optionally store full XML in `raw_xml` for later processing
-
-## Testing Strategy
-
-1. Add unit tests for simple typed members
-2. Add unit tests for typed members with nested elements
-3. Add test with mixed explicit and typed members
-4. Ensure backward compatibility with explicit-only contexts
-
-## Files to Modify
-
-- `crates/xbrl-contexts/src/lib.rs` - Main parsing logic
-- `specs/features/taxonomy/dimensions.feature` - Add BDD scenarios
-- `fixtures/synthetic/dimensions/` - Add test fixtures
-
 ## Acceptance Criteria
 
 - [x] typedMember elements are parsed from dimensional contexts
 - [x] Typed values stored correctly in DimensionMember
 - [x] BDD scenarios pass for typed dimension handling
 - [x] Backward compatibility with explicit dimensions maintained
-- [x] All quality gates pass
+- [x] All quality gates pass (clippy clean, tests pass)
+- [x] PR merged (#65)
+
+## PR
+
+- **PR:** https://github.com/EffortlessMetrics/xbrlkit/pull/65
+- **Branch:** `mend/issue-56-typed-member`
+- **Merged:** 05e974d

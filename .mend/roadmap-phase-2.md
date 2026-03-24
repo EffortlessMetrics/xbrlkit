@@ -23,13 +23,20 @@
 | 2 | SCN-XK-WORKFLOW-005 | Workflow | Activate alpha gate scenario | ✅ Merged #53 |
 | 3 | #5 | Infra | Post-merge validator summary | ✅ Merged #61 |
 
-### Wave 2: Technical Debt 🔄 IN PROGRESS
+### Wave 2: Technical Debt ✅ COMPLETE
 
 | # | Issue | Stream | Description | Status |
 |---|-------|--------|-------------|--------|
 | 4 | #55 | Taxonomy | HTTP fetching for taxonomy-loader | ✅ Merged #63 |
-| 5 | #56 | Dimensions | Typed member handling | 🔍 In Progress |
-| 6 | #57 | Validation | Typed value validation | 📋 Ready |
+| 5 | #56 | Dimensions | Typed member handling | ✅ Merged #65 |
+| 6 | #57 | Validation | Typed value validation | 🔍 In Progress |
+
+### Wave 3: Documentation 🔄 READY
+
+| # | Issue | Stream | Description | Status |
+|---|-------|--------|-------------|--------|
+| 7 | #2 | Docs | Document maintainer command surface | 📋 Ready |
+| 8 | #6 | Docs | Document bundle + impact workflow | 📋 Ready |
 
 ### Wave 3: Documentation 📋 READY
 
