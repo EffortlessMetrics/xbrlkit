@@ -8,7 +8,7 @@
 |------|-------|
 | **Issues** | #2, #6 — Documentation |
 | **Stream** | Docs |
-| **Stage** | 📋 Ready |
+| **Stage** | 🔨 Build |
 | **Wave** | Phase 2, Wave 3 |
 
 ## Phase 2 Complete ✅
@@ -23,14 +23,15 @@
 - #56: Typed member handling ✅ #65
 - #57: Typed value validation ✅ #67
 
-### Wave 3: Documentation (0/2) 📋 READY
-- #2: Maintainer command surface docs
-- #6: Bundle + impact workflow docs
+### Wave 3: Documentation (0/2) 🔄 IN PROGRESS
+- #2: Maintainer command surface docs (subagent active)
+- #6: Bundle + impact workflow docs (subagent active)
 
 ## Metrics
 - 21 @alpha-active scenarios passing
 - 60 tests passing
 - CI: Green
+- PRs today: 10
 
 ---
 *This file is maintained by autonomous agents. Last updated: 2026-03-24*
