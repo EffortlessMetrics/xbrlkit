@@ -16,6 +16,7 @@ clap.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
 walkdir.workspace = true
+chrono = { version = "0.4", features = ["serde"] }
 scenario-contract = { path = "../crates/scenario-contract" }
 xbrlkit-feature-grid = { path = "../crates/xbrlkit-feature-grid" }
 cockpit-export = { path = "../crates/cockpit-export" }
