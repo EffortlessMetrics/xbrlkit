@@ -647,7 +647,9 @@ dependencies = [
  "scenario-runner",
  "serde_json",
  "taxonomy-dimensions",
+ "walkdir",
  "xbrl-contexts",
+ "xbrlkit-feature-grid",
 ]
 
 [[package]]
