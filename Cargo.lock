@@ -645,6 +645,7 @@ dependencies = [
  "receipt-types",
  "scenario-contract",
  "scenario-runner",
+ "sec-profile-types",
  "serde_json",
  "taxonomy-dimensions",
  "walkdir",

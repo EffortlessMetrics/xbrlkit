@@ -1,6 +1,33 @@
 {
   "scenarios": [
     {
+      "scenario_id": "SCN-XK-CLI-001",
+      "ac_id": "AC-XK-CLI-001",
+      "req_id": "REQ-XK-CLI",
+      "feature_file": "specs/features/cli/describe_profile.feature",
+      "sidecar_file": "specs/features/cli/describe_profile.meta.yaml",
+      "layer": "cli",
+      "module": "FEAT-XK-CLI:describe-profile",
+      "crates": [
+        "xbrlkit-cli",
+        "sec-profile-types",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/xbrlkit-cli",
+        "crates/sec-profile-types",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/cli"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-DIM-001",
       "ac_id": "AC-XK-DIM-001",
       "req_id": "REQ-XK-DIMENSIONS",
