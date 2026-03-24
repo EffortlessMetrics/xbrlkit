@@ -75,3 +75,75 @@ Feature: XBRL Dimensional Validation
     When I parse the context dimensions
     Then the dimension should be marked as typed
     And the typed value should be empty
+
+  @alpha-active @SCN-XK-DIM-009 @AC-XK-DIM-009
+  Scenario: Valid typed decimal value passes validation
+    Given a context with typed dimension "dim:AmountAxis" of type "xs:decimal"
+    And the typed member value "123.45"
+    When I validate the typed dimension value
+    Then the validation should pass
+    And no findings should be reported
+
+  @alpha-active @SCN-XK-DIM-010 @AC-XK-DIM-010
+  Scenario: Invalid typed decimal value fails validation
+    Given a context with typed dimension "dim:AmountAxis" of type "xs:decimal"
+    And the typed member value "not-a-number"
+    When I validate the typed dimension value
+    Then the validation should fail
+    And an "XBRL.DIMENSION.INVALID_TYPED_VALUE" finding should be reported
+
+  @alpha-active @SCN-XK-DIM-011 @AC-XK-DIM-011
+  Scenario: Valid typed date value passes validation
+    Given a context with typed dimension "dim:ReportDateAxis" of type "xs:date"
+    And the typed member value "2024-03-15"
+    When I validate the typed dimension value
+    Then the validation should pass
+    And no findings should be reported
+
+  @alpha-active @SCN-XK-DIM-012 @AC-XK-DIM-012
+  Scenario: Invalid typed date value fails validation
+    Given a context with typed dimension "dim:ReportDateAxis" of type "xs:date"
+    And the typed member value "15-03-2024"
+    When I validate the typed dimension value
+    Then the validation should fail
+    And an "XBRL.DIMENSION.INVALID_TYPED_VALUE" finding should be reported
+
+  @alpha-active @SCN-XK-DIM-013 @AC-XK-DIM-013
+  Scenario: Valid typed boolean value passes validation
+    Given a context with typed dimension "dim:IsActiveAxis" of type "xs:boolean"
+    And the typed member value "true"
+    When I validate the typed dimension value
+    Then the validation should pass
+    And no findings should be reported
+
+  @alpha-active @SCN-XK-DIM-014 @AC-XK-DIM-014
+  Scenario: Invalid typed boolean value fails validation
+    Given a context with typed dimension "dim:IsActiveAxis" of type "xs:boolean"
+    And the typed member value "yes"
+    When I validate the typed dimension value
+    Then the validation should fail
+    And an "XBRL.DIMENSION.INVALID_TYPED_VALUE" finding should be reported
+
+  @alpha-active @SCN-XK-DIM-015 @AC-XK-DIM-015
+  Scenario: Empty typed value fails validation
+    Given a context with typed dimension "dim:RequiredAxis" of type "xs:string"
+    And the typed member value ""
+    When I validate the typed dimension value
+    Then the validation should fail
+    And an "XBRL.DIMENSION.EMPTY_TYPED_VALUE" finding should be reported
+
+  @alpha-active @SCN-XK-DIM-016 @AC-XK-DIM-016
+  Scenario: Valid typed integer value passes validation
+    Given a context with typed dimension "dim:CountAxis" of type "xs:integer"
+    And the typed member value "-42"
+    When I validate the typed dimension value
+    Then the validation should pass
+    And no findings should be reported
+
+  @alpha-active @SCN-XK-DIM-017 @AC-XK-DIM-017
+  Scenario: Invalid typed integer value fails validation
+    Given a context with typed dimension "dim:CountAxis" of type "xs:integer"
+    And the typed member value "3.14"
+    When I validate the typed dimension value
+    Then the validation should fail
+    And an "XBRL.DIMENSION.INVALID_TYPED_VALUE" finding should be reported
