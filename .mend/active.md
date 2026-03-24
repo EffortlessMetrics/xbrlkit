@@ -6,29 +6,35 @@
 
 | Item | Value |
 |------|-------|
-| **Issue** | #4 — Add repo-local maintainer wrappers |
-| **Stream** | DevEx |
+| **Issue** | SCN-XK-WORKFLOW-005 — Alpha readiness gate scenario |
+| **Stream** | Workflow |
 | **Stage** | 🔍 Research |
 | **Started** | 2026-03-24 |
 | **Wave** | Phase 2, Wave 1 |
 
 ## Scope
 
-Add repo-local wrapper entrypoints for the maintainer hot path:
-- `make quick` — runs quick gate (fmt, clippy, test)
-- `make full` — runs full gate (alpha-check)
+Activate the alpha_check.feature scenario:
+- SCN-XK-WORKFLOW-005: Run the alpha readiness gate
+
+Steps needed:
+- `Given the active alpha scenarios are implemented`
+- `When I run the alpha readiness gate`
+- `Then the alpha readiness checks pass`
 
 ## Research Findings
 
-- Wrappers should call existing `cargo xtask` commands
-- CONTRIBUTING docs need updating
-- Pattern exists in other Rust projects
+- Feature file exists at `specs/features/workflow/alpha_check.feature`
+- No `@alpha-active` tag currently
+- Step handlers need implementation in xbrlkit-bdd-steps
+- Can leverage existing `cargo xtask alpha-check` command
 
 ## Next Actions
 
-1. Create Makefile with quick/full targets
-2. Test wrappers locally
-3. Create PR
+1. Add step handlers for alpha gate scenario
+2. Add @alpha-active tag
+3. Run quality gates
+4. Create PR
 
 ---
 *This file is maintained by autonomous agents. Last updated: 2026-03-24*
