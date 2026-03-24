@@ -34,6 +34,8 @@ pub struct World {
     pub filing_manifest: Option<edgar_attachments::FilingManifest>,
     pub filing_receipt: Option<receipt_types::Receipt>,
     pub compiled_grid: Option<FeatureGrid>,
+    pub cli_output: Option<String>,
+    pub cli_json_output: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -61,6 +63,8 @@ impl World {
             filing_manifest: None,
             filing_receipt: None,
             compiled_grid: None,
+            cli_output: None,
+            cli_json_output: None,
         }
     }
 }
@@ -138,6 +142,7 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
     if let Some(profile_id) = step.text.strip_prefix("the profile pack \"") {
         let profile_id = profile_id.trim_end_matches('"').to_string();
@@ -262,6 +267,12 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
             "synthetic-subject",
             receipt_types::RunResult::Success,
         ));
+        return Ok(true);
+    }
+
+    // CLI Given steps
+    if step.text == "a SEC profile is configured" {
+        world.profile_id = Some("sec/efm-77/opco".to_string());
         return Ok(true);
     }
 
@@ -428,10 +439,24 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // CLI When steps
+    if step.text == "I run describe-profile --json" {
+        let profile_id = world
+            .profile_id
+            .as_ref()
+            .context("profile must be configured")?;
+        let profile = sec_profile_types::load_profile_from_workspace(&world.repo_root, profile_id)?;
+        let json_output =
+            serde_json::to_string_pretty(&profile).context("serializing profile to JSON")?;
+        world.cli_output = Some(json_output);
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
-fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
+#[allow(clippy::too_many_lines)]
+fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
         if !world.dimension_context.validation_findings.is_empty() {
@@ -529,6 +554,37 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
                     "expected receipt kind 'filing.manifest', got '{}'",
                     receipt.kind
                 );
+            }
+            Ok(())
+        }
+        // CLI Then steps
+        "the output is valid JSON" => {
+            let output = world
+                .cli_output
+                .clone()
+                .context("CLI output not captured")?;
+            let json_value: serde_json::Value =
+                serde_json::from_str(&output).context("CLI output is not valid JSON")?;
+            world.cli_json_output = Some(json_value);
+            Ok(())
+        }
+        "the profile contains required fields" => {
+            let json_value = world
+                .cli_json_output
+                .as_ref()
+                .context("JSON output not parsed")?;
+            let required_fields = [
+                "id",
+                "label",
+                "forms",
+                "enabled_rule_families",
+                "standard_taxonomy_uris",
+                "required_facts",
+            ];
+            for field in &required_fields {
+                if json_value.get(field).is_none() {
+                    anyhow::bail!("required field '{field}' is missing from profile output");
+                }
             }
             Ok(())
         }

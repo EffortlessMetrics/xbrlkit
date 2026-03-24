@@ -22,6 +22,7 @@ receipt-types = { path = "../receipt-types" }
 filing-load = { path = "../filing-load" }
 edgar-attachments = { path = "../edgar-attachments" }
 xbrlkit-feature-grid = { path = "../xbrlkit-feature-grid" }
+sec-profile-types = { path = "../sec-profile-types" }
 
 [lints]
 workspace = true
