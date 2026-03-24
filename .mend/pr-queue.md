@@ -26,6 +26,7 @@
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
+| #53 | SCN-XK-WORKFLOW-005 | ✅ Complete | `7379cc0` | Alpha gate scenario |
 | #51 | #4 | ✅ Complete | `4a82af7` | Maintainer wrappers (make quick/full) |
 | #48 | #3 | ✅ Complete | `677fc87` | describe-profile --json acceptance slice |
 | #46 | SCN-XK-WORKFLOW-001 | ✅ Complete | `0f3b522` | Feature grid scenario |
@@ -43,10 +44,9 @@
 
 | # | Issue | Stream | Stage | Blocker |
 |---|-------|--------|-------|---------|
-| 1 | SCN-XK-WORKFLOW-005 | Workflow | 🔍 Research | None |
-| 2 | #5 | Infra | 📋 Ready | None |
+| 1 | #5 | Infra | 🔍 Research | None |
 
-*See `.mend/roadmap-phase-2.md` for full Phase 2 plan.*
+*Wave 1 complete (3/3). Starting Wave 2. See `.mend/roadmap-phase-2.md` for full plan.*
 
 ## In Progress
 

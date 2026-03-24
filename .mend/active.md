@@ -6,35 +6,31 @@
 
 | Item | Value |
 |------|-------|
-| **Issue** | SCN-XK-WORKFLOW-005 — Alpha readiness gate scenario |
-| **Stream** | Workflow |
+| **Issue** | #5 — Post-merge validator summary |
+| **Stream** | Infra |
 | **Stage** | 🔍 Research |
 | **Started** | 2026-03-24 |
-| **Wave** | Phase 2, Wave 1 |
+| **Wave** | Phase 2, Wave 1 (last item) |
 
 ## Scope
 
-Activate the alpha_check.feature scenario:
-- SCN-XK-WORKFLOW-005: Run the alpha readiness gate
-
-Steps needed:
-- `Given the active alpha scenarios are implemented`
-- `When I run the alpha readiness gate`
-- `Then the alpha readiness checks pass`
+Emit a machine-readable post-merge validator summary for alpha-check:
+- The validator leaves a machine-readable summary or receipt
+- The summary reflects the existing `cargo xtask alpha-check` result
+- Stays scoped to post-merge validation ergonomics
 
 ## Research Findings
 
-- Feature file exists at `specs/features/workflow/alpha_check.feature`
-- No `@alpha-active` tag currently
-- Step handlers need implementation in xbrlkit-bdd-steps
-- Can leverage existing `cargo xtask alpha-check` command
+- Alpha-check already generates receipts in artifacts/
+- Need to make post-merge summary more automation-friendly
+- Could emit JSON summary to artifacts/cockpit/ or similar
 
 ## Next Actions
 
-1. Add step handlers for alpha gate scenario
-2. Add @alpha-active tag
-3. Run quality gates
-4. Create PR
+1. Research current receipt structure
+2. Design machine-readable summary format
+3. Implement in xtask
+4. Test and create PR
 
 ---
 *This file is maintained by autonomous agents. Last updated: 2026-03-24*
