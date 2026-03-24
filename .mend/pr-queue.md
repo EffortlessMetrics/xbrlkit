@@ -70,7 +70,22 @@
 - CI failure needing intervention
 - Confidence < 60%
 
+## Stale PRs Requiring Attention
+
+| PR | Title | Status | Action Needed |
+|----|-------|--------|---------------|
+| #39 | docs(queue): update with bundle scenarios | 🔄 Open | Merge conflicts - rebase or close |
+| #36 | docs: update autonomous-log with friction fixes | 🔄 Open | Merge conflicts - rebase or close |
+| #31 | docs: update PR queue with completed work | 🔄 Open | Merge conflicts - rebase or close |
+
+*All 3 docs PRs have merge conflicts against main. Likely superseded by later queue updates.*
+
 ## Next
 
 **Phase 3 planning required.**
 See `.mend/roadmap-phase-3.md` when created.
+
+**Actions completed this run:**
+- Closed Issue #4 (completed via PR #51)
+- Closed Issue #5 (completed via PR #61)
+- Identified 3 stale docs PRs with merge conflicts
