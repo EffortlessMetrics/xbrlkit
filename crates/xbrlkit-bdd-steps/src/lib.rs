@@ -29,6 +29,8 @@ pub struct World {
     pub execution: Option<ScenarioExecution>,
     pub dimension_context: DimensionContext,
     pub bundle_manifest: Option<BundleManifest>,
+    pub validation_receipt: Option<receipt_types::Receipt>,
+    pub sensor_report: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -51,6 +53,8 @@ impl World {
             execution: None,
             dimension_context: DimensionContext::default(),
             bundle_manifest: None,
+            validation_receipt: None,
+            sensor_report: None,
         }
     }
 }
@@ -224,6 +228,16 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    // Cockpit pack Given steps
+    if step.text == "a validation report receipt" {
+        world.validation_receipt = Some(receipt_types::Receipt::new(
+            "validation.report",
+            "synthetic-subject",
+            receipt_types::RunResult::Success,
+        ));
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -356,6 +370,16 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Cockpit pack When steps
+    if step.text == "I package the receipt for cockpit" {
+        let receipt = world
+            .validation_receipt
+            .as_ref()
+            .context("packaging requires a validation receipt")?;
+        world.sensor_report = Some(cockpit_export::to_sensor_report("xbrlkit", receipt));
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -438,6 +462,12 @@ fn handle_then(world: &World, step: &Step) -> anyhow::Result<()> {
                     "expected bundling to fail but found {} matching scenario(s)",
                     manifest.scenarios.len()
                 );
+            }
+            Ok(())
+        }
+        "the sensor report is emitted" => {
+            if world.sensor_report.is_none() {
+                anyhow::bail!("sensor report was not emitted");
             }
             Ok(())
         }
