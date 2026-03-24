@@ -6,29 +6,22 @@
 
 | Item | Value |
 |------|-------|
-| **Issues** | #5 (validator summary), #55 (HTTP fetching) |
-| **Streams** | Infra, Taxonomy Core |
+| **Issues** | #55 (HTTP fetching) |
+| **Stream** | Taxonomy Core |
 | **Stage** | 🔨 Build |
 | **Wave** | Phase 2 |
 
-## Parallel Work
+## Completed Today
 
-### Issue #5 — Post-merge validator summary
-- Subagent debugging summary file creation
-- Adding chrono for timestamps
-- Expected: PR within 30 minutes
+| Issue | Status |
+|-------|--------|
+| #5 | ✅ Merged (alpha-check JSON summary) |
+| #55 | 🔄 In progress (taxonomy HTTP fetching) |
 
-### Issue #55 — HTTP fetching for taxonomy-loader
-- Subagent started research
-- Will add reqwest + caching
-- Expected: PR within 60 minutes
+## Next
 
-## Success Criteria
-
-- [ ] #5 merged: alpha-check emits JSON summary
-- [ ] #55 merged: taxonomy-loader fetches remote files
-- [ ] 21+ scenarios still passing
-- [ ] No regressions
+- Continue #55 implementation
+- Queue #56 (typed member handling) when #55 completes
 
 ---
 *This file is maintained by autonomous agents. Last updated: 2026-03-24*
