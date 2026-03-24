@@ -26,6 +26,7 @@
 
 | PR | Issue | Status | Commit | Notes |
 |----|-------|--------|--------|-------|
+| #37 | #35 | ✅ Complete | `5a577da` | Taxonomy loader crate |
 | #32 | #7 | ✅ Complete | `2eeb94f` | Synthetic fixture ix:tuple |
 | #30 | #8 | ✅ Complete | `e6d1b06` | Worktree-aware repo root |
 | #28 | #9 | ✅ Complete | `b3bde6a` | Required facts unit tests |
@@ -42,7 +43,7 @@
 
 | # | Issue | Stream | Stage | Started |
 |---|-------|--------|-------|---------|
-| 1 | [#35: Taxonomy Dimension Loading](https://github.com/EffortlessMetrics/xbrlkit/issues/35) | D: Taxonomy | 🔨 Build | 2026-03-23 |
+| - | - | - | - | - |
 
 ## Parallel Work Streams
 
@@ -51,7 +52,7 @@
 | **A: SEC Compliance** | Required facts | ✅ Complete |
 | **B: Developer Experience** | xtask worktree, pre-push | ✅ Complete |
 | **C: Test Infrastructure** | Synthetic fixtures | ✅ Complete |
-| **D: Taxonomy Core** | Dimension loading | 🔨 Build — In Progress |
+| **D: Taxonomy Core** | Dimension loading | ✅ Complete |
 
 ## Autonomous Infrastructure
 
