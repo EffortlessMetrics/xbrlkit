@@ -231,8 +231,10 @@ fn parse_dimensional_container(node: &roxmltree::Node<'_, '_>) -> DimensionalCon
     let mut dimensions = Vec::new();
 
     for child in node.children().filter(roxmltree::Node::is_element) {
+        let tag_name = child.tag_name().name();
+
         // Look for explicitMember elements (XBRL Dimensions)
-        if child.tag_name().name() == "explicitMember" {
+        if tag_name == "explicitMember" {
             if let Some(dim_attr) = child.attribute("dimension") {
                 let member = child
                     .text()
@@ -247,13 +249,49 @@ fn parse_dimensional_container(node: &roxmltree::Node<'_, '_>) -> DimensionalCon
                 });
             }
         }
-        // TODO: Handle typedMember for typed dimensions
+        // Handle typedMember for typed dimensions
+        else if tag_name == "typedMember" {
+            if let Some(dim_attr) = child.attribute("dimension") {
+                let typed_member = parse_typed_member(&child);
+
+                dimensions.push(DimensionMember {
+                    dimension: dim_attr.to_string(),
+                    member: typed_member.value.clone(),
+                    is_typed: true,
+                    typed_value: Some(typed_member.value),
+                });
+            }
+        }
     }
 
     DimensionalContainer {
         dimensions,
         raw_xml: None,
     }
+}
+
+/// Represents a parsed typed member value.
+struct TypedMemberValue {
+    /// The extracted typed value from nested element
+    value: String,
+}
+
+/// Parse a typedMember element to extract the typed value.
+///
+/// Typed members contain a nested element with the actual value:
+/// <xbrldi:typedMember dimension="tax:dCustomer">
+///     <cust>12345</cust>
+/// </xbrldi:typedMember>
+fn parse_typed_member(node: &roxmltree::Node<'_, '_>) -> TypedMemberValue {
+    // Get the first child element which contains the typed value
+    let value = node
+        .children()
+        .find(roxmltree::Node::is_element)
+        .and_then(|child| child.text())
+        .map(|t| t.trim().to_string())
+        .unwrap_or_default();
+
+    TypedMemberValue { value }
 }
 
 /// Find a child element by name (local name only).
@@ -406,6 +444,184 @@ mod tests {
         assert_eq!(members.len(), 1);
         assert_eq!(members[0].dimension, "us-gaap:StatementScenarioAxis");
         assert!(members[0].member.contains("ScenarioActualMember"));
+    }
+
+    #[test]
+    fn test_parse_typed_member_context() {
+        let xml = r#"
+            <xbrl xmlns="http://www.xbrl.org/2003/instance"
+                  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+                  xmlns:dim="http://example.com/dim"
+                  xmlns:cust="http://example.com/cust">
+                <context id="ctx-typed" xmlns="http://www.xbrl.org/2003/instance">
+                    <entity>
+                        <identifier scheme="http://www.sec.gov/CIK">0000320193</identifier>
+                        <segment>
+                            <xbrldi:typedMember dimension="dim:CustomerAxis">
+                                <cust:customerId>12345</cust:customerId>
+                            </xbrldi:typedMember>
+                        </segment>
+                    </entity>
+                    <period>
+                        <instant>2024-12-31</instant>
+                    </period>
+                </context>
+            </xbrl>
+        "#;
+
+        let set = parse_contexts(xml).unwrap();
+        assert_eq!(set.len(), 1);
+
+        let ctx = set.get("ctx-typed").unwrap();
+        assert!(has_dimensions(ctx));
+
+        let members = get_dimensional_members(ctx);
+        assert_eq!(members.len(), 1);
+        assert_eq!(members[0].dimension, "dim:CustomerAxis");
+        assert_eq!(members[0].member, "12345");
+        assert!(members[0].is_typed);
+        assert_eq!(members[0].typed_value, Some("12345".to_string()));
+    }
+
+    #[test]
+    fn test_parse_typed_member_in_scenario() {
+        let xml = r#"
+            <xbrl xmlns="http://www.xbrl.org/2003/instance"
+                  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+                  xmlns:dim="http://example.com/dim">
+                <context id="ctx-scenario-typed" xmlns="http://www.xbrl.org/2003/instance">
+                    <entity>
+                        <identifier scheme="http://www.sec.gov/CIK">0000320193</identifier>
+                    </entity>
+                    <period>
+                        <instant>2024-12-31</instant>
+                    </period>
+                    <scenario>
+                        <xbrldi:typedMember dimension="dim:DateRangeAxis">
+                            <dim:dateValue>2024-01-15</dim:dateValue>
+                        </xbrldi:typedMember>
+                    </scenario>
+                </context>
+            </xbrl>
+        "#;
+
+        let set = parse_contexts(xml).unwrap();
+        let ctx = set.get("ctx-scenario-typed").unwrap();
+
+        let members = get_dimensional_members(ctx);
+        assert_eq!(members.len(), 1);
+        assert_eq!(members[0].dimension, "dim:DateRangeAxis");
+        assert_eq!(members[0].member, "2024-01-15");
+        assert!(members[0].is_typed);
+    }
+
+    #[test]
+    fn test_parse_mixed_explicit_and_typed_members() {
+        let xml = r#"
+            <xbrl xmlns="http://www.xbrl.org/2003/instance"
+                  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+                  xmlns:us-gaap="http://fasb.org/us-gaap/2024"
+                  xmlns:dim="http://example.com/dim">
+                <context id="ctx-mixed" xmlns="http://www.xbrl.org/2003/instance">
+                    <entity>
+                        <identifier scheme="http://www.sec.gov/CIK">0000320193</identifier>
+                        <segment>
+                            <xbrldi:explicitMember dimension="us-gaap:StatementScenarioAxis">
+                                us-gaap:ScenarioActualMember
+                            </xbrldi:explicitMember>
+                            <xbrldi:typedMember dimension="dim:ProductAxis">
+                                <dim:productCode>PROD-789</dim:productCode>
+                            </xbrldi:typedMember>
+                        </segment>
+                    </entity>
+                    <period>
+                        <instant>2024-12-31</instant>
+                    </period>
+                </context>
+            </xbrl>
+        "#;
+
+        let set = parse_contexts(xml).unwrap();
+        let ctx = set.get("ctx-mixed").unwrap();
+
+        let members = get_dimensional_members(ctx);
+        assert_eq!(members.len(), 2);
+
+        // Explicit member
+        let explicit = members.iter().find(|m| !m.is_typed).unwrap();
+        assert_eq!(explicit.dimension, "us-gaap:StatementScenarioAxis");
+        assert!(explicit.member.contains("ScenarioActualMember"));
+        assert!(!explicit.is_typed);
+
+        // Typed member
+        let typed = members.iter().find(|m| m.is_typed).unwrap();
+        assert_eq!(typed.dimension, "dim:ProductAxis");
+        assert_eq!(typed.member, "PROD-789");
+        assert!(typed.is_typed);
+    }
+
+    #[test]
+    fn test_parse_typed_member_with_namespace_prefix() {
+        let xml = r#"
+            <xbrl xmlns="http://www.xbrl.org/2003/instance"
+                  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+                  xmlns:open="http://www.nbb.be/be/fr/cbso/dict/dom/open">
+                <context id="ctx-nbb" xmlns="http://www.xbrl.org/2003/instance">
+                    <entity>
+                        <identifier scheme="http://www.fgov.be">1234567890</identifier>
+                    </entity>
+                    <period>
+                        <instant>2024-12-31</instant>
+                    </period>
+                    <scenario>
+                        <xbrldi:typedMember dimension="dim:afnp">
+                            <open:str>John</open:str>
+                        </xbrldi:typedMember>
+                    </scenario>
+                </context>
+            </xbrl>
+        "#;
+
+        let set = parse_contexts(xml).unwrap();
+        let ctx = set.get("ctx-nbb").unwrap();
+
+        let members = get_dimensional_members(ctx);
+        assert_eq!(members.len(), 1);
+        assert_eq!(members[0].dimension, "dim:afnp");
+        assert_eq!(members[0].member, "John");
+        assert!(members[0].is_typed);
+    }
+
+    #[test]
+    fn test_parse_typed_member_empty_value() {
+        let xml = r#"
+            <xbrl xmlns="http://www.xbrl.org/2003/instance"
+                  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+                  xmlns:dim="http://example.com/dim">
+                <context id="ctx-empty" xmlns="http://www.xbrl.org/2003/instance">
+                    <entity>
+                        <identifier scheme="http://www.sec.gov/CIK">0000320193</identifier>
+                    </entity>
+                    <period>
+                        <instant>2024-12-31</instant>
+                    </period>
+                    <scenario>
+                        <xbrldi:typedMember dimension="dim:EmptyAxis">
+                            <dim:value></dim:value>
+                        </xbrldi:typedMember>
+                    </scenario>
+                </context>
+            </xbrl>
+        "#;
+
+        let set = parse_contexts(xml).unwrap();
+        let ctx = set.get("ctx-empty").unwrap();
+
+        let members = get_dimensional_members(ctx);
+        assert_eq!(members.len(), 1);
+        assert_eq!(members[0].dimension, "dim:EmptyAxis");
+        assert_eq!(members[0].member, "");
+        assert!(members[0].is_typed);
     }
 
     #[test]
