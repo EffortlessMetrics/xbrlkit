@@ -435,6 +435,39 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    // Decimal precision Given steps
+    if step.text.starts_with("a numeric fact with value ") {
+        // Clear previous state for standalone decimal precision scenarios
+        world.context_completeness_context.facts.clear();
+        world.context_completeness_context.contexts.clear();
+        world.context_completeness_context.findings.clear();
+
+        // Parse: "a numeric fact with value "1234.56" and decimals "INF""
+        let quoted: Vec<String> = step
+            .text
+            .split('"')
+            .enumerate()
+            .filter(|(i, _)| i % 2 == 1)
+            .map(|(_, s)| s.to_string())
+            .collect();
+
+        if quoted.len() >= 2 {
+            let value = &quoted[0];
+            let decimals = &quoted[1];
+            let fact = xbrl_report_types::Fact {
+                concept: "us-gaap:TestConcept".to_string(),
+                context_ref: "ctx-1".to_string(),
+                unit_ref: Some("usd".to_string()),
+                decimals: Some(decimals.clone()),
+                value: value.clone(),
+                member: String::new(),
+            };
+            world.context_completeness_context.facts.push(fact);
+            return Ok(true);
+        }
+        anyhow::bail!("invalid numeric fact specification: {}", step.text);
+    }
+
     Ok(false)
 }
 
@@ -691,6 +724,14 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Decimal precision When steps
+    if step.text == "decimal precision validation is performed" {
+        let findings =
+            numeric_rules::validate_decimal_precision(&world.context_completeness_context.facts);
+        world.context_completeness_context.findings = findings;
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -736,6 +777,34 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 "expected finding {} but got {:?}",
                 expected_finding,
                 world.dimension_context.validation_findings
+            );
+        }
+        return Ok(());
+    }
+
+    // Decimal precision Then steps
+    if step.text == "no validation errors are reported" {
+        if !world.context_completeness_context.findings.is_empty() {
+            anyhow::bail!(
+                "expected no validation errors but got: {:?}",
+                world.context_completeness_context.findings
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(error_type) = step.text.strip_prefix("validation error \"") {
+        let expected_error = error_type.trim_end_matches("\" is reported");
+        let has_error = world
+            .context_completeness_context
+            .findings
+            .iter()
+            .any(|f| f.rule_id.contains(expected_error) || f.message.contains(expected_error));
+        if !has_error {
+            anyhow::bail!(
+                "expected validation error '{}' but got: {:?}",
+                expected_error,
+                world.context_completeness_context.findings
             );
         }
         return Ok(());

@@ -102,6 +102,12 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 
 *No active work.*
 
+### ✅ Complete (Recently Merged)
+
+| Item | Issue | Status | PR | Notes |
+|------|-------|--------|-----|-------|
+| Decimal Precision Validation | #81 | ✅ Complete | #93 | EFM 6.5.37 implementation, 10 BDD scenarios, alpha-check green |
+
 ### 📋 Planned (Future)
 
 | Wave | Item | Priority | Description |

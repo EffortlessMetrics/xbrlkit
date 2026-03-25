@@ -25,6 +25,7 @@ xbrlkit-feature-grid = { path = "../xbrlkit-feature-grid" }
 sec-profile-types = { path = "../sec-profile-types" }
 context-completeness = { path = "../context-completeness" }
 xbrl-report-types = { path = "../xbrl-report-types" }
+numeric-rules = { path = "../numeric-rules" }
 
 [lints]
 workspace = true

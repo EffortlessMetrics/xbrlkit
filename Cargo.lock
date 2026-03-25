@@ -2381,6 +2381,7 @@ dependencies = [
  "dimensional-rules",
  "edgar-attachments",
  "filing-load",
+ "numeric-rules",
  "receipt-types",
  "scenario-contract",
  "scenario-runner",

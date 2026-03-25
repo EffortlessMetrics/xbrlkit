@@ -1,0 +1,1 @@
+# Valid decimal precision fixture

@@ -1,128 +1,202 @@
-# Decimal Precision Validation - Implementation Plan
+# Decimal Precision Validation — Implementation Plan
 
 **Issue:** #81  
-**Acceptance Criteria:** AC-XK-SEC-DECIMAL-001, AC-XK-SEC-DECIMAL-002  
-**Estimated Effort:** 2 days  
+**Research Date:** 2026-03-26  
+**Confidence:** High (85%)
 
-## Research Summary
+---
 
-From SEC EFM § 6.6.4 and § 6.5.17:
-- Numeric facts MUST use `@decimals` (not `@precision`)
-- Decimals value indicates accuracy: INF (exact), 0 (units), 2 (cents), -3 (thousands), etc.
-- Value must correspond to accuracy in official HTML/ASCII document
+## Research Findings
 
-## Implementation Approach
+### 1. SEC EFM Requirements
 
-### 1. Extend `numeric-rules` Crate
+**EFM 6.6.32 / 6.6.4** — Decimals Attribute Selection:
+The value of the `decimals` attribute must correspond to the accuracy of the amount as reported in the official HTML/ASCII document.
 
-Add to `crates/numeric-rules/src/lib.rs`:
+| Accuracy in Official Document | decimals Value |
+|------------------------------|----------------|
+| Exact amount | INF |
+| Rounded to billions | -9 |
+| Rounded to millions | -6 |
+| Rounded to thousands | -3 |
+| Rounded to units | 0 |
+| Rounded to cents (hundredths) | 2 |
+| Rounded to whole percentage | 2 |
+| Rounded to basis points | 4 |
 
-```rust
-/// Validates decimal precision on numeric facts.
-pub fn validate_decimal_precision(
-    facts: &[Fact],
-    config: &DecimalPrecisionConfig,
-) -> Vec<ValidationFinding>
+**EFM 6.5.37** — Nonzero Digits Truncated (Error):
+> "A non-nil numeric fact value is not truncated by the decimals attribute."
+
+This is the core validation rule we must implement. Examples of violations:
+
+| Fact Text | decimals | Interpreted Value | Result |
+|-----------|----------|-------------------|--------|
+| -2345.67 | INF | -2,345.67 | ✓ Valid |
+| -2345.67 | 2 | -2,345.67 | ✓ Valid |
+| -2345.67 | 0 | -2,345.00 | ✗ Error (truncates .67) |
+| -2345.67 | -2 | -2,300.00 | ✗ Error (truncates 45.67) |
+| -2345.67 | -3 | -2,000.00 | ✗ Error (truncates 345.67) |
+
+**EFM 6.5.17** — Decimals Not Precision:
+SEC requires the `decimals` attribute, not `precision`. Using `precision` is an error.
+
+### 2. XBRL 2.1 Specification
+
+The XBRL 2.1 spec defines how to infer precision from decimals:
+
+```
+precision = n + e + d
+
+where:
+- n = number of non-zero digits to left of decimal point (or -zeros to right if no left digits)
+- e = exponent value (if present)
+- d = decimals attribute value
 ```
 
-**Validation checks:**
-1. **Missing decimals**: Numeric fact without `@decimals` attribute → Error
-2. **Precision attribute used**: Fact has `@precision` → Error (SEC requirement)
-3. **Excessive precision**: Decimals value > threshold for data type → Warning
+Example: `123.4567` with `decimals="2"` → n=3, e=0, d=2 → precision=5
 
-### 2. Add Configuration
+### 3. Key Insight for Implementation
 
-Extend `sec_profile_types` to include:
+The validation is **not symmetric**:
+- A value like `1,000,000` may have decimals > -6 (e.g., -5, -4)
+- But a value like `-2345.67` must NOT have decimals that truncate non-zero digits
 
+The check: After applying the decimals rounding, no non-zero digits from the original value should become zero.
+
+---
+
+## Implementation Design
+
+### Location
+Extend `crates/numeric-rules/` (shared with negative-values validation)
+
+### New Module
+`crates/numeric-rules/src/decimal_precision.rs`
+
+### Core Function
 ```rust
-pub struct DecimalPrecisionRules {
-    pub max_monetary_decimals: i32,      // e.g., 2 (cents)
-    pub max_percentage_decimals: i32,    // e.g., 4 (basis points)
-    pub prohibited_concepts: Vec<String>, // Concepts requiring exact precision (INF)
+pub fn validate_decimal_precision(fact: &NumericFact) -> Vec<ValidationError> {
+    // Check if decimals attribute truncates non-zero digits
+    // Return error if EFM 6.5.37 violated
 }
 ```
 
-### 3. Wire into `validation-run`
+### Validation Logic
 
-In `crates/validation-run/src/lib.rs`, add:
+1. **Parse the numeric value** (handle scientific notation, decimals)
+2. **Get decimals attribute** (INF, or integer)
+3. **Apply rounding logic** per XBRL spec
+4. **Check for truncation** of non-zero digits
+5. **Report error** if truncation detected
 
-```rust
-use numeric_rules::validate_decimal_precision;
+### Error Code
+`fs-0637-Nonzero-Digits-Truncated` (per SEC EDGAR error codes)
 
-// After negative value validation
-if let Some(rules) = &profile.numeric_rules {
-    report.findings.extend(validate_decimal_precision(
-        &report.facts,
-        &rules.decimal_precision_rules,
-    ));
-}
-```
+---
 
-### 4. BDD Scenarios
+## BDD Scenarios
 
-Create `specs/features/sec/decimal_precision.feature`:
+File: `specs/features/sec/decimal_precision.feature`
 
 ```gherkin
-Feature: Decimal Precision Validation (AC-XK-SEC-DECIMAL-001)
+Feature: Decimal Precision Validation (EFM 6.5.37)
 
-  Scenario: Missing decimals attribute on numeric fact
-    Given a report with a numeric fact without decimals attribute
-    When decimal precision validation runs
-    Then finding SEC.DECIMAL_PRECISION.MISSING is produced
+  Background:
+    Given the system has loaded the SEC validation rules
 
-  Scenario: Precision attribute used instead of decimals
-    Given a report with a numeric fact using precision attribute
-    When decimal precision validation runs
-    Then finding SEC.DECIMAL_PRECISION.PRECISION_USED is produced
+  @alpha-candidate @ac-xk-sec-decimal-001
+  Scenario: Valid exact value with INF decimals
+    Given a numeric fact with value "1234.56" and decimals "INF"
+    When decimal precision validation is performed
+    Then no validation errors are reported
 
-  Scenario: Valid decimals attribute
-    Given a report with numeric facts having valid decimals
-    When decimal precision validation runs
-    Then no decimal precision findings are produced
+  @alpha-candidate @ac-xk-sec-decimal-001
+  Scenario: Valid rounded value with appropriate decimals
+    Given a numeric fact with value "1234.00" and decimals "0"
+    When decimal precision validation is performed
+    Then no validation errors are reported
+
+  @alpha-candidate @ac-xk-sec-decimal-001
+  Scenario: Invalid truncation of fractional digits
+    Given a numeric fact with value "1234.56" and decimals "0"
+    When decimal precision validation is performed
+    Then validation error "NonzeroDigitsTruncated" is reported
+
+  @alpha-candidate @ac-xk-sec-decimal-001
+  Scenario: Invalid truncation of significant digits
+    Given a numeric fact with value "1234" and decimals "-3"
+    When decimal precision validation is performed
+    Then validation error "NonzeroDigitsTruncated" is reported
+
+  @alpha-candidate @ac-xk-sec-decimal-002
+  Scenario: Valid high-magnitude rounding
+    Given a numeric fact with value "1000000" and decimals "-5"
+    When decimal precision validation is performed
+    Then no validation errors are reported
 ```
 
-### 5. Test Fixtures
+---
 
-Create `fixtures/synthetic/sec/decimal-precision/`:
-- `valid-decimals.xml` - Numeric facts with correct decimals
-- `missing-decimals.xml` - Numeric fact without decimals
-- `precision-used.xml` - Numeric fact using precision attribute
+## Integration Points
 
-## File Changes
+### 1. Wire into validation-run
+Add to `crates/validation-run/src/pipeline.rs`:
+```rust
+// After unit consistency validation
+.pipeline(numeric_rules::validate_decimal_precision)
+```
 
-| File | Change |
-|------|--------|
-| `crates/numeric-rules/src/lib.rs` | Add `validate_decimal_precision()` function |
-| `crates/sec-profile-types/src/lib.rs` | Add `DecimalPrecisionRules` struct |
-| `crates/validation-run/src/lib.rs` | Wire validation into pipeline |
-| `specs/features/sec/decimal_precision.feature` | New BDD scenarios |
-| `specs/features/sec/decimal_precision.meta.yaml` | Sidecar metadata |
-| `fixtures/synthetic/sec/decimal-precision/` | Test fixtures |
-| `profiles/sec/efm-77/numeric-rules.yaml` | Add decimal precision rules |
+### 2. Add Alpha Check ACs
+Update `xtask/src/alpha_check.rs`:
+```rust
+pub const ACTIVE_ALPHA_ACS: &[&str] = &[
+    // ... existing ACs ...
+    "AC-XK-SEC-DECIMAL-001",
+    "AC-XK-SEC-DECIMAL-002",
+];
+```
 
-## Acceptance Criteria Mapping
+---
 
-- **AC-XK-SEC-DECIMAL-001**: Detect invalid decimal precision
-  - Missing decimals attribute → Error
-  - Using precision instead of decimals → Error
-- **AC-XK-SEC-DECIMAL-002**: Valid precision values pass
-  - All numeric facts with proper decimals → No findings
+## Test Fixtures
 
-## Risks and Mitigations
+Create in `crates/numeric-rules/tests/fixtures/`:
 
-| Risk | Mitigation |
-|------|------------|
-| Breaking existing tests | Run full test suite before PR |
-| Profile config missing | Use defaults if config absent |
-| Non-numeric facts | Skip validation for non-numeric types |
+**valid_precision.xbrl** — Various valid decimals combinations
+**invalid_truncation.xbrl** — Cases that violate EFM 6.5.37
 
-## Next Steps
+---
 
-1. Create branch: `mend/issue-81-decimal-precision`
-2. Implement `validate_decimal_precision()`
-3. Add configuration structs
-4. Create BDD scenarios
-5. Add test fixtures
-6. Wire into validation-run
-7. Run alpha-check
-8. Create PR
+## Estimates
+
+| Task | Estimate |
+|------|----------|
+| Core validation logic | 4h |
+| Unit tests | 2h |
+| BDD scenarios | 2h |
+| Integration (validation-run) | 1h |
+| Alpha-check wiring | 1h |
+| **Total** | **10h (~1.5 days)** |
+
+---
+
+## Open Questions
+
+1. Should we also validate that `precision` attribute is NOT used (EFM 6.5.17)?
+2. Do we need to handle scientific notation (e.g., `1.23e5`)?
+3. Should we validate specific decimal values per fact type (some facts require INF)?
+
+**Recommendation:** Start with core EFM 6.5.37 validation (nonzero truncation). Add precision-attribute check as separate rule if needed.
+
+---
+
+## Dependencies
+
+- `numeric-rules` crate (exists)
+- `xbrl-types` crate for NumericFact types
+- No external dependencies
+
+---
+
+*Plan created by: Mend autonomous queue check*  
+*Ready for build phase transition*
