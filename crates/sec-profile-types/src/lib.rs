@@ -43,6 +43,20 @@ pub struct ProfilePack {
     pub standard_taxonomy_uris: Vec<String>,
     #[serde(default)]
     pub required_facts: Vec<String>,
+    #[serde(default)]
+    pub numeric_rules: Option<NumericRules>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct NumericRules {
+    #[serde(default)]
+    pub negative_value_rules: NegativeValueRules,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct NegativeValueRules {
+    #[serde(default)]
+    pub prohibited_concepts: Vec<String>,
 }
 
 pub fn load_profile_from_workspace(root: &Path, profile_id: &str) -> anyhow::Result<ProfilePack> {

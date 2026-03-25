@@ -84,24 +84,38 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 📐 Plan (Ready for Review)
+### 🔄 Review (Awaiting Approval)
+
+| Item | Issue | Description | PR |
+|------|-------|-------------|-----|
+| Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | #86 |
+
+**Status:** 
+- ✅ numeric-rules crate created
+- ✅ Core validation logic implemented
+- ✅ Wired into validation-run pipeline
+- ✅ BDD scenarios added (5 scenarios @alpha-candidate)
+- ✅ Tests passing
+- ✅ Golden file updated
+- ✅ CI green (check passes, CLA check expected failure)
+- ⏳ **Awaiting:** PR review approval (REVIEW_REQUIRED)
+
+### 📐 Plan (Ready for Planning)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
-| Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | 3-4 days |
+| Unit Consistency Validation | #82 | Validate unit references match fact types | 2-3 days |
 
-### 🔍 Research (Next Up)
-
-| Item | Issue | Description | Est. Effort |
-|------|-------|-------------|-------------|
-| Decimal Precision Validation | #81 | Validate decimal attribute correctness | 2-3 days |
+**Research Complete:** See `.mend/notes/unit-consistency-research.md`
+- Architecture: New `unit-rules` crate (follows `numeric-rules` pattern)
+- Validation: Concept patterns → expected unit types
+- Configuration: `UnitRules` in `sec-profile-types`
+- Implementation plan: `.mend/notes/unit-consistency-plan.md`
 
 ### 📋 Ready (Planned)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
-| Decimal Precision Validation | #81 | Validate decimal attribute correctness | 2-3 days |
-| Unit Consistency Validation | #82 | Ensure unit references match fact types | 2-3 days |
 | Context Completeness Validation | #83 | Ensure all facts reference valid contexts | 2 days |
 
 ### 📋 Planned (Future)
@@ -111,12 +125,9 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
 | Wave 5 | IFRS/ESEF Support | P2 | Extended taxonomy support |
 
-## Actions Completed This Run
-- ✅ Closed stale PRs #31, #36, #39
-- ✅ Closed completed issues #4, #5
-- ✅ Created Phase 3 roadmap (`.mend/roadmap-phase-3.md`)
-- ✅ Discovered Issue #9 was already complete — closed with documentation
-- ✅ Created Issue #80 (Negative Value Validation)
-- ✅ Created Issue #81 (Decimal Precision Validation)
-- ✅ Created Issue #82 (Unit Consistency Validation)
-- ✅ Created Issue #83 (Context Completeness Validation)
+## Actions Completed This Run (2026-03-25 20:32 CST)
+- ✅ Found existing research for #82 (Unit Consistency Validation)
+- ✅ Moved #82 from 📋 Ready → 📐 Plan stage
+- ✅ Created implementation plan: `.mend/notes/unit-consistency-plan.md`
+- ✅ Verified no active work in progress
+- ✅ Updated queue state

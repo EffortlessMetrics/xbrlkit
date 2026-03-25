@@ -3,6 +3,7 @@
 use duplicate_facts::{DuplicateDisposition, classify};
 use efm_rules::{validate_inline_restrictions, validate_required_facts, validate_taxonomy_years};
 use ixds_assemble::assemble;
+use numeric_rules::validate_negative_values;
 use receipt_types::{Receipt, RunResult};
 use sec_profile_types::ProfilePack;
 use taxonomy_dimensions::DimensionTaxonomy;
@@ -35,6 +36,16 @@ pub fn validate_html_members(members: &[(&str, &str)], profile: &ProfilePack) ->
     report
         .findings
         .extend(validate_required_facts(&report.facts, profile));
+    // Validate negative values where prohibited
+    let prohibited_concepts = profile
+        .numeric_rules
+        .as_ref()
+        .map(|nr| nr.negative_value_rules.prohibited_concepts.clone())
+        .unwrap_or_default();
+    report.findings.extend(validate_negative_values(
+        &report.facts,
+        &prohibited_concepts,
+    ));
     let subject = format!("{} members", report.members.len());
     finalize_validation(report, subject)
 }

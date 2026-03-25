@@ -152,6 +152,7 @@ mod tests {
             accepted_taxonomies: AcceptedTaxonomies::default(),
             standard_taxonomy_uris: Vec::new(),
             required_facts: Vec::new(),
+            numeric_rules: None,
         }
     }
 
@@ -172,6 +173,7 @@ mod tests {
                 "dei:EntityCentralIndexKey".to_string(),
                 "dei:DocumentType".to_string(),
             ],
+            numeric_rules: None,
         }
     }
 

@@ -15,6 +15,7 @@ ixds-assemble = { path = "../ixds-assemble" }
 efm-rules = { path = "../efm-rules" }
 duplicate-facts = { path = "../duplicate-facts" }
 xbrl-report-types = { path = "../xbrl-report-types" }
+numeric-rules = { path = "../numeric-rules" }
 xbrl-contexts = { path = "../xbrl-contexts" }
 taxonomy-dts = { path = "../taxonomy-dts" }
 taxonomy-types = { path = "../taxonomy-types" }
