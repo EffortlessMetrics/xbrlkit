@@ -70,7 +70,16 @@
 - CI failure needing intervention
 - Confidence < 60%
 
+## Stale PRs Requiring Attention
+
+None. All stale PRs closed on 2026-03-25.
+
 ## Next
 
 **Phase 3 planning required.**
 See `.mend/roadmap-phase-3.md` when created.
+
+**Actions completed this run:**
+- Closed Issue #4 (completed via PR #51)
+- Closed Issue #5 (completed via PR #61)
+- Identified 3 stale docs PRs with merge conflicts
