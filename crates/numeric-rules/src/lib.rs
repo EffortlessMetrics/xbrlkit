@@ -141,10 +141,7 @@ mod tests {
 
     #[test]
     fn detects_negative_shares_outstanding() {
-        let facts = vec![fact(
-            "dei:EntityCommonStockSharesOutstanding",
-            "-1000",
-        )];
+        let facts = vec![fact("dei:EntityCommonStockSharesOutstanding", "-1000")];
         let prohibited: Vec<String> = Vec::new();
 
         let findings = validate_negative_values(&facts, &prohibited);
