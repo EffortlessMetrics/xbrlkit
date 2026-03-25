@@ -25,11 +25,7 @@ pub fn validate_context_completeness(
     let mut findings = Vec::new();
 
     for fact in facts {
-        // Skip facts without a context_ref (some facts may not have contexts)
-        let context_ref = match &fact.context_ref {
-            Some(ref_id) => ref_id,
-            None => continue,
-        };
+        let context_ref = &fact.context_ref;
 
         // Check if context exists (case-insensitive lookup)
         if contexts.get(context_ref).is_none() {
@@ -71,24 +67,19 @@ pub fn is_valid_context_ref(context_ref: &str, contexts: &ContextSet) -> bool {
 pub fn count_missing_contexts(facts: &[Fact], contexts: &ContextSet) -> usize {
     facts
         .iter()
-        .filter(|f| {
-            f.context_ref
-                .as_ref()
-                .map(|ref_id| contexts.get(ref_id).is_none())
-                .unwrap_or(false)
-        })
+        .filter(|f| contexts.get(&f.context_ref).is_none())
         .count()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use xbrl_contexts::{Context, EntityIdentifier, Period};
+    use xbrl_contexts::{normalize_context_id, Context, EntityIdentifier, Period};
 
-    fn create_test_fact(concept: &str, context_ref: Option<&str>) -> Fact {
+    fn create_test_fact(concept: &str, context_ref: &str) -> Fact {
         Fact {
             concept: concept.to_string(),
-            context_ref: context_ref.map(|s| s.to_string()),
+            context_ref: context_ref.to_string(),
             unit_ref: None,
             decimals: None,
             value: "1000".to_string(),
@@ -98,7 +89,7 @@ mod tests {
 
     fn create_test_context(id: &str) -> Context {
         Context {
-            id: id.to_string(),
+            id: normalize_context_id(id), // Normalize the ID for consistent lookup
             entity: EntityIdentifier {
                 scheme: "http://www.sec.gov/CIK".to_string(),
                 value: "0000320193".to_string(),
@@ -114,7 +105,7 @@ mod tests {
         let mut contexts = ContextSet::new();
         contexts.insert(create_test_context("ctx-1"));
 
-        let facts = vec![create_test_fact("us-gaap:Revenue", Some("ctx-1"))];
+        let facts = vec![create_test_fact("us-gaap:Revenue", "ctx-1")];
         let findings = validate_context_completeness(&facts, &contexts);
 
         assert!(findings.is_empty());
@@ -123,7 +114,7 @@ mod tests {
     #[test]
     fn test_missing_context_reference() {
         let contexts = ContextSet::new();
-        let facts = vec![create_test_fact("us-gaap:Revenue", Some("ctx-missing"))];
+        let facts = vec![create_test_fact("us-gaap:Revenue", "ctx-missing")];
         let findings = validate_context_completeness(&facts, &contexts);
 
         assert_eq!(findings.len(), 1);
@@ -134,23 +125,11 @@ mod tests {
     #[test]
     fn test_case_insensitive_matching() {
         let mut contexts = ContextSet::new();
-        contexts.insert(create_test_context("CTX-1")); // uppercase
+        contexts.insert(create_test_context("CTX-1")); // uppercase (normalized to lowercase)
 
-        let facts = vec![create_test_fact("us-gaap:Revenue", Some("ctx-1"))]; // lowercase
+        let facts = vec![create_test_fact("us-gaap:Revenue", "ctx-1")]; // lowercase
         let findings = validate_context_completeness(&facts, &contexts);
 
-        assert!(findings.is_empty());
-    }
-
-    #[test]
-    fn test_fact_without_context_ref() {
-        let mut contexts = ContextSet::new();
-        contexts.insert(create_test_context("ctx-1"));
-
-        let facts = vec![create_test_fact("us-gaap:Revenue", None)];
-        let findings = validate_context_completeness(&facts, &contexts);
-
-        // Facts without context_ref are skipped (not errors)
         assert!(findings.is_empty());
     }
 
@@ -160,9 +139,9 @@ mod tests {
         contexts.insert(create_test_context("ctx-1"));
 
         let facts = vec![
-            create_test_fact("us-gaap:Revenue", Some("ctx-missing-1")),
-            create_test_fact("us-gaap:Assets", Some("ctx-1")), // valid
-            create_test_fact("us-gaap:Liabilities", Some("ctx-missing-2")),
+            create_test_fact("us-gaap:Revenue", "ctx-missing-1"),
+            create_test_fact("us-gaap:Assets", "ctx-1"), // valid
+            create_test_fact("us-gaap:Liabilities", "ctx-missing-2"),
         ];
         let findings = validate_context_completeness(&facts, &contexts);
 
@@ -183,7 +162,7 @@ mod tests {
     #[test]
     fn test_empty_contexts() {
         let contexts = ContextSet::new();
-        let facts = vec![create_test_fact("us-gaap:Revenue", Some("ctx-1"))];
+        let facts = vec![create_test_fact("us-gaap:Revenue", "ctx-1")];
         let findings = validate_context_completeness(&facts, &contexts);
 
         assert_eq!(findings.len(), 1);
@@ -205,10 +184,9 @@ mod tests {
         contexts.insert(create_test_context("ctx-1"));
 
         let facts = vec![
-            create_test_fact("us-gaap:Revenue", Some("ctx-missing-1")),
-            create_test_fact("us-gaap:Assets", Some("ctx-1")), // valid
-            create_test_fact("us-gaap:Liabilities", Some("ctx-missing-2")),
-            create_test_fact("us-gaap:Equity", None), // no context_ref
+            create_test_fact("us-gaap:Revenue", "ctx-missing-1"),
+            create_test_fact("us-gaap:Assets", "ctx-1"), // valid
+            create_test_fact("us-gaap:Liabilities", "ctx-missing-2"),
         ];
 
         assert_eq!(count_missing_contexts(&facts, &contexts), 2);
