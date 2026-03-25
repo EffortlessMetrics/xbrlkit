@@ -16,6 +16,10 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-IXDS-001",
     "AC-XK-IXDS-002",
     "AC-XK-EXPORT-001",
+    "AC-XK-CONTEXT-001",
+    "AC-XK-CONTEXT-002",
+    "AC-XK-CONTEXT-003",
+    "AC-XK-CONTEXT-004",
     // AC-XK-WORKFLOW-002/003 and AC-XK-MANIFEST-001 are tested via @alpha-active BDD tags
 ];
 
