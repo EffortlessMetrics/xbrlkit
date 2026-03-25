@@ -89,6 +89,7 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Item | Issue | Description | PR |
 |------|-------|-------------|-----|
 | Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | #86 |
+| Unit Consistency Validation | #82 | Validate unit references match fact types | #88 |
 
 **Status:** ✅ **MERGED** (2026-03-25 14:02 UTC)
 - Commit: `9f2fc8d`
@@ -97,24 +98,6 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 - Golden file updated
 
 ### 🔨 Build (In Progress)
-
-| Item | Issue | Description | Est. Effort |
-|------|-------|-------------|-------------|
-| Unit Consistency Validation | #82 | Validate unit references match fact types | 2-3 days |
-
-**Research Complete:** See `.mend/notes/unit-consistency-research.md`
-- Architecture: New `unit-rules` crate (follows `numeric-rules` pattern)
-- Validation: Concept patterns → expected unit types
-- Configuration: `UnitRules` in `sec-profile-types`
-- Implementation plan: `.mend/notes/unit-consistency-plan.md`
-
-**Research Complete:** See `.mend/notes/unit-consistency-research.md`
-- Architecture: New `unit-rules` crate (follows `numeric-rules` pattern)
-- Validation: Concept patterns → expected unit types
-- Configuration: `UnitRules` in `sec-profile-types`
-- Implementation plan: `.mend/notes/unit-consistency-plan.md`
-
-### 📋 Ready (Planned)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
