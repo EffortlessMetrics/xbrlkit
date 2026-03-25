@@ -1,0 +1,13 @@
+[package]
+name = "context-completeness"
+version = "0.1.0"
+edition = "2021"
+description = "XBRL context completeness validation"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+xbrl-report-types = { path = "../xbrl-report-types" }
+xbrl-contexts = { path = "../xbrl-contexts" }
+
+[dev-dependencies]
+# Test dependencies added as needed

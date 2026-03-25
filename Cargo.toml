@@ -47,6 +47,7 @@ members = [
   "crates/dimensional-rules",
   "crates/numeric-rules",
   "crates/unit-rules",
+  "crates/context-completeness",
   "crates/taxonomy-loader",
 ]
 default-members = ["crates/xbrlkit-cli", "xtask"]
