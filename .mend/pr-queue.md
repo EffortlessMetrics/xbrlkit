@@ -84,7 +84,7 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 🔄 Review (In Progress)
+### 🔄 Review (Blocked)
 
 | Item | Issue | Description | PR |
 |------|-------|-------------|-----|
@@ -94,9 +94,11 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 - ✅ numeric-rules crate created
 - ✅ Core validation logic implemented
 - ✅ Wired into validation-run pipeline
-- ✅ BDD scenarios added (5 scenarios)
+- ✅ BDD scenarios added (5 scenarios @alpha-candidate)
 - ✅ Tests passing
-- ⏳ Awaiting CI for merge
+- ⏳ **Blocked:** Golden file needs regeneration via `cargo xtask feature-grid`
+
+**Note:** The new BDD scenarios are marked `@alpha-candidate` (not `@alpha-active`), but the feature grid golden file check requires exact match. Need to regenerate golden file with cargo to include new scenarios in correct format.
 
 ### 📐 Plan (Ready for Planning)
 
