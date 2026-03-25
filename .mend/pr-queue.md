@@ -84,27 +84,29 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 🔄 Review (Awaiting Approval)
+### ✅ Complete (Recently Merged)
 
 | Item | Issue | Description | PR |
 |------|-------|-------------|-----|
 | Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | #86 |
 
-**Status:** 
-- ✅ numeric-rules crate created
-- ✅ Core validation logic implemented
-- ✅ Wired into validation-run pipeline
-- ✅ BDD scenarios added (5 scenarios @alpha-candidate)
-- ✅ Tests passing
-- ✅ Golden file updated
-- ✅ CI green (check passes, CLA check expected failure)
-- ⏳ **Awaiting:** PR review approval (REVIEW_REQUIRED)
+**Status:** ✅ **MERGED** (2026-03-25 14:02 UTC)
+- Commit: `9f2fc8d`
+- numeric-rules crate created
+- 5 BDD scenarios added
+- Golden file updated
 
-### 📐 Plan (Ready for Planning)
+### 🔨 Build (In Progress)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
 | Unit Consistency Validation | #82 | Validate unit references match fact types | 2-3 days |
+
+**Research Complete:** See `.mend/notes/unit-consistency-research.md`
+- Architecture: New `unit-rules` crate (follows `numeric-rules` pattern)
+- Validation: Concept patterns → expected unit types
+- Configuration: `UnitRules` in `sec-profile-types`
+- Implementation plan: `.mend/notes/unit-consistency-plan.md`
 
 **Research Complete:** See `.mend/notes/unit-consistency-research.md`
 - Architecture: New `unit-rules` crate (follows `numeric-rules` pattern)
