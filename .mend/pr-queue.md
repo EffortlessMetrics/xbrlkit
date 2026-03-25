@@ -84,11 +84,24 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 📐 Plan (Ready for Review)
+### 🔨 Build (In Progress)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
 | Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | 3-4 days |
+
+**Status:** 
+- ✅ numeric-rules crate created
+- ✅ Core validation logic implemented
+- ✅ Wired into validation-run pipeline
+- ✅ BDD scenarios added (5 scenarios)
+- ⏳ Build and test
+
+### 📐 Plan (Completed)
+
+| Item | Issue | Description | Est. Effort |
+|------|-------|-------------|-------------|
+| Negative Value Validation | #80 | Implementation plan complete | — |
 
 ### 🔍 Research (Next Up)
 
