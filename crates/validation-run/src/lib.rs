@@ -216,3 +216,19 @@ pub fn validate_dimensions(
 
     findings
 }
+
+/// Validate that all facts reference valid contexts.
+///
+/// # Arguments
+/// * `facts` - The facts to validate
+/// * `context_set` - The set of valid contexts
+///
+/// # Returns
+/// Vector of validation findings for missing context references.
+#[must_use]
+pub fn validate_context_completeness(
+    facts: &[Fact],
+    context_set: &ContextSet,
+) -> Vec<ValidationFinding> {
+    context_completeness::validate_context_completeness(facts, context_set)
+}
