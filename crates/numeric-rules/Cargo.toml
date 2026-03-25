@@ -1,0 +1,11 @@
+[package]
+name = "numeric-rules"
+version = "0.1.0"
+edition = "2021"
+description = "Numeric validation rules for XBRL reports"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+xbrl-report-types = { path = "../xbrl-report-types" }
+
+[dev-dependencies]
