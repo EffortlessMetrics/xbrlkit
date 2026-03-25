@@ -84,11 +84,17 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 🔍 Research (In Progress)
+### 📐 Plan (Ready for Review)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
 | Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | 3-4 days |
+
+### 🔍 Research (Next Up)
+
+| Item | Issue | Description | Est. Effort |
+|------|-------|-------------|-------------|
+| Decimal Precision Validation | #81 | Validate decimal attribute correctness | 2-3 days |
 
 ### 📋 Ready (Planned)
 
