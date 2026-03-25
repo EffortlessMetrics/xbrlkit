@@ -78,18 +78,22 @@ None. All stale PRs closed on 2026-03-25.
 
 See `.mend/roadmap-phase-3.md` for full roadmap.
 
+### ✅ Recently Discovered (Already Complete)
+
+| Item | Issue | Status | Notes |
+|------|-------|--------|-------|
+| Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
+
 ### 📋 Ready (Next Up)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
-| Required Facts Research | #9 | Research SEC EFM 6.5/6.6 required facts specification | 1-2 days |
+| Negative Value Validation | — | Research and implement negative value detection | 3-4 days |
 
 ### 📋 Planned
 
 | Wave | Item | Priority | Description |
 |------|------|----------|-------------|
-| Wave 1 | Required Facts Implementation | P0 | Implement required facts validation rule |
-| Wave 2 | Negative Value Validation | P1 | Detect negative values where prohibited |
 | Wave 2 | Decimal Precision Validation | P1 | Validate decimal attribute correctness |
 | Wave 3 | Context/Unit Validation | P1 | Validate context completeness and unit consistency |
 | Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
@@ -99,4 +103,4 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 - ✅ Closed stale PRs #31, #36, #39
 - ✅ Closed completed issues #4, #5
 - ✅ Created Phase 3 roadmap (`.mend/roadmap-phase-3.md`)
-- ✅ Marked #9 as 📋 Ready (required facts research)
+- ✅ Discovered Issue #9 was already complete — closed with documentation
