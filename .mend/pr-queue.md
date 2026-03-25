@@ -72,13 +72,7 @@
 
 ## Stale PRs Requiring Attention
 
-| PR | Title | Status | Action Needed |
-|----|-------|--------|---------------|
-| #39 | docs(queue): update with bundle scenarios | 🔄 Open | Merge conflicts - rebase or close |
-| #36 | docs: update autonomous-log with friction fixes | 🔄 Open | Merge conflicts - rebase or close |
-| #31 | docs: update PR queue with completed work | 🔄 Open | Merge conflicts - rebase or close |
-
-*All 3 docs PRs have merge conflicts against main. Likely superseded by later queue updates.*
+None. All stale PRs closed on 2026-03-25.
 
 ## Next
 
