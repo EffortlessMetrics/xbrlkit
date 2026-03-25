@@ -84,18 +84,24 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 📋 Ready (Next Up)
+### 🔍 Research (In Progress)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
-| Negative Value Validation | — | Research and implement negative value detection | 3-4 days |
+| Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | 3-4 days |
 
-### 📋 Planned
+### 📋 Ready (Planned)
+
+| Item | Issue | Description | Est. Effort |
+|------|-------|-------------|-------------|
+| Decimal Precision Validation | #81 | Validate decimal attribute correctness | 2-3 days |
+| Unit Consistency Validation | #82 | Ensure unit references match fact types | 2-3 days |
+| Context Completeness Validation | #83 | Ensure all facts reference valid contexts | 2 days |
+
+### 📋 Planned (Future)
 
 | Wave | Item | Priority | Description |
 |------|------|----------|-------------|
-| Wave 2 | Decimal Precision Validation | P1 | Validate decimal attribute correctness |
-| Wave 3 | Context/Unit Validation | P1 | Validate context completeness and unit consistency |
 | Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
 | Wave 5 | IFRS/ESEF Support | P2 | Extended taxonomy support |
 
@@ -104,3 +110,7 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 - ✅ Closed completed issues #4, #5
 - ✅ Created Phase 3 roadmap (`.mend/roadmap-phase-3.md`)
 - ✅ Discovered Issue #9 was already complete — closed with documentation
+- ✅ Created Issue #80 (Negative Value Validation)
+- ✅ Created Issue #81 (Decimal Precision Validation)
+- ✅ Created Issue #82 (Unit Consistency Validation)
+- ✅ Created Issue #83 (Context Completeness Validation)
