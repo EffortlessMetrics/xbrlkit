@@ -74,12 +74,29 @@
 
 None. All stale PRs closed on 2026-03-25.
 
-## Next
+## Phase 3: Feature Completeness — SEC Validation Rules
 
-**Phase 3 planning required.**
-See `.mend/roadmap-phase-3.md` when created.
+See `.mend/roadmap-phase-3.md` for full roadmap.
 
-**Actions completed this run:**
-- Closed Issue #4 (completed via PR #51)
-- Closed Issue #5 (completed via PR #61)
-- Identified 3 stale docs PRs with merge conflicts
+### 📋 Ready (Next Up)
+
+| Item | Issue | Description | Est. Effort |
+|------|-------|-------------|-------------|
+| Required Facts Research | #9 | Research SEC EFM 6.5/6.6 required facts specification | 1-2 days |
+
+### 📋 Planned
+
+| Wave | Item | Priority | Description |
+|------|------|----------|-------------|
+| Wave 1 | Required Facts Implementation | P0 | Implement required facts validation rule |
+| Wave 2 | Negative Value Validation | P1 | Detect negative values where prohibited |
+| Wave 2 | Decimal Precision Validation | P1 | Validate decimal attribute correctness |
+| Wave 3 | Context/Unit Validation | P1 | Validate context completeness and unit consistency |
+| Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
+| Wave 5 | IFRS/ESEF Support | P2 | Extended taxonomy support |
+
+## Actions Completed This Run
+- ✅ Closed stale PRs #31, #36, #39
+- ✅ Closed completed issues #4, #5
+- ✅ Created Phase 3 roadmap (`.mend/roadmap-phase-3.md`)
+- ✅ Marked #9 as 📋 Ready (required facts research)
