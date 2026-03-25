@@ -173,6 +173,7 @@ mod tests {
                 "dei:EntityCentralIndexKey".to_string(),
                 "dei:DocumentType".to_string(),
             ],
+            numeric_rules: None,
         }
     }
 
