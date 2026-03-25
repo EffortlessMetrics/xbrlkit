@@ -28,6 +28,130 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-CONTEXT-001",
+      "ac_id": "AC-XK-CONTEXT-001",
+      "req_id": "REQ-XK-CONTEXT",
+      "feature_file": "specs/features/foundation/context_completeness.feature",
+      "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
+      "layer": "foundation",
+      "module": "FEAT-XK-CONTEXT:context-completeness",
+      "crates": [
+        "context-completeness",
+        "xbrl-contexts",
+        "xbrl-report-types",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/contexts/missing-context-01"
+      ],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/context-completeness",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/foundation",
+        "fixtures/synthetic/contexts"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-CONTEXT-002",
+      "ac_id": "AC-XK-CONTEXT-002",
+      "req_id": "REQ-XK-CONTEXT",
+      "feature_file": "specs/features/foundation/context_completeness.feature",
+      "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
+      "layer": "foundation",
+      "module": "FEAT-XK-CONTEXT:context-completeness",
+      "crates": [
+        "context-completeness",
+        "xbrl-contexts",
+        "xbrl-report-types",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/contexts/valid-contexts-01"
+      ],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/context-completeness",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/foundation",
+        "fixtures/synthetic/contexts"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-CONTEXT-003",
+      "ac_id": "AC-XK-CONTEXT-003",
+      "req_id": "REQ-XK-CONTEXT",
+      "feature_file": "specs/features/foundation/context_completeness.feature",
+      "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
+      "layer": "foundation",
+      "module": "FEAT-XK-CONTEXT:context-completeness",
+      "crates": [
+        "context-completeness",
+        "xbrl-contexts",
+        "xbrl-report-types",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/contexts/case-insensitive-01"
+      ],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/context-completeness",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/foundation",
+        "fixtures/synthetic/contexts"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-CONTEXT-004",
+      "ac_id": "AC-XK-CONTEXT-004",
+      "req_id": "REQ-XK-CONTEXT",
+      "feature_file": "specs/features/foundation/context_completeness.feature",
+      "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
+      "layer": "foundation",
+      "module": "FEAT-XK-CONTEXT:context-completeness",
+      "crates": [
+        "context-completeness",
+        "xbrl-contexts",
+        "xbrl-report-types",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/contexts/multiple-missing-01"
+      ],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/context-completeness",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/foundation",
+        "fixtures/synthetic/contexts"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-DIM-001",
       "ac_id": "AC-XK-DIM-001",
       "req_id": "REQ-XK-DIMENSIONS",
