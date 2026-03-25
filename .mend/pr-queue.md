@@ -84,7 +84,7 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 🔄 Review (Blocked)
+### 🔄 Review (Awaiting Approval)
 
 | Item | Issue | Description | PR |
 |------|-------|-------------|-----|
@@ -96,26 +96,26 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 - ✅ Wired into validation-run pipeline
 - ✅ BDD scenarios added (5 scenarios @alpha-candidate)
 - ✅ Tests passing
-- ⏳ **Blocked:** Golden file needs regeneration via `cargo xtask feature-grid`
-
-**Note:** The new BDD scenarios are marked `@alpha-candidate` (not `@alpha-active`), but the feature grid golden file check requires exact match. Need to regenerate golden file with cargo to include new scenarios in correct format.
+- ✅ Golden file updated
+- ✅ CI green (check passes, CLA check expected failure)
+- ⏳ **Awaiting:** PR review approval (REVIEW_REQUIRED)
 
 ### 📐 Plan (Ready for Planning)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
-| Decimal Precision Validation | #81 | Validate decimal attribute correctness | 2-3 days |
+| Unit Consistency Validation | #82 | Validate unit references match fact types | 2-3 days |
 
-**Research Complete:** See `.mend/notes/decimal-precision-research.md`
-- EFM § 6.5.37 "Nonzero Digits Truncated" rule identified
-- Algorithm: detect when decimals attribute would truncate non-zero digits
-- Ready for implementation planning
+**Research Complete:** See `.mend/notes/unit-consistency-research.md`
+- Architecture: New `unit-rules` crate (follows `numeric-rules` pattern)
+- Validation: Concept patterns → expected unit types
+- Configuration: `UnitRules` in `sec-profile-types`
+- Implementation plan: `.mend/notes/unit-consistency-plan.md`
 
 ### 📋 Ready (Planned)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
-| Unit Consistency Validation | #82 | Ensure unit references match fact types | 2-3 days |
 | Context Completeness Validation | #83 | Ensure all facts reference valid contexts | 2 days |
 
 ### 📋 Planned (Future)
@@ -125,9 +125,9 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
 | Wave 5 | IFRS/ESEF Support | P2 | Extended taxonomy support |
 
-## Actions Completed This Run (2026-03-25 16:32 CST)
-- ✅ Completed research on Issue #81 (Decimal Precision Validation)
-- ✅ Documented EFM § 6.5.37 specification and validation logic
-- ✅ Created research notes: `.mend/notes/decimal-precision-research.md`
-- ✅ Moved #81 from 🔍 Research → 📐 Plan stage
-- ✅ Updated #80 status: implementation complete, PR #86 open for review
+## Actions Completed This Run (2026-03-25 20:32 CST)
+- ✅ Found existing research for #82 (Unit Consistency Validation)
+- ✅ Moved #82 from 📋 Ready → 📐 Plan stage
+- ✅ Created implementation plan: `.mend/notes/unit-consistency-plan.md`
+- ✅ Verified no active work in progress
+- ✅ Updated queue state
