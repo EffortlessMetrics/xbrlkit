@@ -84,36 +84,35 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 |------|-------|--------|-------|
 | Required Facts Validation | #9 | ✅ Complete | Already implemented and active (AC-XK-SEC-REQUIRED-001/002 passing) |
 
-### 🔨 Build (In Progress)
+### 🔄 Review (In Progress)
 
-| Item | Issue | Description | Est. Effort |
-|------|-------|-------------|-------------|
-| Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | 3-4 days |
+| Item | Issue | Description | PR |
+|------|-------|-------------|-----|
+| Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | #86 |
 
 **Status:** 
 - ✅ numeric-rules crate created
 - ✅ Core validation logic implemented
 - ✅ Wired into validation-run pipeline
 - ✅ BDD scenarios added (5 scenarios)
-- ⏳ Build and test
+- ✅ Tests passing
+- ⏳ Awaiting CI for merge
 
-### 📐 Plan (Completed)
-
-| Item | Issue | Description | Est. Effort |
-|------|-------|-------------|-------------|
-| Negative Value Validation | #80 | Implementation plan complete | — |
-
-### 🔍 Research (Next Up)
+### 📐 Plan (Ready for Planning)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
 | Decimal Precision Validation | #81 | Validate decimal attribute correctness | 2-3 days |
+
+**Research Complete:** See `.mend/notes/decimal-precision-research.md`
+- EFM § 6.5.37 "Nonzero Digits Truncated" rule identified
+- Algorithm: detect when decimals attribute would truncate non-zero digits
+- Ready for implementation planning
 
 ### 📋 Ready (Planned)
 
 | Item | Issue | Description | Est. Effort |
 |------|-------|-------------|-------------|
-| Decimal Precision Validation | #81 | Validate decimal attribute correctness | 2-3 days |
 | Unit Consistency Validation | #82 | Ensure unit references match fact types | 2-3 days |
 | Context Completeness Validation | #83 | Ensure all facts reference valid contexts | 2 days |
 
@@ -124,12 +123,9 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
 | Wave 5 | IFRS/ESEF Support | P2 | Extended taxonomy support |
 
-## Actions Completed This Run
-- ✅ Closed stale PRs #31, #36, #39
-- ✅ Closed completed issues #4, #5
-- ✅ Created Phase 3 roadmap (`.mend/roadmap-phase-3.md`)
-- ✅ Discovered Issue #9 was already complete — closed with documentation
-- ✅ Created Issue #80 (Negative Value Validation)
-- ✅ Created Issue #81 (Decimal Precision Validation)
-- ✅ Created Issue #82 (Unit Consistency Validation)
-- ✅ Created Issue #83 (Context Completeness Validation)
+## Actions Completed This Run (2026-03-25 16:32 CST)
+- ✅ Completed research on Issue #81 (Decimal Precision Validation)
+- ✅ Documented EFM § 6.5.37 specification and validation logic
+- ✅ Created research notes: `.mend/notes/decimal-precision-research.md`
+- ✅ Moved #81 from 🔍 Research → 📐 Plan stage
+- ✅ Updated #80 status: implementation complete, PR #86 open for review

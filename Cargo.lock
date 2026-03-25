@@ -949,6 +949,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "numeric-rules"
+version = "0.1.0"
+dependencies = [
+ "xbrl-report-types",
+]
+
+[[package]]
 name = "oim-normalize"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -1790,6 +1797,7 @@ dependencies = [
  "duplicate-facts",
  "efm-rules",
  "ixds-assemble",
+ "numeric-rules",
  "receipt-types",
  "sec-profile-types",
  "taxonomy-dimensions",

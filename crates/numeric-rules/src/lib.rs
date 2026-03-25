@@ -158,10 +158,7 @@ mod tests {
 
     #[test]
     fn detects_negative_with_parentheses() {
-        let facts = vec![fact(
-            "dei:EntityCommonStockSharesOutstanding",
-            "(1000)",
-        )];
+        let facts = vec![fact("dei:EntityCommonStockSharesOutstanding", "(1000)")];
         let prohibited: Vec<String> = Vec::new();
 
         let findings = validate_negative_values(&facts, &prohibited);
@@ -171,10 +168,7 @@ mod tests {
 
     #[test]
     fn allows_positive_shares() {
-        let facts = vec![fact(
-            "dei:EntityCommonStockSharesOutstanding",
-            "1000000",
-        )];
+        let facts = vec![fact("dei:EntityCommonStockSharesOutstanding", "1000000")];
         let prohibited: Vec<String> = Vec::new();
 
         let findings = validate_negative_values(&facts, &prohibited);

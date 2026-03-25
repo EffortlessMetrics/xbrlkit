@@ -42,9 +42,10 @@ pub fn validate_html_members(members: &[(&str, &str)], profile: &ProfilePack) ->
         .as_ref()
         .map(|nr| nr.negative_value_rules.prohibited_concepts.clone())
         .unwrap_or_default();
-    report
-        .findings
-        .extend(validate_negative_values(&report.facts, &prohibited_concepts));
+    report.findings.extend(validate_negative_values(
+        &report.facts,
+        &prohibited_concepts,
+    ));
     let subject = format!("{} members", report.members.len());
     finalize_validation(report, subject)
 }
