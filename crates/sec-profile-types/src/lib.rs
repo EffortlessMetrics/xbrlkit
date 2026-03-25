@@ -51,12 +51,26 @@ pub struct ProfilePack {
 pub struct NumericRules {
     #[serde(default)]
     pub negative_value_rules: NegativeValueRules,
+    #[serde(default)]
+    pub unit_rules: UnitRules,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct NegativeValueRules {
     #[serde(default)]
     pub prohibited_concepts: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct UnitRules {
+    #[serde(default)]
+    pub monetary_concepts: Vec<String>,
+    #[serde(default)]
+    pub share_concepts: Vec<String>,
+    #[serde(default)]
+    pub pure_concepts: Vec<String>,
+    #[serde(default)]
+    pub per_share_concepts: Vec<String>,
 }
 
 pub fn load_profile_from_workspace(root: &Path, profile_id: &str) -> anyhow::Result<ProfilePack> {
