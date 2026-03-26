@@ -101,7 +101,9 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 
 ### 🔨 Build (In Progress)
 
-*No active work.*
+| Item | Issue | Started | Notes |
+|------|-------|---------|-------|
+| Streaming Parser (Wave 4) | — | 2026-03-26 | `xbrl-stream` crate created, 5 unit tests passing, ready for integration into validation-run |
 
 ### 📋 Planned (Future)
 

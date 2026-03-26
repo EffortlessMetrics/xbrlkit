@@ -1,0 +1,22 @@
+[package]
+name = "xbrl-stream"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "SAX-style streaming XBRL parser for large filings"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+quick-xml = { version = "0.36", features = ["async-tokio"] }
+thiserror = "1.0"
+anyhow = "1.0"
+xbrl-report-types = { path = "../xbrl-report-types" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+
+[lints]
+workspace = true

@@ -49,6 +49,7 @@ members = [
   "crates/unit-rules",
   "crates/context-completeness",
   "crates/taxonomy-loader",
+  "crates/xbrl-stream",
 ]
 default-members = ["crates/xbrlkit-cli", "xtask"]
 
