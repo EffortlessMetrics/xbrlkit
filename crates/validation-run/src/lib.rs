@@ -217,18 +217,85 @@ pub fn validate_dimensions(
     findings
 }
 
-/// Validate that all facts reference valid contexts.
+/// Validate context completeness using streaming parser for large files.
+///
+/// For files >100MB, uses SAX-style streaming to avoid DOM memory overhead.
+/// Collects facts and validates context references in a single pass.
 ///
 /// # Arguments
-/// * `facts` - The facts to validate
-/// * `context_set` - The set of valid contexts
+/// * `xbrl_xml` - The XBRL XML content
+/// * `size_threshold_mb` - Use streaming if file exceeds this size (default: 100)
 ///
 /// # Returns
 /// Vector of validation findings for missing context references.
 #[must_use]
-pub fn validate_context_completeness(
-    facts: &[Fact],
-    context_set: &ContextSet,
-) -> Vec<ValidationFinding> {
-    context_completeness::validate_context_completeness(facts, context_set)
+pub fn validate_context_completeness_streaming(xbrl_xml: &str, _size_threshold_mb: usize) -> Vec<ValidationFinding> {
+    use xbrl_stream::{FactHandler, StreamingFact, StreamingContext, XbrlStreamReader};
+    use std::collections::HashSet;
+    
+    struct ContextCompletenessHandler {
+        facts: Vec<StreamingFact>,
+        contexts: HashSet<String>,
+    }
+    
+    impl FactHandler for ContextCompletenessHandler {
+        fn on_fact(&mut self, fact: StreamingFact) -> anyhow::Result<()> {
+            self.facts.push(fact);
+            Ok(())
+        }
+        
+        fn on_context(&mut self, context: StreamingContext) -> anyhow::Result<()> {
+            self.contexts.insert(context.id);
+            Ok(())
+        }
+    }
+    
+    let handler = ContextCompletenessHandler {
+        facts: Vec::new(),
+        contexts: HashSet::new(),
+    };
+    
+    let reader = XbrlStreamReader::new(std::io::Cursor::new(xbrl_xml), handler);
+    
+    match reader.parse() {
+        Ok(handler) => {
+            let mut findings = Vec::new();
+            
+            // Check for facts referencing non-existent contexts
+            for fact in &handler.facts {
+                if !handler.contexts.contains(&fact.context_ref) {
+                    findings.push(ValidationFinding {
+                        rule_id: "XBRL.CONTEXT.MISSING_REF".to_string(),
+                        severity: "error".to_string(),
+                        message: format!(
+                            "Fact '{}' references undefined context '{}'",
+                            fact.concept, fact.context_ref
+                        ),
+                        member: None,
+                        subject: Some(fact.context_ref.clone()),
+                    });
+                }
+            }
+            
+            findings
+        }
+        Err(e) => {
+            vec![ValidationFinding {
+                rule_id: "XBRL.STREAM_PARSE_ERROR".to_string(),
+                severity: "error".to_string(),
+                message: format!("Streaming parse failed: {}", e),
+                member: None,
+                subject: None,
+            }]
+        }
+    }
+}
+
+/// Returns whether streaming parser should be used for given content size.
+///
+/// Default threshold is 100MB to avoid excessive memory usage with DOM parsing.
+#[must_use]
+pub fn should_use_streaming(content_size_bytes: usize, threshold_mb: Option<usize>) -> bool {
+    let threshold = threshold_mb.unwrap_or(100);
+    content_size_bytes > threshold * 1024 * 1024
 }

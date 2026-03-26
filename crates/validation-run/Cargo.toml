@@ -22,6 +22,8 @@ taxonomy-dts = { path = "../taxonomy-dts" }
 taxonomy-types = { path = "../taxonomy-types" }
 taxonomy-dimensions = { path = "../taxonomy-dimensions" }
 dimensional-rules = { path = "../dimensional-rules" }
+xbrl-stream = { path = "../xbrl-stream" }
+anyhow = "1.0"
 
 [lints]
 workspace = true
