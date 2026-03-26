@@ -28,6 +28,7 @@ pub struct World {
     pub fixture_dirs: Vec<PathBuf>,
     pub execution: Option<ScenarioExecution>,
     pub dimension_context: DimensionContext,
+    pub context_completeness_context: ContextCompletenessContext,
     pub bundle_manifest: Option<BundleManifest>,
     pub validation_receipt: Option<receipt_types::Receipt>,
     pub sensor_report: Option<serde_json::Value>,
@@ -49,6 +50,13 @@ pub struct DimensionContext {
     pub typed_value_type: Option<String>, // Added for typed value validation
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct ContextCompletenessContext {
+    pub contexts: Vec<xbrl_contexts::Context>,
+    pub facts: Vec<xbrl_report_types::Fact>,
+    pub findings: Vec<xbrl_report_types::ValidationFinding>,
+}
+
 impl World {
     #[must_use]
     pub fn new(repo_root: PathBuf, grid: FeatureGrid) -> Self {
@@ -59,6 +67,7 @@ impl World {
             fixture_dirs: Vec::new(),
             execution: None,
             dimension_context: DimensionContext::default(),
+            context_completeness_context: ContextCompletenessContext::default(),
             bundle_manifest: None,
             validation_receipt: None,
             sensor_report: None,
@@ -330,6 +339,135 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    // Context completeness Given steps
+    if step.text.starts_with("an XBRL report with context ") {
+        // Parse contexts from the step text
+        // Format: "an XBRL report with context \"ctx-1\"" or "an XBRL report with contexts \"ctx-1\" and \"ctx-2\""
+        let text = &step.text;
+        let contexts: Vec<String> = text
+            .split('"')
+            .enumerate()
+            .filter(|(i, _)| i % 2 == 1)
+            .map(|(_, s)| s.to_string())
+            .collect();
+
+        for ctx_id in contexts {
+            let context = xbrl_contexts::Context {
+                id: xbrl_contexts::normalize_context_id(&ctx_id),
+                entity: EntityIdentifier {
+                    scheme: "http://www.sec.gov/CIK".to_string(),
+                    value: "0000320193".to_string(),
+                },
+                entity_segment: None,
+                period: Period::Instant("2024-12-31".to_string()),
+                scenario: None,
+            };
+            world.context_completeness_context.contexts.push(context);
+        }
+        return Ok(true);
+    }
+
+    if step.text.starts_with("a fact referencing concept ") {
+        // Parse: "a fact referencing concept \"us-gaap:Revenue\" with context \"ctx-1\""
+        let text = &step.text;
+        if let Some(concept_start) = text.find('\"') {
+            let concept_end = text[concept_start + 1..]
+                .find('\"')
+                .map(|i| concept_start + 1 + i);
+            if let Some(concept_end) = concept_end {
+                let concept = &text[concept_start + 1..concept_end];
+                if let Some(ctx_start) = text[concept_end + 1..].find('\"') {
+                    let ctx_start = concept_end + 1 + ctx_start;
+                    let ctx_end = text[ctx_start + 1..].find('\"').map(|i| ctx_start + 1 + i);
+                    if let Some(ctx_end) = ctx_end {
+                        let context_ref = &text[ctx_start + 1..ctx_end];
+                        let fact = xbrl_report_types::Fact {
+                            concept: concept.to_string(),
+                            context_ref: context_ref.to_string(),
+                            unit_ref: None,
+                            decimals: None,
+                            value: "1000".to_string(),
+                            member: String::new(),
+                        };
+                        world.context_completeness_context.facts.push(fact);
+                        return Ok(true);
+                    }
+                }
+            }
+        }
+        anyhow::bail!("invalid fact specification: {}", step.text);
+    }
+
+    if step.text.starts_with("facts referencing concepts ") {
+        // Parse: "facts referencing concepts \"us-gaap:Revenue\" and \"us-gaap:Assets\" with contexts \"ctx-1\" and \"ctx-2\""
+        // For simplicity, we'll create facts for each concept-context pair
+        // Parse all quoted strings
+        let quoted: Vec<String> = step
+            .text
+            .split('\"')
+            .enumerate()
+            .filter(|(i, _)| i % 2 == 1)
+            .map(|(_, s)| s.to_string())
+            .collect();
+
+        if quoted.len() >= 2 {
+            // First half are concepts, second half are contexts
+            let mid = quoted.len() / 2;
+            let concepts = &quoted[..mid];
+            let contexts = &quoted[mid..];
+
+            for (i, concept) in concepts.iter().enumerate() {
+                let context_ref = contexts
+                    .get(i)
+                    .or_else(|| contexts.first())
+                    .map_or("ctx-1", String::as_str);
+                let fact = xbrl_report_types::Fact {
+                    concept: concept.clone(),
+                    context_ref: context_ref.to_string(),
+                    unit_ref: None,
+                    decimals: None,
+                    value: "1000".to_string(),
+                    member: String::new(),
+                };
+                world.context_completeness_context.facts.push(fact);
+            }
+        }
+        return Ok(true);
+    }
+
+    // Decimal precision Given steps
+    if step.text.starts_with("a numeric fact with value ") {
+        // Clear previous state for standalone decimal precision scenarios
+        world.context_completeness_context.facts.clear();
+        world.context_completeness_context.contexts.clear();
+        world.context_completeness_context.findings.clear();
+
+        // Parse: "a numeric fact with value "1234.56" and decimals "INF""
+        let quoted: Vec<String> = step
+            .text
+            .split('"')
+            .enumerate()
+            .filter(|(i, _)| i % 2 == 1)
+            .map(|(_, s)| s.to_string())
+            .collect();
+
+        if quoted.len() >= 2 {
+            let value = &quoted[0];
+            let decimals = &quoted[1];
+            let fact = xbrl_report_types::Fact {
+                concept: "us-gaap:TestConcept".to_string(),
+                context_ref: "ctx-1".to_string(),
+                unit_ref: Some("usd".to_string()),
+                decimals: Some(decimals.clone()),
+                value: value.clone(),
+                member: String::new(),
+            };
+            world.context_completeness_context.facts.push(fact);
+            return Ok(true);
+        }
+        anyhow::bail!("invalid numeric fact specification: {}", step.text);
+    }
+
     Ok(false)
 }
 
@@ -570,6 +708,30 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Context completeness When steps
+    if step.text == "context completeness validation runs" {
+        // Build ContextSet from contexts
+        let mut context_set = xbrl_contexts::ContextSet::new();
+        for ctx in &world.context_completeness_context.contexts {
+            context_set.insert(ctx.clone());
+        }
+        // Run validation
+        let findings = context_completeness::validate_context_completeness(
+            &world.context_completeness_context.facts,
+            &context_set,
+        );
+        world.context_completeness_context.findings = findings;
+        return Ok(true);
+    }
+
+    // Decimal precision When steps
+    if step.text == "decimal precision validation is performed" {
+        let findings =
+            numeric_rules::validate_decimal_precision(&world.context_completeness_context.facts);
+        world.context_completeness_context.findings = findings;
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -615,6 +777,34 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 "expected finding {} but got {:?}",
                 expected_finding,
                 world.dimension_context.validation_findings
+            );
+        }
+        return Ok(());
+    }
+
+    // Decimal precision Then steps
+    if step.text == "no validation errors are reported" {
+        if !world.context_completeness_context.findings.is_empty() {
+            anyhow::bail!(
+                "expected no validation errors but got: {:?}",
+                world.context_completeness_context.findings
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(error_type) = step.text.strip_prefix("validation error \"") {
+        let expected_error = error_type.trim_end_matches("\" is reported");
+        let has_error = world
+            .context_completeness_context
+            .findings
+            .iter()
+            .any(|f| f.rule_id.contains(expected_error) || f.message.contains(expected_error));
+        if !has_error {
+            anyhow::bail!(
+                "expected validation error '{}' but got: {:?}",
+                expected_error,
+                world.context_completeness_context.findings
             );
         }
         return Ok(());
@@ -722,6 +912,7 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<()> {
     if let Some(rule_id) = step
         .text
@@ -802,6 +993,80 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 "scenario {} not found in feature grid (contains {} scenario(s))",
                 scenario_id,
                 grid.scenarios.len()
+            );
+        }
+        return Ok(());
+    }
+
+    // Context completeness Then steps
+    if let Some(context_ref) = step
+        .text
+        .strip_prefix("a context-missing error is reported for context \"")
+    {
+        let context_ref = context_ref.trim_end_matches('"');
+        let found = world
+            .context_completeness_context
+            .findings
+            .iter()
+            .any(|f| f.rule_id == "SEC-CONTEXT-001" && f.message.contains(context_ref));
+        if !found {
+            anyhow::bail!(
+                "expected context-missing error for '{}' but got findings: {:?}",
+                context_ref,
+                world.context_completeness_context.findings
+            );
+        }
+        return Ok(());
+    }
+
+    if step.text == "no context completeness findings are reported" {
+        if !world.context_completeness_context.findings.is_empty() {
+            anyhow::bail!(
+                "expected no findings but got: {:?}",
+                world.context_completeness_context.findings
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(count_str) = step
+        .text
+        .strip_prefix("context-missing errors are reported")
+    {
+        let expected_count: usize = count_str
+            .split_whitespace()
+            .next()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1);
+        let actual_count = world
+            .context_completeness_context
+            .findings
+            .iter()
+            .filter(|f| f.rule_id == "SEC-CONTEXT-001")
+            .count();
+        if actual_count != expected_count {
+            anyhow::bail!(
+                "expected {} context-missing errors but got {}: {:?}",
+                expected_count,
+                actual_count,
+                world.context_completeness_context.findings
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(rule_id) = step.text.strip_prefix("the finding rule ID is \"") {
+        let rule_id = rule_id.trim_end_matches('"');
+        let found = world
+            .context_completeness_context
+            .findings
+            .iter()
+            .any(|f| f.rule_id == rule_id);
+        if !found {
+            anyhow::bail!(
+                "expected finding with rule ID '{}' but got: {:?}",
+                rule_id,
+                world.context_completeness_context.findings
             );
         }
         return Ok(());

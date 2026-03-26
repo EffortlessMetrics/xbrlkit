@@ -1,9 +1,14 @@
 //! Numeric validation rules for XBRL reports.
 //!
 //! This crate provides validation rules for numeric facts in XBRL reports,
-//! including negative value detection where prohibited by taxonomy.
+//! including negative value detection where prohibited by taxonomy
+//! and decimal precision validation per SEC EFM 6.5.37.
 
 use xbrl_report_types::{Fact, ValidationFinding};
+
+pub mod decimal_precision;
+
+pub use decimal_precision::validate_decimal_precision;
 
 /// Validates that numeric facts don't have negative values where prohibited.
 ///

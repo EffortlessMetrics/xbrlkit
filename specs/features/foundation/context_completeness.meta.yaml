@@ -1,0 +1,56 @@
+feature_id: FEAT-XK-CONTEXT
+layer: foundation
+module: context-completeness
+scenarios:
+  SCN-XK-CONTEXT-001:
+    ac_id: AC-XK-CONTEXT-001
+    req_id: REQ-XK-CONTEXT
+    crates: [context-completeness, xbrl-contexts, xbrl-report-types, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: [synthetic/contexts/missing-context-01]
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/context-completeness
+      - crates/xbrlkit-bdd-steps
+      - specs/features/foundation
+      - fixtures/synthetic/contexts
+  SCN-XK-CONTEXT-002:
+    ac_id: AC-XK-CONTEXT-002
+    req_id: REQ-XK-CONTEXT
+    crates: [context-completeness, xbrl-contexts, xbrl-report-types, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: [synthetic/contexts/valid-contexts-01]
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/context-completeness
+      - crates/xbrlkit-bdd-steps
+      - specs/features/foundation
+      - fixtures/synthetic/contexts
+  SCN-XK-CONTEXT-003:
+    ac_id: AC-XK-CONTEXT-003
+    req_id: REQ-XK-CONTEXT
+    crates: [context-completeness, xbrl-contexts, xbrl-report-types, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: [synthetic/contexts/case-insensitive-01]
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/context-completeness
+      - crates/xbrlkit-bdd-steps
+      - specs/features/foundation
+      - fixtures/synthetic/contexts
+  SCN-XK-CONTEXT-004:
+    ac_id: AC-XK-CONTEXT-004
+    req_id: REQ-XK-CONTEXT
+    crates: [context-completeness, xbrl-contexts, xbrl-report-types, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: [synthetic/contexts/multiple-missing-01]
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/context-completeness
+      - crates/xbrlkit-bdd-steps
+      - specs/features/foundation
+      - fixtures/synthetic/contexts
