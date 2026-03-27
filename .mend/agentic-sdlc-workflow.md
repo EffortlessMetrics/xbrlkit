@@ -33,22 +33,39 @@ Spawned agents evaluate:
 - If changes needed → bounce to author
 
 ### 5. Merge Gate (Agent Final Signoff)
-- All prior gates passed
-- Final agent verifies: squash commit message, changelog entry, version bump if needed
-- **Agent comments**: "🤖 Merge approved per agentic SDLC"
-- Then and only then: merge
+**Trigger options:**
+1. **GitHub webhook** — When CI green + all review labels present
+2. **Cron poll** — Regular check for ready-to-merge PRs
+
+**Agent actions:**
+- Verify all prior gates passed (labels present)
+- Verify human approval
+- Final verification: squash commit message, changelog entry, version bump
+- **Agent comments**: "🤖 AGENTIC MERGE APPROVED"
+- **Then and only then**: execute merge with squash, delete branch
+
+**Note:** This is explicit agent-controlled merge, not auto-merge. The merge agent performs final checks before the merge operation.
 
 ## Cron Jobs
 
-### `xbrlkit-review-scheduler` (Every 30 min)
+### `xbrlkit-review-scheduler` (Every 15 min)
 ```
 For each open PR:
   If CI green AND no `review-in-progress` label:
     If missing quality review → spawn reviewer-quality
-    If missing test review → spawn reviewer-tests
+    If missing test review → spawn reviewer-tests  
     If missing arch review → spawn reviewer-arch
     If missing integ review → spawn reviewer-integ
-    If all reviews passed AND human approved → spawn merger-final-signoff
+  
+  If all reviews passed AND human approved AND not yet merged:
+    → spawn merger-final-signoff
+```
+
+### `xbrlkit-merge-trigger` (Alternative: GitHub webhook)
+```
+On CI completion (success) OR label change:
+  If all review labels present AND human approved:
+    → spawn merger-final-signoff immediately
 ```
 
 ### `xbrlkit-tree-cleanup` (Every 6 hours)

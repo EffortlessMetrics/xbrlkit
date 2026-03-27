@@ -6,6 +6,10 @@ Final verification before merge.
 ## Trigger
 - Cron scheduler when PR has all passed labels + human approval
 
+## Trigger Options
+1. **GitHub webhook** — Triggered when CI green + `quality-passed` + `tests-passed` + `arch-passed` + `integ-passed` + human approval
+2. **Cron poll** — Scheduled check (e.g., every 15 min) for PRs ready to merge
+
 ## Preconditions
 - `quality-passed`
 - `tests-passed`
