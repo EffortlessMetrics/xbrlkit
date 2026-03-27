@@ -22,40 +22,46 @@ Create initial implementation plan from issue/requirements.
    - Test strategy
    - Risk assessment
    - Estimated effort
-4. Label issue: `plan-draft`
+4. **Comment on ISSUE with summary**
+5. Label issue: `plan-draft`
 
 ## Output
-Plan document + `plan-draft` label
 
-## Template
-```markdown
-# Plan: {Issue Title}
+### Plan Document
+`.mend/plans/ISSUE-{number}.md`
 
-## Overview
-{summary}
+### GitHub Comment on ISSUE (Required)
 
-## Acceptance Criteria
-- [ ] AC-001: {description}
-- [ ] AC-002: {description}
-
-## Approach
-{technical approach}
-
-## Files
-- Create: `path/to/new.rs`
-- Modify: `path/to/existing.rs`
-
-## Tests
-- Unit tests for {component}
-- BDD scenarios for {feature}
-
-## Risks
-- {risk and mitigation}
-
-## Estimate
-{rough estimate}
+**Template:**
 ```
+## 🤖 Initial Plan Created
+
+I've drafted an implementation plan for this issue.
+
+### 📄 Plan Location
+`.mend/plans/ISSUE-{number}.md`
+
+### 🎯 Summary
+{1-2 paragraph narrative of what the plan covers}
+
+### 📋 Key Points
+- **Approach**: {high-level strategy}
+- **Files affected**: {count} new, {count} modified
+- **Estimated effort**: {rough estimate}
+- **Risk level**: {low/medium/high}
+
+### 🔄 Next Steps
+Awaiting plan review. Next agent: `reviewer-plan`
+
+---
+*planner-initial agent*
+```
+
+### Label Actions
+- Add `plan-draft` label
+- Remove `needs-plan` label (if present)
 
 ## Safety
 - Create plan only, no implementation
 - Plan should be reviewable
+- Always comment on the issue

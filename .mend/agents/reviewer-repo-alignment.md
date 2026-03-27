@@ -27,35 +27,92 @@ Repository-level alignment check on the PLAN. Ensures proposed implementation fi
    - Similar features in codebase? (reuse opportunities)
    - Related modules need updates?
    - Impact on existing patterns
-
-## Signoff Criteria
-- Planned structure aligns with repo conventions
-- Patterns are consistent
-- No convention violations in the plan
+6. **Comment on ISSUE with alignment findings**
 
 ## Output
-**PASS**: Label `repo-aligned` on issue
+
+### GitHub Comment on ISSUE (Required)
+
+**PASS Template:**
 ```
-🤖 Repo Alignment PASS
+## 🤖 Repo Alignment PASS
 
-Planned structure: ✅
-Patterns: ✅
-Conventions: ✅
+I've verified the plan aligns with repository patterns and conventions.
 
-Ready for implementation (builder agent).
+### 📁 Structural Alignment
+
+#### File Locations
+- **Proposed locations**: ✅ Follow crate conventions
+- **Module structure**: ✅ Consistent with existing patterns
+
+#### Naming Conventions
+- **Style match**: ✅ Aligns with repo conventions
+
+### 🔄 Pattern Consistency
+
+#### Error Handling
+{Assessment of planned error handling approach}
+
+#### Testing Patterns
+{How planned tests align with existing patterns}
+
+### 📋 Convention Compliance
+- **CONTRIBUTING.md**: ✅ Follows guidelines
+- **License headers**: ✅ Planned appropriately
+
+### 🔗 Cross-References
+- **Similar features**: {identified for reference}
+- **Related modules**: {that may need updates}
+- **Reuse opportunities**: {identified}
+
+### 📝 Assessment
+{narrative about how well the plan fits the codebase}
+
+### 🔄 Next Steps
+✅ Repo alignment complete. Plan approved for implementation.
+
+Builder agent will create branch and PR. Next agent: `builder-implement`
+
+---
+*reviewer-repo-alignment agent*
 ```
 
-**CHANGES**: Label `plan-needs-work`
+**CHANGES NEEDED Template:**
 ```
-🤖 Repo Alignment CHANGES NEEDED
+## 🤖 Repo Alignment CHANGES NEEDED
 
-Alignment issues in plan:
-{specific violations}
+The plan has alignment issues with repository conventions.
 
-Revise plan before implementation.
+### 📁 Structural Issues
+
+#### {Issue}
+- **Current plan**: {what's proposed}
+- **Repo convention**: {what's expected}
+- **Suggested change**: {how to align}
+
+### 🔄 Pattern Inconsistencies
+
+#### {Pattern}
+- **Plan approach**: {what's planned}
+- **Existing approach**: {what repo uses}
+- **Recommendation**: {how to match}
+
+### 📝 Summary
+{narrative explaining the alignment gaps}
+
+### 🔄 Next Steps
+Revise plan for alignment and re-tag with `deep-plan-reviewed`.
+
+---
+*reviewer-repo-alignment agent*
 ```
+
+### Label Actions
+- **PASS**: Add `repo-aligned` label
+- **CHANGES**: Add `plan-needs-work` label
 
 ## Safety
 - Reviews PLAN only, not code
 - Can bounce plan back to planning phase
 - Focus on consistency with existing codebase
+- Always comment on the issue
