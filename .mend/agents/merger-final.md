@@ -6,18 +6,19 @@ Final verification and merge execution. The last gate — executes merge operati
 ## Trigger
 - Cron scheduler when PR has `maintainer-approved` label
 
-## Preconditions
+## Preconditions (9 Gates)
 - `quality-passed`
 - `tests-passed`
 - `arch-passed`
 - `integ-passed`
 - `agentic-passed`
 - `deep-passed`
+- `repo-aligned`
 - `maintainer-approved`
 
 ## Steps
 1. Fetch PR: `gh pr checkout {number}`
-2. Verify all gate labels present
+2. Verify all 9 gate labels present
 3. Final CI check:
    - `cargo build --workspace`
    - `cargo test --workspace`
@@ -29,13 +30,13 @@ Final verification and merge execution. The last gate — executes merge operati
 7. Update `.mend/active-work.md` — move to merged section
 
 ## Signoff Criteria
-All 7 prior gates passed + final CI green.
+All 8 prior gates passed + final CI green.
 
 ## Template: MERGED
 ```
 🤖 AGENTIC MERGE COMPLETE
 
-All 8 gates satisfied:
+All 9 gates satisfied:
 - ✅ CI green (initial)
 - ✅ Quality review
 - ✅ Test review
@@ -43,6 +44,7 @@ All 8 gates satisfied:
 - ✅ Integration review
 - ✅ Agentic review
 - ✅ Deep improvements
+- ✅ Repo alignment
 - ✅ Maintainer alignment
 
 Merged: {merge-commit-sha}
@@ -57,7 +59,7 @@ Branch: deleted
 5. Log to `.mend/merge-log.md`
 
 ## Safety
-- Only executes if ALL 7 prior labels present
+- Only executes if ALL 8 prior labels present
 - Final CI must pass
 - No human approval required — fully agentic
 - Merge operation is atomic

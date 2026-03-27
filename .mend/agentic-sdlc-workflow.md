@@ -23,8 +23,9 @@ Every PR goes through multiple agent passes until quality gate satisfied. No mer
 | 4 | `reviewer-integ` | Integration | Alpha-check passes, no golden drift, fixtures valid |
 | 5 | `reviewer-agentic` | Agentic review + CI | Comprehensive review, all prior gates verified |
 | 6 | `reviewer-deep` | Deep improvements | Final cleanup, optimizations, edge cases |
-| 7 | `maintainer-alignment` | Maintainer review | Code direction, strategic alignment, final checks |
-| 8 | `merger-final` | Merge approval | Verify all gates, execute merge |
+| 7 | `reviewer-repo-alignment` | Repo alignment | Structural consistency, patterns, conventions |
+| 8 | `maintainer-alignment` | Maintainer review | Code direction, strategic alignment, final checks |
+| 9 | `merger-final` | Merge approval | Verify all gates, execute merge |
 
 **Bounce conditions**: Any pass can request changes and bounce PR back to author.
 
@@ -81,8 +82,19 @@ Every PR goes through multiple agent passes until quality gate satisfied. No mer
 
 **Signoff**: `deep-passed` label
 
-### maintainer-alignment (NEW)
+### reviewer-repo-alignment (NEW)
 **Trigger**: After deep-passed
+
+**Scope**:
+- Repository-level structural alignment
+- Pattern consistency with existing code
+- Convention compliance
+- Cross-reference validation
+
+**Signoff**: `repo-aligned` label
+
+### maintainer-alignment (NEW)
+**Trigger**: After repo-aligned
 
 **Scope**:
 - Code direction alignment
@@ -98,7 +110,7 @@ Every PR goes through multiple agent passes until quality gate satisfied. No mer
 **Trigger**: After maintainer-approved
 
 **Scope**:
-- Verify all gate labels present
+- Verify all 9 gate labels present
 - Final CI check
 - Squash commit message format
 - CHANGELOG.md updated
@@ -120,7 +132,8 @@ For each open PR:
       - arch but no integ → reviewer-integ
       - integ but no agentic → reviewer-agentic
       - agentic but no deep → reviewer-deep
-      - deep but no maintainer → maintainer-alignment
+      - deep but no repo-aligned → reviewer-repo-alignment
+      - repo-aligned but no maintainer → maintainer-alignment
       - maintainer-approved → merger-final
 ```
 
@@ -142,6 +155,7 @@ Clean merged branches, stash uncommitted, git gc
 | `integ-passed` | Integration review complete | reviewer-integ |
 | `agentic-passed` | Agentic review complete | reviewer-agentic |
 | `deep-passed` | Deep improvements complete | reviewer-deep |
+| `repo-aligned` | Repo alignment complete | reviewer-repo-alignment |
 | `maintainer-approved` | Maintainer alignment complete | maintainer-alignment |
 | `changes-requested` | Bounced for revision | Any reviewer |
 | `agent-merge-approved` | Merge complete | merger-final |
@@ -150,7 +164,7 @@ Clean merged branches, stash uncommitted, git gc
 
 1. **No force push to main**
 2. **No human merge** — Only merger-final agent executes merge
-3. **8 agent gates** — Quality → Tests → Arch → Integ → Agentic → Deep → Maintainer → Merge
+3. **9 agent gates** — Quality → Tests → Arch → Integ → Agentic → Deep → Repo Alignment → Maintainer → Merge
 4. **Bounce limit** — After 3 bounces, escalate to human
 5. **Audit trail** — Every agent action logged
 
