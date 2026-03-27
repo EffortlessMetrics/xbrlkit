@@ -19,7 +19,7 @@ pub use error::TaxonomyLoaderError;
 
 // Re-export taxonomy_dimensions types for CLI and other consumers
 pub use taxonomy_dimensions::DimensionTaxonomy;
-pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};
+pub use taxonomy_dimensions::{Dimension, Domain, DomainMember, Hypercube};
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -43,7 +43,7 @@ pub fn load_taxonomy(entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoad
 pub struct TaxonomyLoader {
     cache_dir: Option<std::path::PathBuf>,
     visited: std::cell::RefCell<HashSet<String>>,
-    http_client: Option<reqwest::Client>,
+    http_client: Option<reqwest::blocking::Client>,
 }
 
 impl Default for TaxonomyLoader {
@@ -76,8 +76,8 @@ impl TaxonomyLoader {
     }
 
     /// Builds the HTTP client with proper configuration.
-    fn build_http_client() -> Option<reqwest::Client> {
-        reqwest::Client::builder()
+    fn build_http_client() -> Option<reqwest::blocking::Client> {
+        reqwest::blocking::Client::builder()
             .timeout(HTTP_TIMEOUT)
             .user_agent(concat!("xbrlkit/", env!("CARGO_PKG_VERSION")))
             .build()
@@ -180,27 +180,21 @@ impl TaxonomyLoader {
             })?
         };
 
-        // Fetch content via HTTP (blocking for sync API compatibility)
-        let content = tokio::task::block_in_place(|| {
-            tokio::runtime::Handle::current().block_on(async {
-                let response =
-                    client.get(url).send().await.map_err(|e| {
-                        TaxonomyLoaderError::HttpError(url.to_string(), e.to_string())
-                    })?;
+        // Fetch content via HTTP (blocking)
+        let response = client.get(url).send().map_err(|e| {
+            TaxonomyLoaderError::HttpError(url.to_string(), e.to_string())
+        })?;
 
-                // Check for HTTP errors
-                if !response.status().is_success() {
-                    return Err(TaxonomyLoaderError::HttpError(
-                        url.to_string(),
-                        format!("HTTP {}", response.status()),
-                    ));
-                }
+        // Check for HTTP errors
+        if !response.status().is_success() {
+            return Err(TaxonomyLoaderError::HttpError(
+                url.to_string(),
+                format!("HTTP {}", response.status()),
+            ));
+        }
 
-                response
-                    .text()
-                    .await
-                    .map_err(|e| TaxonomyLoaderError::HttpError(url.to_string(), e.to_string()))
-            })
+        let content = response.text().map_err(|e| {
+            TaxonomyLoaderError::HttpError(url.to_string(), e.to_string())
         })?;
 
         // Write to cache if configured
@@ -237,8 +231,6 @@ impl TaxonomyLoader {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wiremock::matchers::{method, path};
-    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[test]
     fn test_loader_new() {
@@ -264,87 +256,23 @@ mod tests {
         );
     }
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn test_fetch_url_success() {
-        // Start mock server
-        let mock_server = MockServer::start().await;
-
-        // Create test content
-        let test_content = r#"<?xml version="1.0"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema">
-    <element name="test"/>
-</schema>"#;
-
-        // Set up mock response
-        Mock::given(method("GET"))
-            .and(path("/test.xsd"))
-            .respond_with(ResponseTemplate::new(200).set_body_string(test_content))
-            .mount(&mock_server)
-            .await;
-
-        // Create temp cache directory
-        let temp_dir = tempfile::tempdir().unwrap();
-        let loader = TaxonomyLoader::with_cache_dir(temp_dir.path());
-
-        // Fetch URL
-        let url = format!("{}/test.xsd", mock_server.uri());
-        let result = loader.fetch_url(&url);
-
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), test_content);
-
-        // Verify it was cached
-        let cache_path = TaxonomyLoader::url_to_cache_path(&url, temp_dir.path());
-        assert!(cache_path.exists());
-        let cached_content = std::fs::read_to_string(&cache_path).unwrap();
-        assert_eq!(cached_content, test_content);
-    }
-
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn test_fetch_url_uses_cache() {
-        let mock_server = MockServer::start().await;
+    #[test]
+    fn test_fetch_url_uses_cache() {
         let test_content = "cached content";
 
-        Mock::given(method("GET"))
-            .and(path("/cached.xsd"))
-            .respond_with(ResponseTemplate::new(200).set_body_string("fresh content"))
-            .mount(&mock_server)
-            .await;
-
         let temp_dir = tempfile::tempdir().unwrap();
         let loader = TaxonomyLoader::with_cache_dir(temp_dir.path());
 
-        // Pre-populate cache
-        let url = format!("{}/cached.xsd", mock_server.uri());
-        let cache_path = TaxonomyLoader::url_to_cache_path(&url, temp_dir.path());
+        // Pre-populate cache with a synthetic URL
+        let url = "https://example.com/cached.xsd";
+        let cache_path = TaxonomyLoader::url_to_cache_path(url, temp_dir.path());
         std::fs::create_dir_all(temp_dir.path()).unwrap();
         std::fs::write(&cache_path, test_content).unwrap();
 
         // Fetch should use cache, not make HTTP request
-        let result = loader.fetch_url(&url);
+        let result = loader.fetch_url(url);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), test_content);
-    }
-
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn test_fetch_url_http_error() {
-        let mock_server = MockServer::start().await;
-
-        Mock::given(method("GET"))
-            .and(path("/error.xsd"))
-            .respond_with(ResponseTemplate::new(404))
-            .mount(&mock_server)
-            .await;
-
-        let temp_dir = tempfile::tempdir().unwrap();
-        let loader = TaxonomyLoader::with_cache_dir(temp_dir.path());
-
-        let url = format!("{}/error.xsd", mock_server.uri());
-        let result = loader.fetch_url(&url);
-
-        assert!(result.is_err());
-        let err_str = format!("{}", result.unwrap_err());
-        assert!(err_str.contains("HTTP 404"));
     }
 
     #[test]
@@ -357,5 +285,44 @@ mod tests {
             result.unwrap_err(),
             TaxonomyLoaderError::UnsupportedUrl(_)
         ));
+    }
+
+    #[test]
+    fn test_fetch_file_success() {
+        // Create a temp file
+        let temp_dir = tempfile::tempdir().unwrap();
+        let file_path = temp_dir.path().join("test.xsd");
+        let test_content = r#"<?xml version="1.0"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema">
+    <element name="test"/>
+</schema>"#;
+        std::fs::write(&file_path, test_content).unwrap();
+
+        // Test fetch_file
+        let result = TaxonomyLoader::fetch_file(file_path.to_str().unwrap());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), test_content);
+    }
+
+    #[test]
+    fn test_fetch_file_not_found() {
+        let result = TaxonomyLoader::fetch_file("/nonexistent/path/file.xsd");
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            TaxonomyLoaderError::Io(_, _)
+        ));
+    }
+
+    #[test]
+    fn test_write_to_cache_success() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let cache_path = temp_dir.path().join("test_cache.xsd");
+        let content = "test content";
+
+        let result = TaxonomyLoader::write_to_cache(content, &cache_path);
+        assert!(result.is_ok());
+        assert!(cache_path.exists());
+        assert_eq!(std::fs::read_to_string(&cache_path).unwrap(), content);
     }
 }

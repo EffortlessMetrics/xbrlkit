@@ -12,9 +12,8 @@ description = "XBRL taxonomy loading from XSD and linkbase files"
 roxmltree = "0.20"
 thiserror.workspace = true
 taxonomy-dimensions = { path = "../taxonomy-dimensions" }
-reqwest = { version = "0.12", features = ["rustls-tls"], default-features = false }
+reqwest = { version = "0.12", features = ["rustls-tls", "blocking"], default-features = false }
 url = "2.5"
-tokio = { workspace = true }
 
 [lints]
 workspace = true
@@ -23,3 +22,4 @@ workspace = true
 serde_json.workspace = true
 wiremock = "0.6"
 tempfile = "3"
+tokio = { workspace = true }
