@@ -71,15 +71,15 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 ## Cron Jobs
 | Job | Schedule | Status |
 |-----|----------|--------|
-| xbrlkit-planning-scheduler | Every 15 min | 🟡 Needs creation |
+| xbrlkit-planning-scheduler | Every 15 min | 🟢 Created (disabled) |
 | **xbrlkit-review-scheduler** | Every 15 min | 🟢 **ENABLED** |
 | xbrlkit-tree-cleanup | Every 6 hours | 🟡 Disabled |
 | xbrlkit-ci-health | Hourly | 🟢 Active |
 
 ## Next Steps
-- [ ] Create xbrlkit-planning-scheduler cron job
-- [ ] Create planning phase labels
-- [ ] Test full flow on new issue
+- [ ] Enable xbrlkit-planning-scheduler cron job
+- [ ] Test planning phase on new issue
+- [ ] Monitor PR #97, #99, #103 through review pipeline
 
 ---
 *Updated: Full 13-agent workflow — planning phase added, repo alignment in planning*
