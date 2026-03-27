@@ -1,0 +1,56 @@
+feature_id: FEAT-XK-STREAM
+layer: performance
+module: streaming-parser
+scenarios:
+  SCN-XK-STREAM-001:
+    ac_id: AC-XK-STREAM-001
+    req_id: REQ-XK-PERFORMANCE
+    crates: [xbrl-stream, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: [synthetic/inline/ixds-single-file-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrl-stream
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+  SCN-XK-STREAM-002:
+    ac_id: AC-XK-STREAM-002
+    req_id: REQ-XK-PERFORMANCE
+    crates: [xbrl-stream, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: [synthetic/inline/ixds-single-file-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrl-stream
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+  SCN-XK-STREAM-003:
+    ac_id: AC-XK-STREAM-003
+    req_id: REQ-XK-PERFORMANCE
+    crates: [xbrl-stream, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: [synthetic/inline/ixds-single-file-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrl-stream
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+  SCN-XK-STREAM-004:
+    ac_id: AC-XK-STREAM-004
+    req_id: REQ-XK-PERFORMANCE
+    crates: [xbrl-stream, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: [synthetic/inline/ixds-single-file-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrl-stream
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps

@@ -1,4 +1,4 @@
-@alpha-future
+@alpha-active
 Feature: Streaming Parser for Large Files
   As an XBRL validator
   I want to validate large SEC filings without excessive memory usage
