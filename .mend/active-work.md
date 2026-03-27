@@ -8,8 +8,9 @@ Workflow defined in `.mend/agentic-sdlc-workflow.md`. Agents in `.mend/agents/`.
 ### In Review (Agentic Pipeline)
 | PR | Description | CI | Quality | Tests | Arch | Integ | Human | Status |
 |----|-------------|----|---------|-------|------|-------|-------|--------|
-| #97 | Taxonomy loader BDD scenarios | 🟢 | — | — | — | — | — | 🟡 Ready for agent review |
-| #99 | Autonomous workflow infra | 🟢 | — | — | — | — | — | 🟡 Ready for agent review |
+| #97 | Taxonomy loader BDD scenarios | 🟢 | — | — | — | — | — | 🟡 ready-for-review |
+| #99 | Autonomous workflow infra | 🟢 | — | — | — | — | — | 🟡 ready-for-review |
+| #103 | Agentic SDLC workflow | 🟢 | — | — | — | — | — | 🟡 ready-for-review |
 
 ### Blocked / Waiting
 | Item | Blocker | ETA |
@@ -19,8 +20,7 @@ Workflow defined in `.mend/agentic-sdlc-workflow.md`. Agents in `.mend/agents/`.
 ### Queue (Next Up)
 | Priority | Item | Confidence | Value |
 |----------|------|------------|-------|
-| P0 | Enable agentic review cron jobs | High | Process |
-| P0 | Create GitHub labels | High | Process |
+| P0 | Enable review-scheduler cron (dry-run first) | High | Process |
 | P1 | Close/refresh legacy PRs #11-15 | Medium | Hygiene |
 | P2 | CLI dimension inspection extension | High | Feature |
 | P2 | Typed dimension validation scenarios | High | Feature |
@@ -30,13 +30,24 @@ Workflow defined in `.mend/agentic-sdlc-workflow.md`. Agents in `.mend/agents/`.
 2. **Multi-pass review** — Quality → Tests → Arch → Integ → Human → Merge
 3. **Bounce allowed** — Any gate can request changes
 
-## Background Processes
-| Job | Status | Last Run | Finding |
-|-----|--------|----------|---------|
-| CI Health | ✅ Active | Hourly | Green |
-| Friction Scan | ✅ Active | Every 6h | — |
-| Review Scheduler | 🟡 Defined | — | Ready to enable |
-| Tree Cleanup | 🟡 Defined | — | Ready to enable |
+## Labels Created
+- `ready-for-review` — PR ready for agent review
+- `review-in-progress` — Agent currently reviewing
+- `quality-passed`, `tests-passed`, `arch-passed`, `integ-passed` — Review gates
+- `in-review` — Ready for human review
+- `changes-requested` — Bounced for revision
+- `agent-merge-approved` — Merge agent completed
+- `autonomous` — Part of autonomous workflow
+- `wip` — Work in progress
+
+## Cron Jobs (Created, Disabled)
+| Job | Schedule | Purpose |
+|-----|----------|---------|
+| xbrlkit-review-scheduler | Every 15 min | Spawn reviewer agents for ready PRs |
+| xbrlkit-tree-cleanup | Every 6 hours | Clean merged branches, stash uncommitted |
+| xbrlkit-ci-health | Hourly | CI health check |
+| xbrlkit-friction-scan | Every 6h | TODO/FIXME detection |
+| xbrlkit-queue-check | Every 2h | Check active-work.md for queued items |
 
 ---
-*Updated: Agentic SDLC workflow phase 1 complete*
+*Updated: Agentic SDLC Phase 1 complete — labels and cron jobs ready*
