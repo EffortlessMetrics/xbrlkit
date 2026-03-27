@@ -33,32 +33,80 @@ Review code for Rust idioms, error handling, documentation, and naming conventio
 - No TODO/FIXME without issue numbers
 
 ## Output
-**PASS**: Add `quality-passed` label, comment with 🤖 Quality Review PASS template
-**FAIL**: Add `changes-requested` label, comment with specific issues
 
-## Template: PASS
+### GitHub Comment Required
+Post detailed comment on PR with findings. Use template but EXPAND with narrative.
+
+**PASS Template:**
 ```
-🤖 Quality Review PASS
+## 🤖 Quality Review PASS
 
-Files reviewed: {count}
-Clippy warnings: {count}
-Notes: {any non-blocking observations}
+### Files Reviewed
+{count} files analyzed
 
-Ready for next gate.
+### Clippy Check
+- **Level**: Pedantic
+- **Warnings**: {count}
+- **Status**: ✅ Clean
+
+### What I Looked For
+{Describe your review approach — what patterns you checked, what stood out}
+
+### Findings
+{Detailed narrative of what you found}
+
+#### ✅ Strengths
+- {Specific good patterns observed}
+- {Well-structured code sections}
+
+#### 📝 Notes (Non-blocking)
+- {Suggestions for improvement that don't block}
+
+### Signoff
+All quality gates passed. Proceeding to test review.
+
+---
+*reviewer-quality agent*
 ```
 
-## Template: CHANGES REQUESTED
+**CHANGES REQUESTED Template:**
 ```
-🤖 Quality Review CHANGES REQUESTED
+## 🤖 Quality Review CHANGES REQUESTED
 
-Issues found:
-{numbered list with file:line references}
+### Files Reviewed
+{count} files analyzed
 
-Action: Address and push. Re-review will trigger automatically.
+### Issues Found
+
+#### 🔴 Blockers
+1. **{File}:{Line}** — {Issue}
+   - **Why it matters**: {Explanation}
+   - **Suggested fix**: {Concrete change}
+
+2. **{File}:{Line}** — {Issue}
+   ...
+
+#### 🟡 Warnings
+1. **{File}:{Line}** — {Issue}
+   - **Consider**: {Suggestion}
+
+### Summary
+{ narrative summary of overall code quality }
+
+### Next Steps
+Address blockers and push. Re-review will trigger automatically.
+
+---
+*reviewer-quality agent*
 ```
+
+### Label Actions
+- **PASS**: Add `quality-passed` label, remove `review-in-progress`
+- **FAIL**: Add `changes-requested` label, remove `review-in-progress`
 
 ## Safety
 - Do NOT push commits
 - Do NOT merge
 - Read-only review only
 - Label changes only
+- Always post GitHub comment with findings

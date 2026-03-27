@@ -33,26 +33,84 @@ Final alignment on code direction, strategic fit, and architectural decisions. T
 - Direction approved
 
 ## Output
-**PASS**: Add `maintainer-approved` label
+
+### GitHub Comment Required
+
+**PASS Template:**
 ```
-🤖 Maintainer Alignment APPROVED
+## 🤖 Maintainer Alignment APPROVED
 
-Strategic fit: ✅
-Architecture: ✅
-Direction: ✅
+### Strategic Assessment
 
-Proceeding to merge gate.
+#### Roadmap Alignment
+{How this PR fits into xbrlkit's direction}
+
+#### API Surface Review
+- **New public APIs**: {count}
+- **Breaking changes**: {yes/no}
+- **Deprecation**: {if any}
+
+#### Technical Debt Assessment
+{Analysis of debt introduced vs value gained}
+
+### Architecture Review
+
+#### Pattern Consistency
+{How this fits with existing architecture}
+
+#### Crate Boundaries
+{Assessment of crate placement}
+
+### Direction Check
+- **Domain fit**: {XBRL/SEC validation alignment}
+- **Scope**: {appropriateness}
+- **Completeness**: {does it deliver what it promises}
+
+### Final Judgment
+{narrative explaining why this is ready to merge}
+
+### Signoff
+✅ Maintainer alignment complete. Proceeding to merge gate.
+
+---
+*maintainer-alignment agent*
 ```
 
-**FAIL**: Add `changes-requested` label
+**CHANGES REQUESTED Template:**
 ```
-🤖 Maintainer Alignment CHANGES REQUESTED
+## 🤖 Maintainer Alignment CHANGES REQUESTED
 
-Alignment issues:
-{specific concerns}
+### Strategic Concerns
 
-Requires author attention before merge.
+#### {Concern Category}
+{Detailed explanation of the concern}
+- **Impact**: {what this affects}
+- **Suggested resolution**: {how to fix}
+
+### Architecture Issues
+{if any}
+
+### Direction Questions
+- {questions about fit or approach}
+
+### Summary
+{narrative explaining the concerns and path forward}
+
+### Options
+1. **Revise approach**: {specific changes}
+2. **Escalate to human**: If strategic decision needed
+
+### Next Steps
+Address concerns or request human review for strategic decisions.
+
+---
+*maintainer-alignment agent*
 ```
+
+### Label Actions
+- **PASS**: Add `maintainer-approved`, remove `review-in-progress`
+- **FAIL**: Add `changes-requested`, remove `review-in-progress`
+- **ESCALATE**: Add `needs-human-decision` for strategic conflicts
 
 ## Escalation
 If maintainer agent detects:
@@ -66,3 +124,4 @@ If maintainer agent detects:
 - Read-only review
 - Can escalate to human for strategic decisions
 - Final gate before merge agent
+- Always post GitHub comment with findings
