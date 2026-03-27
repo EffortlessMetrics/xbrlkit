@@ -1,8 +1,9 @@
 # Active Work Queue — xbrlkit
 
 ## Agentic SDLC Status
-**Full workflow — Planning → Build → Review → Merge** 🟢
-13 agents, 13 gates. Fully agentic.
+**FULLY OPERATIONAL** 🟢🟢
+Planning scheduler: ENABLED | Review scheduler: ENABLED
+13 agents, 13 gates. End-to-end agentic.
 
 ## Workflow
 ```
@@ -11,12 +12,12 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 
 ## Current Sprint
 
-### In Planning
-| Issue | Description | Status | Next Agent |
-|-------|-------------|--------|------------|
-| #100 | Taxonomy Loader BDD — PR #97 | 🟡 PR exists | In review phase |
-| #101 | Legacy PR Cleanup | — | needs-plan |
-| #102 | ADR: HTTP client architecture | — | needs-plan |
+### In Planning (Scheduler Active)
+| Issue | Description | Label | Next Agent |
+|-------|-------------|-------|------------|
+| #100 | Taxonomy Loader BDD | **needs-plan** | planner-initial |
+| #101 | Legacy PR Cleanup | **needs-plan** | planner-initial |
+| #102 | ADR: HTTP client architecture | **needs-plan** | planner-initial |
 
 ### In Review (Code Phase)
 | PR | CI | Q | T | A | I | Ag | D | M | Status |
@@ -71,15 +72,30 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 ## Cron Jobs
 | Job | Schedule | Status |
 |-----|----------|--------|
-| xbrlkit-planning-scheduler | Every 15 min | 🟢 Created (disabled) |
+| **xbrlkit-planning-scheduler** | Every 15 min | 🟢 **ENABLED** |
 | **xbrlkit-review-scheduler** | Every 15 min | 🟢 **ENABLED** |
 | xbrlkit-tree-cleanup | Every 6 hours | 🟡 Disabled |
 | xbrlkit-ci-health | Hourly | 🟢 Active |
 
-## Next Steps
-- [ ] Enable xbrlkit-planning-scheduler cron job
-- [ ] Test planning phase on new issue
-- [ ] Monitor PR #97, #99, #103 through review pipeline
+## What Happens Now
+
+### Planning Phase (Next 15 min)
+1. Planning scheduler picks up issues #100, #101, #102
+2. Spawns `planner-initial` agents
+3. Agents create `.mend/plans/ISSUE-{n}.md` documents
+4. Labels progress: needs-plan → plan-draft
+
+### Review Phase (Ongoing)
+1. Review scheduler checks PRs #97, #99, #103 every 15 min
+2. Spawns `reviewer-quality` agents (first gate)
+3. Labels progress through 8 review gates
+4. Final `merger-final` executes merge
+
+## Monitoring
+- `.mend/plans/` — Watch for new plan documents
+- `.mend/session-log.md` — Agent activity log
+- PR labels — Gate progression
+- Issue labels — Planning phase progression
 
 ---
-*Updated: Full 13-agent workflow — planning phase added, repo alignment in planning*
+*Status: BOTH SCHEDULERS ENABLED — Full agentic workflow operational*
