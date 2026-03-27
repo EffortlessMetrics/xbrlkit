@@ -91,22 +91,19 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Negative Value Validation | #80 | Detect negative values where prohibited by taxonomy | #86 |
 | Unit Consistency Validation | #82 | Validate unit references match fact types | #88 |
 | Context Completeness Validation | #83 | Ensure all facts reference valid contexts | #90 |
+| Decimal Precision Validation | #81 | EFM 6.5.37 implementation, 10 BDD scenarios | #93 |
 
-**Status:** ✅ **MERGED** (2026-03-25 14:02 UTC)
-- Commit: `9f2fc8d`
+**Status:** ✅ **PHASE 3 WAVES 1-3 COMPLETE**
 - numeric-rules crate created
-- 5 BDD scenarios added
+- 21 BDD scenarios active
 - Golden file updated
+- All quality gates green
 
 ### 🔨 Build (In Progress)
 
-*No active work.*
-
-### ✅ Complete (Recently Merged)
-
-| Item | Issue | Status | PR | Notes |
-|------|-------|--------|-----|-------|
-| Decimal Precision Validation | #81 | ✅ Complete | #93 | EFM 6.5.37 implementation, 10 BDD scenarios, alpha-check green |
+| Item | Issue | Started | Notes |
+|------|-------|---------|-------|
+| Streaming Parser (Wave 4) | — | 2026-03-26 | `xbrl-stream` crate created, 5 unit tests passing, ready for integration into validation-run |
 
 ### 📋 Planned (Future)
 
@@ -115,9 +112,9 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
 | Wave 5 | IFRS/ESEF Support | P2 | Extended taxonomy support |
 
-## Actions Completed This Run (2026-03-25 20:32 CST)
-- ✅ Found existing research for #82 (Unit Consistency Validation)
-- ✅ Moved #82 from 📋 Ready → 📐 Plan stage
-- ✅ Created implementation plan: `.mend/notes/unit-consistency-plan.md`
-- ✅ Verified no active work in progress
-- ✅ Updated queue state
+## Actions Completed This Run (2026-03-26 12:32 CST)
+- ✅ Verified PR #93 was merged (context completeness + decimal precision)
+- ✅ Confirmed issue #81 closed
+- ✅ Updated queue state: Phase 3 Waves 1-3 now complete
+- ✅ No 📋 Ready items remaining — all P0/P1 work complete
+- ✅ Queue now empty, awaiting Phase 4/5 prioritization or new issues
