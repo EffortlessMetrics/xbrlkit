@@ -1207,6 +1207,258 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-TAX-LOAD-001",
+      "ac_id": "AC-XK-TAX-LOAD-001",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAX-LOAD-002",
+      "ac_id": "AC-XK-TAX-LOAD-002",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAX-LOAD-003",
+      "ac_id": "AC-XK-TAX-LOAD-003",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAX-LOAD-004",
+      "ac_id": "AC-XK-TAX-LOAD-004",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAX-LOAD-005",
+      "ac_id": "AC-XK-TAX-LOAD-005",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAX-LOAD-006",
+      "ac_id": "AC-XK-TAX-LOAD-006",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAX-LOAD-007",
+      "ac_id": "AC-XK-TAX-LOAD-007",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-TAX-LOAD-008",
+      "ac_id": "AC-XK-TAX-LOAD-008",
+      "req_id": "REQ-XK-TAXONOMY-LOADER",
+      "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
+      "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "crates": [
+        "taxonomy-loader",
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/taxonomy/standard-location-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-loader",
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-TAXONOMY-001",
       "ac_id": "AC-XK-TAXONOMY-001",
       "req_id": "REQ-XK-TAXONOMY",

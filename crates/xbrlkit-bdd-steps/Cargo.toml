@@ -27,6 +27,7 @@ context-completeness = { path = "../context-completeness" }
 xbrl-report-types = { path = "../xbrl-report-types" }
 numeric-rules = { path = "../numeric-rules" }
 xbrl-stream = { path = "../xbrl-stream" }
+taxonomy-loader = { path = "../taxonomy-loader" }
 
 [lints]
 workspace = true
