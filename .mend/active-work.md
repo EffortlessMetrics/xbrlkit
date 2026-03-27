@@ -1,72 +1,85 @@
 # Active Work Queue — xbrlkit
 
 ## Agentic SDLC Status
-**Fully agentic workflow — 9 gates, SCHEDULER ENABLED** 🟢
-Workflow defined in `.mend/agentic-sdlc-workflow.md`. Agents in `.mend/agents/`.
+**Full workflow — Planning → Build → Review → Merge** 🟢
+13 agents, 13 gates. Fully agentic.
+
+## Workflow
+```
+Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI → Quality → Tests → Arch → Integ → Agentic → Deep → Maintainer → Merge
+```
 
 ## Current Sprint
 
-### In Review (Agentic Pipeline)
-| PR | Description | CI | Q | T | A | I | Ag | D | R | M | Status |
-|----|-------------|----|---|---|---|---|----|---|---|---|--------|
-| #97 | Taxonomy loader BDD scenarios | 🟢 | — | — | — | — | — | — | — | — | ready-for-review |
-| #99 | Autonomous workflow infra | 🟢 | — | — | — | — | — | — | — | — | ready-for-review |
-| #103 | Agentic SDLC workflow | 🟢 | — | — | — | — | — | — | — | — | ready-for-review |
+### In Planning
+| Issue | Description | Status | Next Agent |
+|-------|-------------|--------|------------|
+| #100 | Taxonomy Loader BDD — PR #97 | 🟡 PR exists | In review phase |
+| #101 | Legacy PR Cleanup | — | needs-plan |
+| #102 | ADR: HTTP client architecture | — | needs-plan |
 
-**Legend:** Q=Quality, T=Tests, A=Arch, I=Integ, Ag=Agentic, D=Deep, R=Repo Alignment, M=Maintainer
+### In Review (Code Phase)
+| PR | CI | Q | T | A | I | Ag | D | M | Status |
+|----|----|---|---|---|---|----|---|---|--------|
+| #97 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
+| #99 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
+| #103 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
 
-### Agent Definitions (9 Total)
+**Legend:** Q=Quality, T=Tests, A=Arch, I=Integ, Ag=Agentic, D=Deep, M=Maintainer
+
+## Agent Definitions (13 Total)
+
+### Planning Phase (4)
 | Agent | Purpose | File |
 |-------|---------|------|
-| reviewer-quality | Code quality, clippy, docs | `.mend/agents/reviewer-quality.md` |
-| reviewer-tests | Test coverage, BDD alignment | `.mend/agents/reviewer-tests.md` |
-| reviewer-arch | Architecture, crate boundaries | `.mend/agents/reviewer-arch.md` |
-| reviewer-integ | Integration, artifacts | `.mend/agents/reviewer-integ.md` |
-| reviewer-agentic | Cross-cutting review + CI verify | `.mend/agents/reviewer-agentic.md` |
-| reviewer-deep | Final improvements, cleanup | `.mend/agents/reviewer-deep.md` |
-| **reviewer-repo-alignment** | **Repo alignment, patterns** | `.mend/agents/reviewer-repo-alignment.md` |
-| maintainer-alignment | Code direction, strategic fit | `.mend/agents/maintainer-alignment.md` |
-| merger-final | Final verification + merge | `.mend/agents/merger-final.md` |
+| planner-initial | Create plan from issue | `.mend/agents/planner-initial.md` |
+| reviewer-plan | Review plan feasibility | `.mend/agents/reviewer-plan.md` |
+| reviewer-deep-plan | Deep plan review | `.mend/agents/reviewer-deep-plan.md` |
+| reviewer-repo-alignment | Check plan vs repo patterns | `.mend/agents/reviewer-repo-alignment.md` |
 
-### Blocked / Waiting
-| Item | Blocker | ETA |
-|------|---------|-----|
-| Legacy PR cleanup (#11-15) | User decision on stale PRs | — |
+### Implementation Phase (1)
+| Agent | Purpose | File |
+|-------|---------|------|
+| builder-implement | Implement plan, create PR | `.mend/agents/builder-implement.md` |
 
-## Workflow (9 Gates)
-```
-CI → Quality → Tests → Arch → Integ → Agentic → Deep → Repo Alignment → Maintainer → Merge
-     ↑________________________ Bounce back for changes ________________________|
-```
+### Review Phase (8)
+| Agent | Purpose | File |
+|-------|---------|------|
+| reviewer-quality | Code quality, clippy | `.mend/agents/reviewer-quality.md` |
+| reviewer-tests | Test coverage, BDD | `.mend/agents/reviewer-tests.md` |
+| reviewer-arch | Architecture | `.mend/agents/reviewer-arch.md` |
+| reviewer-integ | Integration | `.mend/agents/reviewer-integ.md` |
+| reviewer-agentic | Cross-cutting + CI | `.mend/agents/reviewer-agentic.md` |
+| reviewer-deep | Improvements, cleanup | `.mend/agents/reviewer-deep.md` |
+| maintainer-alignment | Direction, strategy | `.mend/agents/maintainer-alignment.md` |
+| merger-final | Verify + merge | `.mend/agents/merger-final.md` |
 
 ## Labels
-- `ready-for-review` — PR ready for agent review
-- `review-in-progress` — Agent currently reviewing
-- `quality-passed`, `tests-passed`, `arch-passed`, `integ-passed` — Gates 1-4
-- `agentic-passed` — Gate 5 (cross-cutting + CI verify)
-- `deep-passed` — Gate 6 (improvements, cleanup)
-- `repo-aligned` — Gate 7 (repo alignment, patterns)
-- `maintainer-approved` — Gate 8 (alignment, direction)
-- `agent-merge-approved` — Gate 9 (merged)
-- `changes-requested` — Bounced for revision
-- `needs-human-decision` — Escalated for strategic issues
-- `autonomous`, `wip` — Workflow labels
+
+### Planning
+- `needs-plan` → `plan-draft` → `plan-reviewed` → `deep-plan-reviewed` → `repo-aligned`
+- `plan-needs-work` — Bounce to revision
+
+### Implementation
+- `building` — Implementation in progress
+- `ready-for-review` — Entering review pipeline
+
+### Review
+- `quality-passed` → `tests-passed` → `arch-passed` → `integ-passed` → `agentic-passed` → `deep-passed` → `maintainer-approved` → `agent-merge-approved`
+- `changes-requested` — Bounce to revision
 
 ## Cron Jobs
-| Job | Schedule | Status | Purpose |
-|-----|----------|--------|---------|
-| **xbrlkit-review-scheduler** | Every 15 min | 🟢 **ENABLED** | Spawn next required agent |
-| xbrlkit-tree-cleanup | Every 6 hours | 🟡 Disabled | Clean merged branches |
-| xbrlkit-ci-health | Hourly | 🟢 Active | CI health check |
-| xbrlkit-friction-scan | Every 6h | 🟢 Active | TODO/FIXME detection |
+| Job | Schedule | Status |
+|-----|----------|--------|
+| xbrlkit-planning-scheduler | Every 15 min | 🟡 Needs creation |
+| **xbrlkit-review-scheduler** | Every 15 min | 🟢 **ENABLED** |
+| xbrlkit-tree-cleanup | Every 6 hours | 🟡 Disabled |
+| xbrlkit-ci-health | Hourly | 🟢 Active |
 
-## Next Agent Runs
-Scheduler will check PRs #97, #99, #103 every 15 minutes and spawn `reviewer-quality` agents (first gate).
-
-## Monitoring
-- Check `.mend/session-log.md` for agent activity
-- Watch PR labels for gate progression
-- Reviewer agents will comment 🤖 templates on PRs
+## Next Steps
+- [ ] Create xbrlkit-planning-scheduler cron job
+- [ ] Create planning phase labels
+- [ ] Test full flow on new issue
 
 ---
-*Updated: Scheduler ENABLED — 9-gate fully agentic workflow active*
+*Updated: Full 13-agent workflow — planning phase added, repo alignment in planning*

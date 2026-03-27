@@ -1,153 +1,86 @@
 # Agentic SDLC Workflow — xbrlkit
 
 ## Philosophy
-Every PR goes through multiple agent passes until quality gate satisfied. No merge without explicit agent signoff. Fully agentic — no human review gates.
+End-to-end agentic workflow: Planning → Implementation → Review → Merge. No human gates.
 
-## Workflow Stages
+## Full Workflow
 
-### 1. Branch Creation (Tiny Slices)
-- Max 1-2 ACs per branch
-- Clear scope in branch name: `feat/SCN-XK-TAX-LOAD-001-002`
-- Pre-push: alpha-check must pass locally
-
-### 2. CI Gate (Automated)
-- GitHub Actions: build, test, clippy, fmt
-- Alpha-check: 33 scenarios must pass
-- **Output**: ✅ Green or ❌ Fail (blocks review)
-
-### 3. Agent Review Gate (Multi-Pass)\n| Pass | Agent | Focus | Signoff Criteria |
-|------|-------|-------|------------------|
-| 1 | `reviewer-quality` | Code quality | No clippy warnings, idiomatic Rust, proper error handling |
-| 2 | `reviewer-tests` | Test coverage | All new code tested, BDD steps match feature file |
-| 3 | `reviewer-arch` | Architecture | Fits crate boundaries, no circular deps, ADR if needed |
-| 4 | `reviewer-integ` | Integration | Alpha-check passes, no golden drift, fixtures valid |
-| 5 | `reviewer-agentic` | Agentic review + CI | Comprehensive review, all prior gates verified |
-| 6 | `reviewer-deep` | Deep improvements | Final cleanup, optimizations, edge cases |
-| 7 | `reviewer-repo-alignment` | Repo alignment | Structural consistency, patterns, conventions |
-| 8 | `maintainer-alignment` | Maintainer review | Code direction, strategic alignment, final checks |
-| 9 | `merger-final` | Merge approval | Verify all gates, execute merge |
-
-**Bounce conditions**: Any pass can request changes and bounce PR back to author.
-
-## Agent Details
-
-### reviewer-quality
-- Strict clippy (pedantic level)
-- Idiomatic Rust patterns
-- Error handling (no unwrap in lib code)
-- Documentation coverage
-
-### reviewer-tests  
-- BDD step alignment
-- Unit test coverage
-- Edge case handling
-- Fixture validity
-
-### reviewer-arch
-- Crate boundaries
-- No circular deps
-- ADR requirements
-- Breaking change assessment
-
-### reviewer-integ
-- Alpha-check passes
-- No golden drift
-- Clean build
-- Artifact verification
-
-### reviewer-agentic (NEW)
-**Trigger**: After integ-passed + CI green
-
-**Scope**:
-- Comprehensive cross-cutting review
-- Verify all prior gates actually passed
-- Check for gaps between review passes
-- Ensure CI is still green (re-run if needed)
-- Validate PR description matches changes
-- Check for security concerns
-
-**Signoff**: `agentic-passed` label
-
-### reviewer-deep (NEW)
-**Trigger**: After agentic-passed
-
-**Scope**:
-- Final improvements and cleanup
-- Performance optimizations
-- Edge case hardening
-- Documentation polish
-- Comment quality
-- Naming refinements
-- Remove any remaining TODOs/FIXMEs
-
-**Signoff**: `deep-passed` label
-
-### reviewer-repo-alignment (NEW)
-**Trigger**: After deep-passed
-
-**Scope**:
-- Repository-level structural alignment
-- Pattern consistency with existing code
-- Convention compliance
-- Cross-reference validation
-
-**Signoff**: `repo-aligned` label
-
-### maintainer-alignment (NEW)
-**Trigger**: After repo-aligned
-
-**Scope**:
-- Code direction alignment
-- Strategic fit assessment
-- Architecture consistency with roadmap
-- API surface review
-- Breaking change approval
-- Deprecation handling
-
-**Signoff**: `maintainer-approved` label
-
-### merger-final
-**Trigger**: After maintainer-approved
-
-**Scope**:
-- Verify all 9 gate labels present
-- Final CI check
-- Squash commit message format
-- CHANGELOG.md updated
-- Execute merge with squash
-- Delete branch
-
-**Signoff**: `agent-merge-approved` label + merge commit
-
-## Cron Jobs
-
-### `xbrlkit-review-scheduler` (Every 15 min)
 ```
-For each open PR:
-  If CI green AND no `review-in-progress`:
-    Spawn next required agent based on missing labels:
-      - no quality-passed → reviewer-quality
-      - quality but no tests → reviewer-tests
-      - tests but no arch → reviewer-arch
-      - arch but no integ → reviewer-integ
-      - integ but no agentic → reviewer-agentic
-      - agentic but no deep → reviewer-deep
-      - deep but no repo-aligned → reviewer-repo-alignment
-      - repo-aligned but no maintainer → maintainer-alignment
-      - maintainer-approved → merger-final
+Issue → Plan → Plan Review → Deep Plan Review → Repo Alignment → Build → CI → Quality → Tests → Arch → Integ → Agentic → Deep → Maintainer → Merge
 ```
 
-### `xbrlkit-tree-cleanup` (Every 6 hours)
-```
-Clean merged branches, stash uncommitted, git gc
-```
+## Phase 1: Planning
+
+| Step | Agent | Trigger | Output |
+|------|-------|---------|--------|
+| 1 | `planner-initial` | Issue labeled `needs-plan` | Plan document + `plan-draft` |
+| 2 | `reviewer-plan` | `plan-draft` label | `plan-reviewed` label |
+| 3 | `reviewer-deep-plan` | `plan-reviewed` label | `deep-plan-reviewed` label |
+| 4 | `reviewer-repo-alignment` | `deep-plan-reviewed` label | `repo-aligned` label |
+
+**Repo Alignment** happens here — before any code is written. Checks if the planned implementation aligns with repo patterns and conventions.
+
+## Phase 2: Implementation
+
+| Step | Agent | Trigger | Output |
+|------|-------|---------|--------|
+| 5 | `builder-implement` | `repo-aligned` label | Branch + PR + `ready-for-review` |
+
+## Phase 3: Code Review
+
+| Step | Agent | Trigger | Output |
+|------|-------|---------|--------|
+| 6 | `reviewer-quality` | `ready-for-review` + CI green | `quality-passed` |
+| 7 | `reviewer-tests` | `quality-passed` | `tests-passed` |
+| 8 | `reviewer-arch` | `tests-passed` | `arch-passed` |
+| 9 | `reviewer-integ` | `arch-passed` | `integ-passed` |
+| 10 | `reviewer-agentic` | `integ-passed` | `agentic-passed` |
+| 11 | `reviewer-deep` | `agentic-passed` | `deep-passed` |
+| 12 | `maintainer-alignment` | `deep-passed` | `maintainer-approved` |
+| 13 | `merger-final` | `maintainer-approved` | `agent-merge-approved` + merge |
+
+## Agent Definitions
+
+### Planning Phase
+- `planner-initial.md` — Create implementation plan from issue
+- `reviewer-plan.md` — Review plan for feasibility
+- `reviewer-deep-plan.md` — Deep plan review (edge cases, risks)
+- `reviewer-repo-alignment.md` — Check plan against repo patterns
+
+### Implementation Phase
+- `builder-implement.md` — Implement approved plan, create PR
+
+### Review Phase
+- `reviewer-quality.md` — Code quality, clippy, docs
+- `reviewer-tests.md` — Test coverage, BDD alignment
+- `reviewer-arch.md` — Architecture, crate boundaries
+- `reviewer-integ.md` — Integration, artifacts
+- `reviewer-agentic.md` — Cross-cutting review + CI verify
+- `reviewer-deep.md` — Final improvements, cleanup
+- `maintainer-alignment.md` — Code direction, strategic fit
+- `merger-final.md` — Final verification + merge
 
 ## Labels
 
-| Label | Meaning | Who sets |
-|-------|---------|----------|
-| `wip` | Work in progress | Author |
-| `ready-for-review` | CI green, ready for agents | Author |
+### Planning Phase
+| Label | Meaning | Set By |
+|-------|---------|--------|
+| `needs-plan` | Issue needs implementation plan | Human or triage |
+| `plan-draft` | Initial plan created | planner-initial |
+| `plan-reviewed` | Plan feasibility verified | reviewer-plan |
+| `deep-plan-reviewed` | Deep plan review complete | reviewer-deep-plan |
+| `repo-aligned` | Plan aligns with repo patterns | reviewer-repo-alignment |
+| `plan-needs-work` | Plan needs revision | Any planning agent |
+
+### Implementation Phase
+| Label | Meaning | Set By |
+|-------|---------|--------|
+| `building` | Implementation in progress | builder-implement |
+| `ready-for-review` | PR ready for review pipeline | builder-implement |
+
+### Review Phase
+| Label | Meaning | Set By |
+|-------|---------|--------|
 | `review-in-progress` | Agent currently reviewing | Scheduler |
 | `quality-passed` | Quality review complete | reviewer-quality |
 | `tests-passed` | Test review complete | reviewer-tests |
@@ -155,37 +88,64 @@ Clean merged branches, stash uncommitted, git gc
 | `integ-passed` | Integration review complete | reviewer-integ |
 | `agentic-passed` | Agentic review complete | reviewer-agentic |
 | `deep-passed` | Deep improvements complete | reviewer-deep |
-| `repo-aligned` | Repo alignment complete | reviewer-repo-alignment |
 | `maintainer-approved` | Maintainer alignment complete | maintainer-alignment |
-| `changes-requested` | Bounced for revision | Any reviewer |
 | `agent-merge-approved` | Merge complete | merger-final |
+| `changes-requested` | Bounced for revision | Any reviewer |
+| `needs-human-decision` | Escalated for strategic issues | maintainer-alignment |
+| `autonomous` | Part of autonomous workflow | Any agent |
+
+## Cron Jobs
+
+### `xbrlkit-planning-scheduler` (Every 15 min)
+```
+For each open issue with label:
+  needs-plan → spawn planner-initial
+  plan-draft → spawn reviewer-plan
+  plan-reviewed → spawn reviewer-deep-plan
+  deep-plan-reviewed → spawn reviewer-repo-alignment
+  repo-aligned → spawn builder-implement
+```
+
+### `xbrlkit-review-scheduler` (Every 15 min)
+```
+For each open PR:
+  If CI green AND no review-in-progress:
+    Determine next agent from labels:
+      ready-for-review → reviewer-quality
+      quality-passed → reviewer-tests
+      tests-passed → reviewer-arch
+      arch-passed → reviewer-integ
+      integ-passed → reviewer-agentic
+      agentic-passed → reviewer-deep
+      deep-passed → maintainer-alignment
+      maintainer-approved → merger-final
+```
+
+## Bounce Behavior
+
+Any agent can bounce back to previous phase:
+- Planning agents → back to plan revision
+- Review agents → back to author (with `changes-requested`)
+
+After 3 bounces on same PR/issue → escalate to human (`needs-human-decision`)
 
 ## Safety
 
-1. **No force push to main**
-2. **No human merge** — Only merger-final agent executes merge
-3. **9 agent gates** — Quality → Tests → Arch → Integ → Agentic → Deep → Repo Alignment → Maintainer → Merge
-4. **Bounce limit** — After 3 bounces, escalate to human
-5. **Audit trail** — Every agent action logged
+1. **No human gates** — Fully agentic end-to-end
+2. **Repo alignment before build** — Pattern check on plan, not code
+3. **Audit trail** — Every action logged
+4. **Bounce limit** — Escalation after repeated failures
+5. **Plan-first** — Implementation follows approved plan
 
-## Implementation
+## Directory Structure
 
-### Phase 1 (Done)
-- [x] Base reviewer agents (quality, tests, arch, integ)
-- [x] Labels created
-- [x] Cron jobs defined
-
-### Phase 2 (Now)
-- [ ] Create `reviewer-agentic.md` agent definition
-- [ ] Create `reviewer-deep.md` agent definition
-- [ ] Create `maintainer-alignment.md` agent definition
-- [ ] Update `merger-final-signoff.md` with new trigger logic
-- [ ] Enable scheduler
-
-### Phase 3 (Test)
-- [ ] Run full pipeline on PR #103
-- [ ] Validate bounce behavior
-- [ ] Measure review latency
+```
+.mend/
+  agents/           # Agent definitions
+  plans/            # Implementation plans (ISSUE-{n}.md)
+  session-log.md    # Agent activity log
+  active-work.md    # Current sprint tracking
+```
 
 ---
-*Fully agentic workflow — no human review gates*
+*Full agentic workflow: Planning → Build → Review → Merge (13 agents, 13 gates)*

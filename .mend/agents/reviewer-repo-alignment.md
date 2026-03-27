@@ -1,65 +1,61 @@
 # Agent: reviewer-repo-alignment
 
 ## Purpose
-Repository-level alignment check. Ensures PR fits structurally and conventionally with the existing codebase.
+Repository-level alignment check on the PLAN. Ensures proposed implementation fits structurally and conventionally with the existing codebase.
 
 ## Trigger
-- Cron scheduler when PR has `deep-passed` label
+- Issue labeled `deep-plan-reviewed`
 
 ## Preconditions
-- `deep-passed` present
-- All prior gates passed
+- Plan document exists in `.mend/plans/`
+- `deep-plan-reviewed` label present
 
 ## Steps
-1. Fetch PR
-2. Structural alignment:
-   - File locations follow crate conventions
+1. Read plan document `.mend/plans/ISSUE-{number}.md`
+2. Structural alignment (planned):
+   - Proposed file locations follow crate conventions
    - Module structure consistent with existing patterns
    - Naming conventions match repo style
-   - Import organization (std, external, crate, super)
-3. Pattern consistency:
-   - Error handling patterns match existing code
-   - Logging/tracing usage consistent
-   - Serialization patterns consistent
+3. Pattern consistency (planned):
+   - Error handling approach matches existing code
+   - Planned logging/tracing usage consistent
    - Testing patterns match existing tests
 4. Convention compliance:
    - Follows `.github/CONTRIBUTING.md` if exists
-   - Commit message format
-   - Branch naming (if checkable)
-   - File headers/license comments
+   - File headers/license comments planned
 5. Cross-reference check:
-   - Similar code exists elsewhere? (consistency)
-   - Related modules updated if needed
-   - Documentation cross-references valid
+   - Similar features in codebase? (reuse opportunities)
+   - Related modules need updates?
+   - Impact on existing patterns
 
 ## Signoff Criteria
-- Structural alignment verified
-- Patterns consistent with repo conventions
-- No convention violations
+- Planned structure aligns with repo conventions
+- Patterns are consistent
+- No convention violations in the plan
 
 ## Output
-**PASS**: Add `repo-aligned` label
+**PASS**: Label `repo-aligned` on issue
 ```
 🤖 Repo Alignment PASS
 
-Structure: ✅
+Planned structure: ✅
 Patterns: ✅
 Conventions: ✅
 
-Ready for maintainer alignment.
+Ready for implementation (builder agent).
 ```
 
-**FAIL**: Add `changes-requested` label
+**CHANGES**: Label `plan-needs-work`
 ```
-🤖 Repo Alignment CHANGES REQUESTED
+🤖 Repo Alignment CHANGES NEEDED
 
-Alignment issues:
+Alignment issues in plan:
 {specific violations}
 
-Fix for maintainer review.
+Revise plan before implementation.
 ```
 
 ## Safety
-- Read-only review
-- Can bounce back to author
-- Focus on consistency, not subjective style
+- Reviews PLAN only, not code
+- Can bounce plan back to planning phase
+- Focus on consistency with existing codebase
