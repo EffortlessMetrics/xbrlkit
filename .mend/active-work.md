@@ -1,7 +1,7 @@
 # Active Work Queue — xbrlkit
 
 ## Agentic SDLC Status
-**Fully agentic workflow** — 8 agent gates, no human review required.
+**Fully agentic workflow — 8 gates, SCHEDULER ENABLED** 🟢
 Workflow defined in `.mend/agentic-sdlc-workflow.md`. Agents in `.mend/agents/`.
 
 ## Current Sprint
@@ -47,20 +47,24 @@ CI Green → Quality → Tests → Arch → Integ → Agentic → Deep → Maint
 - `maintainer-approved` — Gate 7 (alignment, direction)
 - `agent-merge-approved` — Gate 8 (merged)
 - `changes-requested` — Bounced for revision
+- `needs-human-decision` — Escalated for strategic issues
 - `autonomous`, `wip` — Workflow labels
 
-## Cron Jobs (Created, Disabled)
-| Job | Schedule | Purpose |
-|-----|----------|---------|
-| xbrlkit-review-scheduler | Every 15 min | Spawn next required agent |
-| xbrlkit-tree-cleanup | Every 6 hours | Clean merged branches |
-| xbrlkit-ci-health | Hourly | CI health check |
-| xbrlkit-friction-scan | Every 6h | TODO/FIXME detection |
+## Cron Jobs
+| Job | Schedule | Status | Purpose |
+|-----|----------|--------|---------|
+| **xbrlkit-review-scheduler** | Every 15 min | 🟢 **ENABLED** | Spawn next required agent |
+| xbrlkit-tree-cleanup | Every 6 hours | 🟡 Disabled | Clean merged branches |
+| xbrlkit-ci-health | Hourly | 🟢 Active | CI health check |
+| xbrlkit-friction-scan | Every 6h | 🟢 Active | TODO/FIXME detection |
 
-## Next Steps
-- [ ] Enable review-scheduler cron
-- [ ] Test full 8-gate pipeline on PR #103
-- [ ] Measure latency per gate
+## Next Agent Runs
+Scheduler will check PRs #97, #99, #103 every 15 minutes and spawn `reviewer-quality` agents (first gate).
+
+## Monitoring
+- Check `.mend/session-log.md` for agent activity
+- Watch PR labels for gate progression
+- Reviewer agents will comment 🤖 templates on PRs
 
 ---
-*Updated: Fully agentic workflow — 8 gates, no human review required*
+*Updated: Scheduler ENABLED — 8-gate fully agentic workflow active*
