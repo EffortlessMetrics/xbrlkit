@@ -229,38 +229,41 @@ pub fn validate_dimensions(
 /// # Returns
 /// Vector of validation findings for missing context references.
 #[must_use]
-pub fn validate_context_completeness_streaming(xbrl_xml: &str, _size_threshold_mb: usize) -> Vec<ValidationFinding> {
-    use xbrl_stream::{FactHandler, StreamingFact, StreamingContext, XbrlStreamReader};
+pub fn validate_context_completeness_streaming(
+    xbrl_xml: &str,
+    _size_threshold_mb: usize,
+) -> Vec<ValidationFinding> {
     use std::collections::HashSet;
-    
+    use xbrl_stream::{FactHandler, StreamingContext, StreamingFact, XbrlStreamReader};
+
     struct ContextCompletenessHandler {
         facts: Vec<StreamingFact>,
         contexts: HashSet<String>,
     }
-    
+
     impl FactHandler for ContextCompletenessHandler {
         fn on_fact(&mut self, fact: StreamingFact) -> anyhow::Result<()> {
             self.facts.push(fact);
             Ok(())
         }
-        
+
         fn on_context(&mut self, context: StreamingContext) -> anyhow::Result<()> {
             self.contexts.insert(context.id);
             Ok(())
         }
     }
-    
+
     let handler = ContextCompletenessHandler {
         facts: Vec::new(),
         contexts: HashSet::new(),
     };
-    
+
     let reader = XbrlStreamReader::new(std::io::Cursor::new(xbrl_xml), handler);
-    
+
     match reader.parse() {
         Ok(handler) => {
             let mut findings = Vec::new();
-            
+
             // Check for facts referencing non-existent contexts
             for fact in &handler.facts {
                 if !handler.contexts.contains(&fact.context_ref) {
@@ -276,14 +279,14 @@ pub fn validate_context_completeness_streaming(xbrl_xml: &str, _size_threshold_m
                     });
                 }
             }
-            
+
             findings
         }
         Err(e) => {
             vec![ValidationFinding {
                 rule_id: "XBRL.STREAM_PARSE_ERROR".to_string(),
                 severity: "error".to_string(),
-                message: format!("Streaming parse failed: {}", e),
+                message: format!("Streaming parse failed: {e}"),
                 member: None,
                 subject: None,
             }]

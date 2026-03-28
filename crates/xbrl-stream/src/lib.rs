@@ -31,8 +31,8 @@
 //! assert_eq!(handler.facts.len(), 1);
 //! ```
 
-use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::events::Event;
 use std::io::BufRead;
 
 /// A streaming XBRL fact as extracted from the XML.
@@ -99,41 +99,47 @@ pub trait FactHandler: Send {
     }
 }
 
-/// Errors that can occur during streaming XBRL parsing.
+/// Error type for streaming XBRL parsing.
 #[derive(Debug, thiserror::Error)]
 pub enum StreamError {
-    #[error("XML parse error: {source}")]
-    XmlError { source: quick_xml::Error },
-    #[error("Invalid XBRL structure: {0}")]
+    /// XML parsing error.
+    #[error("XML parsing error: {source}")]
+    XmlError {
+        /// Source XML error.
+        #[from]
+        source: quick_xml::Error,
+    },
+    /// Structural error (missing required element, etc.).
+    #[error("Structure error: {0}")]
     StructureError(String),
-    #[error("Missing required attribute: {0}")]
-    MissingAttribute(String),
+    /// Handler callback error.
     #[error("Handler error: {0}")]
-    HandlerError(#[from] anyhow::Error),
+    HandlerError(#[source] anyhow::Error),
 }
 
-/// Streaming XBRL parser using SAX-style event processing.
+/// Streaming XBRL parser using SAX-style event parsing.
 pub struct XbrlStreamReader<R: BufRead, H: FactHandler> {
     reader: Reader<R>,
-    buffer: Vec<u8>,
     handler: H,
+    buffer: Vec<u8>,
 }
 
 impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
     /// Create a new streaming XBRL parser.
-    pub fn new(reader: R, handler: H) -> Self {
-        let mut xml_reader = Reader::from_reader(reader);
-        xml_reader.config_mut().trim_text(true);
-
+    pub fn new(source: R, handler: H) -> Self {
+        let mut reader = Reader::from_reader(source);
+        reader.config_mut().trim_text(true);
         Self {
-            reader: xml_reader,
-            buffer: Vec::with_capacity(1024),
+            reader,
             handler,
+            buffer: Vec::with_capacity(4096),
         }
     }
 
-    /// Parse the entire XBRL document, calling handler for each fact.
-    /// Returns the handler for result inspection.
+    /// Parse the XBRL document, invoking handler callbacks as events occur.
+    ///
+    /// # Errors
+    /// Returns `StreamError` on XML parsing failures or handler errors.
     pub fn parse(mut self) -> Result<H, StreamError> {
         let mut current_fact: Option<StreamingFactBuilder> = None;
         let mut current_context: Option<StreamingContextBuilder> = None;
@@ -143,10 +149,11 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
         loop {
             self.buffer.clear();
             match self.reader.read_event_into(&mut self.buffer) {
-                Ok(Event::Start(e)) | Ok(Event::Empty(e)) => {
+                Ok(Event::Start(e) | Event::Empty(e)) => {
                     let name_bytes = e.name();
-                    let name = std::str::from_utf8(name_bytes.as_ref())
-                        .map_err(|_| StreamError::StructureError("Invalid UTF-8 in tag name".into()))?;
+                    let name = std::str::from_utf8(name_bytes.as_ref()).map_err(|_| {
+                        StreamError::StructureError("Invalid UTF-8 in tag name".into())
+                    })?;
                     let name = name.to_string();
 
                     depth += 1;
@@ -183,10 +190,7 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
                     // Check for unit definition
                     if name == "xbrli:unit" || name.ends_with(":unit") {
                         if let Some(id) = Self::get_attr(&e, b"id")? {
-                            current_unit = Some(StreamingUnitBuilder {
-                                id,
-                                measure: None,
-                            });
+                            current_unit = Some(StreamingUnitBuilder { id, measure: None });
                         }
                     }
                 }
@@ -202,8 +206,9 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
 
                 Ok(Event::End(e)) => {
                     let name_bytes = e.name();
-                    let name = std::str::from_utf8(name_bytes.as_ref())
-                        .map_err(|_| StreamError::StructureError("Invalid UTF-8 in end tag".into()))?;
+                    let name = std::str::from_utf8(name_bytes.as_ref()).map_err(|_| {
+                        StreamError::StructureError("Invalid UTF-8 in end tag".into())
+                    })?;
                     let name = name.to_string();
 
                     depth = depth.saturating_sub(1);
@@ -211,8 +216,10 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
                     // Finish fact if we're closing a fact element
                     if let Some(fact_builder) = current_fact.take() {
                         if Self::is_fact_end(&name, &fact_builder.concept) {
-                            let fact = fact_builder.build()?;
-                            self.handler.on_fact(fact).map_err(StreamError::HandlerError)?;
+                            let fact = fact_builder.build();
+                            self.handler
+                                .on_fact(fact)
+                                .map_err(StreamError::HandlerError)?;
                         } else {
                             // Not our fact, restore it
                             current_fact = Some(fact_builder);
@@ -220,18 +227,24 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
                     }
 
                     // Finish context
-                    if (name == "xbrli:context" || name.ends_with(":context")) && current_context.is_some() {
+                    if (name == "xbrli:context" || name.ends_with(":context"))
+                        && current_context.is_some()
+                    {
                         if let Some(ctx_builder) = current_context.take() {
-                            let context = ctx_builder.build()?;
-                            self.handler.on_context(context).map_err(StreamError::HandlerError)?;
+                            let context = ctx_builder.build();
+                            self.handler
+                                .on_context(context)
+                                .map_err(StreamError::HandlerError)?;
                         }
                     }
 
                     // Finish unit
                     if (name == "xbrli:unit" || name.ends_with(":unit")) && current_unit.is_some() {
                         if let Some(unit_builder) = current_unit.take() {
-                            let unit = unit_builder.build()?;
-                            self.handler.on_unit(unit).map_err(StreamError::HandlerError)?;
+                            let unit = unit_builder.build();
+                            self.handler
+                                .on_unit(unit)
+                                .map_err(StreamError::HandlerError)?;
                         }
                     }
                 }
@@ -248,11 +261,15 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
         Ok(self.handler)
     }
 
-    fn get_attr(e: &quick_xml::events::BytesStart<'_>, name: &[u8]) -> Result<Option<String>, StreamError> {
+    fn get_attr(
+        e: &quick_xml::events::BytesStart<'_>,
+        name: &[u8],
+    ) -> Result<Option<String>, StreamError> {
         for attr in e.attributes() {
             let attr = attr.map_err(|_| StreamError::StructureError("Invalid attribute".into()))?;
             if attr.key.as_ref() == name {
-                let value = attr.unescape_value()
+                let value = attr
+                    .unescape_value()
                     .map_err(|_| StreamError::StructureError("Invalid attribute value".into()))?;
                 return Ok(Some(value.into_owned()));
             }
@@ -267,7 +284,7 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
         }
         // Handle namespace prefix variations
         if let Some(concept_local) = concept.split(':').nth(1) {
-            if end_name.ends_with(&format!(":{}", concept_local)) {
+            if end_name.ends_with(&format!(":{concept_local}")) {
                 return true;
             }
         }
@@ -285,14 +302,14 @@ struct StreamingFactBuilder {
 }
 
 impl StreamingFactBuilder {
-    fn build(self) -> Result<StreamingFact, StreamError> {
-        Ok(StreamingFact {
+    fn build(self) -> StreamingFact {
+        StreamingFact {
             concept: self.concept,
             context_ref: self.context_ref,
             unit_ref: self.unit_ref,
             decimals: self.decimals,
             value: self.value.trim().to_string(),
-        })
+        }
     }
 }
 
@@ -306,7 +323,7 @@ struct StreamingContextBuilder {
 }
 
 impl StreamingContextBuilder {
-    fn build(self) -> Result<StreamingContext, StreamError> {
+    fn build(self) -> StreamingContext {
         let period = if let Some(instant) = self.period_instant {
             StreamingPeriod::Instant(instant)
         } else if let (Some(start), Some(end)) = (self.period_start, self.period_end) {
@@ -315,12 +332,12 @@ impl StreamingContextBuilder {
             StreamingPeriod::Unknown
         };
 
-        Ok(StreamingContext {
+        StreamingContext {
             id: self.id,
             entity_scheme: self.entity_scheme,
             entity_value: self.entity_value,
             period,
-        })
+        }
     }
 }
 
@@ -330,11 +347,11 @@ struct StreamingUnitBuilder {
 }
 
 impl StreamingUnitBuilder {
-    fn build(self) -> Result<StreamingUnit, StreamError> {
-        Ok(StreamingUnit {
+    fn build(self) -> StreamingUnit {
+        StreamingUnit {
             id: self.id,
             measure: self.measure,
-        })
+        }
     }
 }
 

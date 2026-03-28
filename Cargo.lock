@@ -2493,6 +2493,7 @@ dependencies = [
  "walkdir",
  "xbrl-contexts",
  "xbrl-report-types",
+ "xbrl-stream",
  "xbrlkit-feature-grid",
 ]
 

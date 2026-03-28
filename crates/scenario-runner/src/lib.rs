@@ -234,6 +234,24 @@ pub fn assert_scenario_outcome(
             Ok(())
         }
 
+        // Streaming Parser
+        Some("AC-XK-STREAM-001") => {
+            // Streaming parser memory validation - BDD steps handle assertions
+            Ok(())
+        }
+        Some("AC-XK-STREAM-002") => {
+            // Parser fallback logic - BDD steps handle assertions
+            Ok(())
+        }
+        Some("AC-XK-STREAM-003") => {
+            // Context validation during streaming - BDD steps handle assertions
+            Ok(())
+        }
+        Some("AC-XK-STREAM-004") => {
+            // Custom handler support - BDD steps handle assertions
+            Ok(())
+        }
+
         // Filing Manifest
         Some("AC-XK-MANIFEST-001") => {
             // BDD steps handle the assertions
