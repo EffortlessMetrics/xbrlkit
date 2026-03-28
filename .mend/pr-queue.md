@@ -99,11 +99,11 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 - Golden file updated
 - All quality gates green
 
-### 🔨 Build (In Progress)
+### 🔄 Review (In Progress)
 
-| Item | Issue | Started | Notes |
-|------|-------|---------|-------|
-| Streaming Parser (Wave 4) | — | 2026-03-26 | `xbrl-stream` crate created, 5 unit tests passing, ready for integration into validation-run |
+| Item | Issue | PR | Notes |
+|------|-------|-----|-------|
+| Streaming Parser (Wave 4) | — | #95 | `xbrl-stream` crate complete with tests, validation-run integration done, BDD scenarios added. Ready for alpha activation. |
 
 ### 📋 Planned (Future)
 
