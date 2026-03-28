@@ -1,8 +1,20 @@
 # ADR-008: Taxonomy-Loader HTTP Client Architecture
 
+**Status:** Accepted  
+**Date:** 2026-03-28  
+**Deciders:** xbrlkit Architecture Team
+
+---
+
+## Decision
+
+Use **reqwest** with the **blocking** client API for HTTP fetching in the taxonomy-loader crate. Explicitly avoid async/tokio for this component.
+
+---
+
 ## Context
 
-The taxonomy-loader crate needs to fetch XBRL taxonomy files from remote sources (e.g., FASB, SEC, ESMA). These taxonomies can be large (multi-MB XSD and linkbase files) and are frequently referenced by URL in XBRL instance documents. The crate already has local file loading but lacks HTTP support.
+The taxonomy-loader crate needs to fetch XBRL taxonomy files from remote sources (SEC, XBRL International, FASB). These taxonomies can be large (multi-MB XSD and linkbase files) and are frequently referenced by URL in XBRL instance documents.
 
 Key requirements:
 - Fetch taxonomy files via HTTP/HTTPS
@@ -11,11 +23,13 @@ Key requirements:
 - Maintain synchronous API compatibility (existing consumers expect sync)
 - Avoid OpenSSL dependency issues (prefer pure Rust TLS)
 
-## Decision
+The decision needed to be made on sync vs async HTTP client architecture, balancing simplicity against potential concurrency performance benefits.
 
-Use **reqwest** with the blocking client API for HTTP fetching in taxonomy-loader.
+---
 
-### Configuration
+## Decision Details
+
+### Selected Approach
 
 ```toml
 [dependencies]
@@ -88,60 +102,64 @@ fn fetch_url(&self, url: &str) -> Result<String, TaxonomyLoaderError> {
 }
 ```
 
-### Error Handling
+---
 
-```rust
-#[derive(Debug, thiserror::Error)]
-pub enum TaxonomyLoaderError {
-    #[error("HTTP request failed for {0}: {1}")]
-    HttpError(String, String),
+## Rationale
 
-    #[error("URL parsing error: {0}")]
-    UrlParse(#[from] url::ParseError),
+### Why Blocking reqwest?
 
-    #[error("unsupported URL: {0}")]
-    UnsupportedUrl(String),
-    // ...
-}
-```
+1. **Taxonomy loading is typically sequential** - Schemas depend on each other; parallel fetching provides limited benefit
+2. **Async overhead not justified** - For the expected use case (loading at startup), async runtime adds complexity without proportional benefit
+3. **Blocking code is easier to reason about** - Simpler control flow, easier debugging
+4. **Easier unit testing** - No async runtime needed in tests
+5. **Reduced dependency tree** - No tokio runtime required
+6. **Existing API compatibility** - Consumers expect sync APIs; async would require breaking changes
 
-## Alternatives Considered
+### Why Not Alternatives?
 
 | Library | Verdict | Rationale |
 |---------|---------|-----------|
-| **reqwest** (blocking) | ✅ Selected | Native blocking API, excellent ergonomics, automatic redirect handling, connection pooling |
+| **reqwest (blocking)** | ✅ Selected | Native blocking API, excellent ergonomics, automatic redirect handling, connection pooling |
 | ureq | ❌ Rejected | Blocking only, less ergonomic, manual redirect handling |
 | hyper | ❌ Rejected | Too low-level, requires significant boilerplate for simple use case |
 | async reqwest | ❌ Rejected | Would require async runtime changes throughout the codebase |
 
-## Rationale
-
-- **Blocking API compatibility**: Existing consumers expect sync APIs; async would require breaking changes
-- **rustls-tls**: Pure Rust TLS avoids OpenSSL system dependency issues
-- **Timeout + User-Agent**: Professional HTTP client behavior out of the box
-- **Cache opt-in**: HTTP fetching only enabled when cache is configured (predictable behavior)
-- **Cache write failures are non-fatal**: Network fetch succeeds even if disk write fails
+---
 
 ## Consequences
 
 ### Positive
-- Simple, ergonomic HTTP API
-- Automatic redirect following
-- Connection pooling and reuse
-- Professional User-Agent header
-- Pure Rust TLS (no OpenSSL)
 
-### Trade-offs
-- Blocking I/O in async contexts could cause issues (mitigated: taxonomy loading is typically done once at startup)
-- 30-second timeout may be insufficient for very slow connections (can be made configurable in future)
-- Cache has no TTL (files never expire; acceptable for stable taxonomy releases)
+| Aspect | Benefit |
+|--------|---------|
+| Simplicity | Simpler implementation and control flow |
+| Testing | Easier unit testing without async runtime |
+| Cognitive Overhead | Reduced mental model complexity |
+| Dependencies | Smaller dependency footprint (no tokio) |
+| Compatibility | Maintains sync API for existing consumers |
+| TLS | Pure Rust TLS via rustls (no OpenSSL) |
+| Features | Automatic redirect following, connection pooling, professional User-Agent |
+
+### Negative / Trade-offs
+
+| Aspect | Impact | Mitigation |
+|--------|--------|------------|
+| High-concurrency scenarios | Less efficient for parallel fetching | Sequential loading is acceptable for taxonomy use case |
+| Async ecosystem | Cannot leverage async ecosystem | Not needed for this component |
+| Blocking I/O in async contexts | Could cause issues if called from async code | Document clearly; taxonomy loading is startup-phase |
+| 30-second timeout | May be insufficient for very slow connections | Can be made configurable in future |
+| Cache TTL | No expiration (files never expire) | Acceptable for stable taxonomy releases |
+
+---
 
 ## Related
 
-- Issue #102: ADR: Taxonomy-loader HTTP client architecture
-- PR #97: Taxonomy loader implementation with HTTP fetching
-- ADR-007: Validation pattern for SEC rules
-- taxonomy-loader crate: `crates/taxonomy-loader/`
+- **Issue #102**: ADR: Taxonomy-loader HTTP client architecture (this ADR)
+- **PR #97**: Taxonomy loader implementation with HTTP fetching
+- **ADR-007**: Validation pattern for SEC rules
+- **taxonomy-loader crate**: `crates/taxonomy-loader/`
+
+---
 
 ## Usage Example
 
@@ -156,3 +174,11 @@ let taxonomy = loader.load("https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-20
 let loader = TaxonomyLoader::new();
 let taxonomy = loader.load("/local/path/to/taxonomy.xsd")?;
 ```
+
+---
+
+## Notes
+
+- The decision is already implemented; this ADR captures the rationale for future reference
+- Cache write failures are non-fatal: network fetch succeeds even if disk write fails
+- HTTP fetching is opt-in via `with_cache_dir()` to maintain predictable default behavior
