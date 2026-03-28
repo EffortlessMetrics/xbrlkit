@@ -1,5 +1,24 @@
 # Agent guidance
 
+## Autonomous Workflow Labels
+
+The following labels support autonomous workflow management of issues and PRs:
+
+| Label | Color | Purpose | When to Apply |
+|-------|-------|---------|---------------|
+| `agent/autonomous` | 🔵 Blue | Marks issues/PRs created or managed by autonomous workflow | Auto-applied when an agent creates an issue or PR |
+| `agent/in-review` | 🟡 Yellow | Indicates items currently under active review | When an agent is actively reviewing an issue/PR |
+| `agent/wip` | 🟠 Orange | Work in progress - not ready for review | When an agent is working on an issue but it's not yet ready |
+| `agent/needs-human` | 🔴 Red | Requires human decision before proceeding | When autonomous workflow encounters a blocker requiring human judgment |
+| `agent/tech-debt` | 🟣 Purple | Technical debt, legacy code, or maintenance tasks | When technical debt is identified during autonomous workflow |
+
+### Label Usage Guidelines
+
+- **Agent labels** (`agent/*`) are primarily applied by autonomous agents, not humans
+- Labels follow a progression: `agent/wip` → `agent/in-review` → `status/ready-to-merge`
+- `agent/needs-human` triggers human notification and should be resolved quickly
+- `agent/tech-debt` can be applied alongside other workflow labels
+
 ## Working model
 
 Treat the repo as a scenario compiler.
