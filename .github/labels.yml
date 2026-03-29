@@ -1,0 +1,79 @@
+# GitHub Labels for Autonomous Workflow Management
+# 
+# This file documents the labels used for managing autonomous workflows
+# in the xbrlkit repository. These labels help track the state of issues
+# and PRs through the autonomous development pipeline.
+#
+# To apply these labels to an issue or PR:
+#   gh issue edit <number> --add-label "autonomous"
+#   gh pr edit <number> --add-label "ready-for-review"
+
+# Core Workflow Labels
+- name: autonomous
+  color: "0052CC"
+  description: "Marks issues/PRs created or managed by autonomous workflow"
+
+- name: needs-review
+  color: "FBCA04"
+  description: "Indicates items currently under active review"
+
+- name: in-progress
+  color: "D93F0B"
+  description: "Work in progress - not ready for review"
+
+- name: needs-human
+  color: "B60205"
+  description: "Requires human decision before proceeding"
+
+- name: debt
+  color: "5319E7"
+  description: "Technical debt, legacy code, or maintenance tasks"
+
+# Planning Pipeline Labels
+- name: needs-plan
+  color: "C2E0C6"
+  description: "Ready for initial planning"
+
+- name: plan-draft
+  color: "FEF2C0"
+  description: "Plan created, needs review"
+
+- name: plan-reviewed
+  color: "E99695"
+  description: "Plan passed initial review"
+
+- name: deep-plan-reviewed
+  color: "BFD4F2"
+  description: "Deep review complete"
+
+# Implementation Labels
+- name: repo-aligned
+  color: "0E8A16"
+  description: "Repo alignment and pattern consistency passed"
+
+- name: building
+  color: "D4C5F9"
+  description: "Implementation in progress"
+
+- name: ready-for-review
+  color: "FBCA04"
+  description: "Ready for agent review"
+
+# Label Usage Guide
+# =================
+#
+## Issue Lifecycle:
+#   1. needs-plan → plan-draft → plan-reviewed → deep-plan-reviewed
+#   2. Mark as 'autonomous' when picked up by an agent
+#   3. Add 'in-progress' while working
+#   4. Use 'needs-human' for escalations
+#
+## PR Lifecycle:
+#   1. Mark as 'autonomous' and 'building' during development
+#   2. 'repo-aligned' after passing alignment checks
+#   3. 'ready-for-review' when complete
+#   4. 'needs-review' while under review
+#   5. 'in-progress' if changes needed
+#
+## Special Labels:
+#   - 'debt': Use for tech debt, refactoring, or maintenance tasks
