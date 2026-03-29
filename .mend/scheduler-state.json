@@ -1,0 +1,27 @@
+{
+  "lastRun": "2026-03-30T03:40:00+08:00",
+  "status": "completed",
+  "issuesChecked": [98, 100],
+  "agentsSpawned": [],
+  "findings": [
+    {
+      "issue": 98,
+      "state": "ANOMALY",
+      "labels": ["autonomous", "repo-aligned", "building"],
+      "hasPlanDocument": false,
+      "hasOpenPRs": true,
+      "openPRs": [106, 110],
+      "note": "Issue has repo-aligned label (should trigger builder-implement) but no plan document exists. 2 PRs already exist for this issue."
+    },
+    {
+      "issue": 100,
+      "state": "ANOMALY",
+      "labels": ["ready-for-review", "building"],
+      "hasPlanDocument": false,
+      "hasOpenPRs": true,
+      "openPRs": [97, 104],
+      "note": "Issue has ready-for-review and building labels but no plan document. 2 PRs exist referencing this issue."
+    }
+  ],
+  "summary": "No planning-phase issues found (no needs-plan, plan-draft, plan-reviewed, deep-plan-reviewed labels). 2 open issues have anomalous state - they have implementation labels but no plan documents."
+}

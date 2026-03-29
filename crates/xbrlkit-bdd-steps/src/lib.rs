@@ -1473,7 +1473,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             Dimension::Explicit { default_domain, .. } => {
                 default_domain.is_some()
             }
-            _ => false,
+            Dimension::Typed { .. } => false,
         });
         if !has_explicit_with_domain && !taxonomy.dimensions.is_empty() {
             anyhow::bail!("no explicit dimensions have domains defined");
