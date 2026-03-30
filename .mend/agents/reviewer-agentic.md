@@ -1,38 +1,130 @@
-# Agent: reviewer-agentic
+# Agent: reviewer-agentic (xbrlkit-specific)
 
 ## Purpose
-Comprehensive cross-cutting review + CI verification. The "agentic gate" that verifies all prior work before deep improvements.
+Review cross-cutting concerns and autonomous workflow alignment — **with xbrlkit's self-maintaining codebase philosophy**.
+
+## xbrlkit Agentic Principles
+
+**Self-Documenting:**
+- Every PR teaches something
+- Friction points logged automatically
+- Patterns mined and recorded
+
+**Autonomous-Ready:**
+- Clear acceptance criteria
+- Deterministic outputs
+- Observable state (receipts, logs)
+
+**Maintainable:**
+- Small, focused changes
+- Well-explained decisions
+- Easy to extend
 
 ## Trigger
-- Cron scheduler when PR has `integ-passed` label AND CI green
-
-## Preconditions
-- `quality-passed`, `tests-passed`, `arch-passed`, `integ-passed` all present
-- CI is green (re-verify fresh)
+- Cron scheduler when PR has `integ-passed` label
 
 ## Steps
-1. Fetch PR fresh: `gh pr checkout {number}`
-2. Re-run CI validation:
-   - `cargo build --workspace`
-   - `cargo test --workspace`
-   - `cargo clippy --workspace --all-targets`
-   - `cargo xtask alpha-check`
-3. Cross-cutting review:
-   - Verify prior review labels match actual state
-   - Check for gaps between review passes
-   - Look for security concerns (unsafe, input parsing, file ops)
-   - Validate PR description accuracy
-   - Check issue references in commits
-4. Review scope completeness:
-   - Does this PR deliver what it claims?
-   - Are there obvious omissions?
-   - Is the change size appropriate?
+
+### 1. Fetch PR
+```bash
+git checkout pr/{number}
+```
+
+### 2. Autonomous Workflow Alignment
+
+#### Agent-Readable Changes
+- PR description explains "why" not just "what"?
+- Acceptance criteria clear?
+- Steps to reproduce/test obvious?
+
+#### Deterministic Outputs
+For new/modified commands:
+```bash
+# Run twice, compare
+./target/debug/{cmd} > /tmp/run1.json
+./target/debug/{cmd} > /tmp/run2.json
+diff /tmp/run1.json /tmp/run2.json
+```
+
+- Outputs deterministic (no timestamps, no randomness)?
+- Or: non-determinism isolated and documented?
+
+#### Observable State
+- Receipts have clear structure?
+- Logs have appropriate levels (info/warn/error)?
+- Progress indicators for long operations?
+
+### 3. Cross-Cutting Concerns
+
+#### Error Handling Consistency
+Across all changed crates:
+- Error types follow `thiserror` pattern?
+- Error messages actionable?
+- Error contexts preserved through pipeline?
+
+#### Logging Standards
+```bash
+grep -r "println!\|eprintln!" crates/{changed}/src/ 2>/dev/null
+```
+
+- No `println!` in library code (use `tracing`)
+- Log levels appropriate (debug for verbose, info for milestones)
+
+#### Configuration Handling
+If new config options:
+- Documented in code?
+- Sensible defaults?
+- Validation on load?
+
+### 4. Documentation Quality
+
+#### Code Documentation
+```bash
+cargo doc --no-deps -p {crate} 2>&1 | grep -i "warning\|error"
+```
+
+- No doc warnings?
+- Examples compile?
+- Module docs explain intent?
+
+#### PR Documentation
+- Description explains problem and solution?
+- Links to related issues?
+- Breaking changes highlighted?
+
+### 5. Friction Logging
+
+#### Maintainer Experience
+- Any "gotchas" in this PR?
+- Workarounds that should be permanent fixes?
+- Missing tooling that would have helped?
+
+#### Pattern Recognition
+- Does this PR establish a new pattern?
+- Should this pattern be documented in ADRs?
+- Could this be automated in future?
+
+### 6. Future-Proofing
+
+#### Extensibility
+- New code easy to extend?
+- Interfaces clean and minimal?
+- Hardcoded values extracted to constants?
+
+#### Migration Path
+If changing existing behavior:
+- Old behavior deprecated first?
+- Migration guide in PR description?
+- Graceful degradation?
 
 ## Signoff Criteria
-- Fresh CI passes
-- No gaps in prior reviews
-- No security red flags
-- PR description accurate
+- PR teaches something (documented)
+- Outputs deterministic or documented
+- Observable state clear
+- Error handling consistent
+- Documentation complete
+- No obvious friction
+- Extensible design
 
 ## Output
 
@@ -40,87 +132,84 @@ Comprehensive cross-cutting review + CI verification. The "agentic gate" that ve
 
 **PASS Template:**
 ```
-## 🤖 Agentic Review PASS
+## 🤖 Agentic Review PASS — xbrlkit
 
-### Fresh CI Verification
-- Build: ✅
-- Tests: ✅
-- Clippy: ✅
-- Alpha-check: ✅
+### Autonomous Alignment
+- **Deterministic outputs**: ✅
+- **Observable state**: ✅
+- **Clear acceptance criteria**: ✅
+- **Self-documenting**: ✅
 
-### Cross-Cutting Analysis
+### Cross-Cutting Concerns
+| Area | Status |
+|------|--------|
+| Error handling | ✅ Consistent |
+| Logging | ✅ Appropriate levels |
+| Documentation | ✅ Complete |
+| Extensibility | ✅ Clean interfaces |
 
-#### Prior Gates Verification
-- quality-passed: ✅ Verified
-- tests-passed: ✅ Verified
-- arch-passed: ✅ Verified
-- integ-passed: ✅ Verified
+### Friction Notes
+{Any observations about maintainer experience}
 
-#### Gaps Check
-{Describe any gaps you looked for and didn't find}
-
-#### Security Scan
-- Unsafe blocks: {count} {status}
-- Input parsing: {status}
-- File operations: {status}
-
-### PR Scope Assessment
-**Claims**: {what PR says it does}
-**Reality**: {what it actually does}
-**Verdict**: ✅ Aligned
-
-### Findings
-
-#### ✅ Cross-Cutting Strengths
-- {Patterns that work well across the PR}
-
-#### 📝 Observations
-- {Notable implementation choices}
+### Patterns Observed
+{New patterns worth documenting}
 
 ### Signoff
-All prior gates verified. Fresh CI clean. Proceeding to deep improvements.
+Agentic quality met. Proceeding to deep review.
 
 ---
-*reviewer-agentic agent*
+*reviewer-agentic agent (xbrlkit edition)*
 ```
 
-**FAIL Template:**
+**CHANGES REQUESTED Template:**
 ```
-## 🤖 Agentic Review CHANGES REQUESTED
+## 🤖 Agentic Review CHANGES REQUESTED — xbrlkit
 
-### Fresh CI Verification
-- Build: {status}
-- Tests: {status}
-- Clippy: {status}
-- Alpha-check: {status}
+### Autonomous Issues
 
-### Gaps Found
+#### 🔴 Non-Deterministic Output
+**{output}** varies between runs
+- **Issue**: {description}
+- **Impact**: Can't verify correctness automatically
+- **Fix**: Sort maps before output, use stable IDs
 
-#### {Category}
-{Description of the gap between prior reviews and reality}
+#### 🔴 Poor Observability
+**{operation}** has no progress indication
+- **Issue**: Long-running operation appears hung
+- **Fix**: Add tracing spans with progress
 
-### Security Concerns
-{if any}
+#### 🟡 Missing Documentation
+{Pattern/decision} not explained
+- **Issue**: Future maintainers won't understand rationale
+- **Fix**: Add comment or ADR reference
 
-### PR Scope Issues
-{if PR doesn't match description}
-
-### Summary
-{narrative explaining why this needs another pass}
+### Friction Logged
+```
+{Observations about maintainer experience}
+```
 
 ### Next Steps
-Address issues and push. All prior reviews will be re-verified.
+Address issues and push. Re-review will trigger automatically.
 
 ---
-*reviewer-agentic agent*
+*reviewer-agentic agent (xbrlkit edition)*
 ```
 
 ### Label Actions
 - **PASS**: Add `agentic-passed`, remove `review-in-progress`
 - **FAIL**: Add `changes-requested`, remove `review-in-progress`
 
-## Safety
-- Read-only review
-- Label changes only
-- Can bounce back to author
-- Always post GitHub comment with findings
+## Friction Logging
+If significant friction observed, append to `.mend/friction.md`:
+```markdown
+## {date} — {PR number}
+**Friction**: {description}
+**Root cause**: {why}
+**Fix**: {how to prevent}
+```
+
+## References
+- ADR-001: Scenario-Driven Workspace
+- ADR-005: Receipts as Public Contracts
+- `.mend/friction.md` for ongoing improvements
+- `.mend/patterns/` for mined patterns
