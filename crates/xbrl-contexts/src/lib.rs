@@ -139,11 +139,12 @@ pub fn parse_contexts(xml: &str) -> Result<ContextSet, ContextError> {
 
     // Find all context elements anywhere in the document
     for node in doc.descendants() {
-        if node.is_element() && node.tag_name().name() == "context" {
-            if let Some(id_attr) = node.attribute("id") {
-                let context = parse_context_element(&node, id_attr)?;
-                set.insert(context);
-            }
+        if node.is_element()
+            && node.tag_name().name() == "context"
+            && let Some(id_attr) = node.attribute("id")
+        {
+            let context = parse_context_element(&node, id_attr)?;
+            set.insert(context);
         }
     }
 
@@ -250,17 +251,17 @@ fn parse_dimensional_container(node: &roxmltree::Node<'_, '_>) -> DimensionalCon
             }
         }
         // Handle typedMember for typed dimensions
-        else if tag_name == "typedMember" {
-            if let Some(dim_attr) = child.attribute("dimension") {
-                let typed_member = parse_typed_member(&child);
+        else if tag_name == "typedMember"
+            && let Some(dim_attr) = child.attribute("dimension")
+        {
+            let typed_member = parse_typed_member(&child);
 
-                dimensions.push(DimensionMember {
-                    dimension: dim_attr.to_string(),
-                    member: typed_member.value.clone(),
-                    is_typed: true,
-                    typed_value: Some(typed_member.value),
-                });
-            }
+            dimensions.push(DimensionMember {
+                dimension: dim_attr.to_string(),
+                member: typed_member.value.clone(),
+                is_typed: true,
+                typed_value: Some(typed_member.value),
+            });
         }
     }
 

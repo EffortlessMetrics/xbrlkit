@@ -11,18 +11,6 @@ use scenario_runner::{assert_scenario_outcome, execute_scenario, write_execution
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
 
-const NON_PUBLISHABLE_PACKAGES: &[&str] = &[
-    "scenario-contract",
-    "scenario-runner",
-    "xbrlkit-bdd",
-    "xbrlkit-bdd-steps",
-    "xbrlkit-cli",
-    "xbrlkit-feature-grid",
-    "xbrlkit-interop-tests",
-    "xbrlkit-test-grid",
-    "xtask",
-];
-
 #[derive(Debug, Parser)]
 #[command(name = "xtask")]
 struct Cli {
@@ -88,11 +76,10 @@ fn repo_root() -> PathBuf {
     if let Ok(output) = std::process::Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .output()
+        && output.status.success()
     {
-        if output.status.success() {
-            let path = String::from_utf8_lossy(&output.stdout);
-            return PathBuf::from(path.trim());
-        }
+        let path = String::from_utf8_lossy(&output.stdout);
+        return PathBuf::from(path.trim());
     }
 
     // Fallback: compile-time path for non-git environments
@@ -256,15 +243,18 @@ fn publishable_packages() -> anyhow::Result<Vec<String>> {
     let mut packages = metadata
         .packages
         .into_iter()
+        .filter(package_is_publishable)
         .map(|package| package.name)
-        .filter(|package| should_package(package))
         .collect::<Vec<_>>();
     packages.sort();
     Ok(packages)
 }
 
-fn should_package(package: &str) -> bool {
-    !NON_PUBLISHABLE_PACKAGES.contains(&package)
+fn package_is_publishable(package: &CargoMetadataPackage) -> bool {
+    package
+        .publish
+        .as_ref()
+        .is_none_or(|registries| !registries.is_empty())
 }
 
 fn run_cargo_package(package: &str) -> anyhow::Result<()> {
@@ -299,6 +289,7 @@ struct CargoMetadata {
 #[derive(Debug, serde::Deserialize)]
 struct CargoMetadataPackage {
     name: String,
+    publish: Option<Vec<String>>,
 }
 
 fn sanitize(input: &str) -> String {
@@ -358,7 +349,8 @@ fn scenario_impacted(scenario: &ScenarioRecord, changed: &[String]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        normalize_repo_path, scenario_impacted, select_matching_scenarios, should_package,
+        CargoMetadataPackage, normalize_repo_path, package_is_publishable, scenario_impacted,
+        select_matching_scenarios,
     };
     use scenario_contract::{FeatureGrid, ScenarioRecord};
 
@@ -418,9 +410,17 @@ mod tests {
 
     #[test]
     fn package_check_skips_workspace_only_crates() {
-        assert!(should_package("xbrlkit-core"));
-        assert!(!should_package("xtask"));
-        assert!(!should_package("xbrlkit-cli"));
-        assert!(!should_package("scenario-contract"));
+        assert!(package_is_publishable(&CargoMetadataPackage {
+            name: "xbrlkit-core".to_string(),
+            publish: None,
+        }));
+        assert!(!package_is_publishable(&CargoMetadataPackage {
+            name: "xtask".to_string(),
+            publish: Some(Vec::new()),
+        }));
+        assert!(package_is_publishable(&CargoMetadataPackage {
+            name: "custom-registry-crate".to_string(),
+            publish: Some(vec!["crates-io".to_string()]),
+        }));
     }
 }

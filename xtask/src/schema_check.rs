@@ -86,16 +86,16 @@ fn validate_value(
         validate_type(type_decl, value, path)?;
     }
 
-    if let Some(const_value) = schema.get("const") {
-        if value != const_value {
-            bail!("{path}: expected constant value {const_value}");
-        }
+    if let Some(const_value) = schema.get("const")
+        && value != const_value
+    {
+        bail!("{path}: expected constant value {const_value}");
     }
 
-    if let Some(enum_values) = schema.get("enum").and_then(Value::as_array) {
-        if !enum_values.iter().any(|candidate| candidate == value) {
-            bail!("{path}: value {value} is not in enum {enum_values:?}");
-        }
+    if let Some(enum_values) = schema.get("enum").and_then(Value::as_array)
+        && !enum_values.iter().any(|candidate| candidate == value)
+    {
+        bail!("{path}: value {value} is not in enum {enum_values:?}");
     }
 
     if let Some(required) = schema.get("required").and_then(Value::as_array) {

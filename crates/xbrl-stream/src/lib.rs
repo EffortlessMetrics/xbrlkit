@@ -174,24 +174,24 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
                     }
 
                     // Check for context definition
-                    if name == "xbrli:context" || name.ends_with(":context") {
-                        if let Some(id) = Self::get_attr(&e, b"id")? {
-                            current_context = Some(StreamingContextBuilder {
-                                id,
-                                entity_scheme: None,
-                                entity_value: None,
-                                period_start: None,
-                                period_end: None,
-                                period_instant: None,
-                            });
-                        }
+                    if (name == "xbrli:context" || name.ends_with(":context"))
+                        && let Some(id) = Self::get_attr(&e, b"id")?
+                    {
+                        current_context = Some(StreamingContextBuilder {
+                            id,
+                            entity_scheme: None,
+                            entity_value: None,
+                            period_start: None,
+                            period_end: None,
+                            period_instant: None,
+                        });
                     }
 
                     // Check for unit definition
-                    if name == "xbrli:unit" || name.ends_with(":unit") {
-                        if let Some(id) = Self::get_attr(&e, b"id")? {
-                            current_unit = Some(StreamingUnitBuilder { id, measure: None });
-                        }
+                    if (name == "xbrli:unit" || name.ends_with(":unit"))
+                        && let Some(id) = Self::get_attr(&e, b"id")?
+                    {
+                        current_unit = Some(StreamingUnitBuilder { id, measure: None });
                     }
                 }
 
@@ -229,23 +229,23 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
                     // Finish context
                     if (name == "xbrli:context" || name.ends_with(":context"))
                         && current_context.is_some()
+                        && let Some(ctx_builder) = current_context.take()
                     {
-                        if let Some(ctx_builder) = current_context.take() {
-                            let context = ctx_builder.build();
-                            self.handler
-                                .on_context(context)
-                                .map_err(StreamError::HandlerError)?;
-                        }
+                        let context = ctx_builder.build();
+                        self.handler
+                            .on_context(context)
+                            .map_err(StreamError::HandlerError)?;
                     }
 
                     // Finish unit
-                    if (name == "xbrli:unit" || name.ends_with(":unit")) && current_unit.is_some() {
-                        if let Some(unit_builder) = current_unit.take() {
-                            let unit = unit_builder.build();
-                            self.handler
-                                .on_unit(unit)
-                                .map_err(StreamError::HandlerError)?;
-                        }
+                    if (name == "xbrli:unit" || name.ends_with(":unit"))
+                        && current_unit.is_some()
+                        && let Some(unit_builder) = current_unit.take()
+                    {
+                        let unit = unit_builder.build();
+                        self.handler
+                            .on_unit(unit)
+                            .map_err(StreamError::HandlerError)?;
                     }
                 }
 
@@ -283,10 +283,10 @@ impl<R: BufRead, H: FactHandler> XbrlStreamReader<R, H> {
             return true;
         }
         // Handle namespace prefix variations
-        if let Some(concept_local) = concept.split(':').nth(1) {
-            if end_name.ends_with(&format!(":{concept_local}")) {
-                return true;
-            }
+        if let Some(concept_local) = concept.split(':').nth(1)
+            && end_name.ends_with(&format!(":{concept_local}"))
+        {
+            return true;
         }
         false
     }

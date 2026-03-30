@@ -23,10 +23,10 @@ pub fn validate_decimal_precision(facts: &[Fact]) -> Vec<ValidationFinding> {
     let mut findings = Vec::new();
 
     for fact in facts {
-        if let Some(decimals) = &fact.decimals {
-            if let Some(error) = check_decimal_truncation(fact, decimals) {
-                findings.push(error);
-            }
+        if let Some(decimals) = &fact.decimals
+            && let Some(error) = check_decimal_truncation(fact, decimals)
+        {
+            findings.push(error);
         }
     }
 

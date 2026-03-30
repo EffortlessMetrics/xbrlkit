@@ -157,11 +157,11 @@ pub fn extract_import_refs(
 
     for node in doc.root_element().children() {
         let tag = node.tag_name().name();
-        if tag == "import" || tag == "include" {
-            if let Some(schema_location) = node.attribute("schemaLocation") {
-                let resolved = resolve_path(&base_dir, schema_location);
-                refs.push(resolved);
-            }
+        if (tag == "import" || tag == "include")
+            && let Some(schema_location) = node.attribute("schemaLocation")
+        {
+            let resolved = resolve_path(&base_dir, schema_location);
+            refs.push(resolved);
         }
     }
 

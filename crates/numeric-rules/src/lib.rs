@@ -31,25 +31,20 @@ pub fn validate_negative_values(
 
     for fact in facts {
         // Check if this is a numeric fact with a negative value
-        if let Some(is_negative) = is_negative_numeric(&fact.value) {
-            if is_negative {
-                // Check if this concept prohibits negative values
-                if concept_prohibits_negative(&fact.concept, prohibited_concepts) {
-                    findings.push(ValidationFinding {
-                        rule_id: format!(
-                            "SEC.NEGATIVE_VALUE.{}",
-                            sanitize_for_rule_id(&fact.concept)
-                        ),
-                        severity: "error".to_string(),
-                        message: format!(
-                            "Concept '{}' has negative value '{}' but does not allow negative values",
-                            fact.concept, fact.value
-                        ),
-                        member: Some(fact.member.clone()),
-                        subject: Some(fact.concept.clone()),
-                    });
-                }
-            }
+        if let Some(is_negative) = is_negative_numeric(&fact.value)
+            && is_negative
+            && concept_prohibits_negative(&fact.concept, prohibited_concepts)
+        {
+            findings.push(ValidationFinding {
+                rule_id: format!("SEC.NEGATIVE_VALUE.{}", sanitize_for_rule_id(&fact.concept)),
+                severity: "error".to_string(),
+                message: format!(
+                    "Concept '{}' has negative value '{}' but does not allow negative values",
+                    fact.concept, fact.value
+                ),
+                member: Some(fact.member.clone()),
+                subject: Some(fact.concept.clone()),
+            });
         }
     }
 
