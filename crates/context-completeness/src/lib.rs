@@ -74,7 +74,7 @@ pub fn count_missing_contexts(facts: &[Fact], contexts: &ContextSet) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use xbrl_contexts::{normalize_context_id, Context, EntityIdentifier, Period};
+    use xbrl_contexts::{Context, EntityIdentifier, Period, normalize_context_id};
 
     fn create_test_fact(concept: &str, context_ref: &str) -> Fact {
         Fact {
