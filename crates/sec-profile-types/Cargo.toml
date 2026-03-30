@@ -13,7 +13,7 @@ path = "src/lib.rs"
 anyhow.workspace = true
 serde.workspace = true
 serde_yaml.workspace = true
-taxonomy-types = { path = "../taxonomy-types" }
+taxonomy-types.workspace = true
 
 [lints]
 workspace = true

@@ -1,0 +1,20 @@
+feature_id: FEAT-XK-WORKFLOW-PACKAGE
+layer: workflow
+module: package-check
+scenarios:
+  SCN-XK-WORKFLOW-006:
+    ac_id: AC-XK-WORKFLOW-004
+    req_id: REQ-XK-WORKFLOW
+    crates: [xtask, xbrlkit-core]
+    fixtures: []
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - Cargo.toml
+      - CHANGELOG.md
+      - crates
+      - docs/how-to
+      - .github/workflows
+      - specs/features/workflow
+      - xtask

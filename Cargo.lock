@@ -1443,6 +1443,7 @@ dependencies = [
  "taxonomy-dimensions",
  "tempfile",
  "thiserror 2.0.18",
+ "tokio",
  "url",
 ]
 
@@ -2315,7 +2316,6 @@ dependencies = [
  "diff-run",
  "export-run",
  "receipt-types",
- "scenario-contract",
  "sec-profile-types",
  "validation-run",
  "xbrl-report-types",

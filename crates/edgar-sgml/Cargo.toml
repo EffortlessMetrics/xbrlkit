@@ -10,7 +10,7 @@ description.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-edgar-identity = { path = "../edgar-identity" }
+edgar-identity.workspace = true
 
 [lints]
 workspace = true

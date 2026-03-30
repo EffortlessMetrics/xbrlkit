@@ -12,9 +12,9 @@ path = "src/lib.rs"
 [dependencies]
 serde = { workspace = true }
 thiserror = { workspace = true }
-xbrl-contexts = { path = "../xbrl-contexts" }
-taxonomy-dimensions = { path = "../taxonomy-dimensions" }
-xbrl-report-types = { path = "../xbrl-report-types" }
+xbrl-contexts.workspace = true
+taxonomy-dimensions.workspace = true
+xbrl-report-types.workspace = true
 
 [lints]
 workspace = true

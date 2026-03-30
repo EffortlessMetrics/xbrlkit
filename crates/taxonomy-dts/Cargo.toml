@@ -10,8 +10,8 @@ description.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-taxonomy-types = { path = "../taxonomy-types" }
-sec-profile-types = { path = "../sec-profile-types" }
+taxonomy-types.workspace = true
+sec-profile-types.workspace = true
 
 [lints]
 workspace = true

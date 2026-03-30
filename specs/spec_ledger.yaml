@@ -75,3 +75,15 @@ stories:
               - type: bdd
                 tag: "@AC-XK-WORKFLOW-002"
                 file: "specs/features/workflow/bundle.feature"
+          - id: AC-XK-WORKFLOW-003
+            title: Run the alpha readiness gate
+            tests:
+              - type: bdd
+                tag: "@AC-XK-WORKFLOW-003"
+                file: "specs/features/workflow/alpha_check.feature"
+          - id: AC-XK-WORKFLOW-004
+            title: Verify publishable crates package for crates.io
+            tests:
+              - type: bdd
+                tag: "@AC-XK-WORKFLOW-004"
+                file: "specs/features/workflow/package_check.feature"

@@ -11,3 +11,10 @@ flows:
     commands:
       - cargo xtask feature-grid
       - cargo xtask impact --changed ${PATHS}
+  - id: release_prep
+    description: Validate the publishable crates surface before opening a release PR.
+    commands:
+      - cargo xtask feature-grid
+      - cargo xtask bundle AC-XK-WORKFLOW-004
+      - cargo xtask package-check
+      - cargo xtask alpha-check

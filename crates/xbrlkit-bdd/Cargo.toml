@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = false
 
 [lib]
 path = "src/lib.rs"
@@ -11,9 +12,9 @@ path = "src/lib.rs"
 [dependencies]
 anyhow.workspace = true
 walkdir.workspace = true
-scenario-contract = { path = "../scenario-contract" }
-receipt-types = { path = "../receipt-types" }
-xbrlkit-bdd-steps = { path = "../xbrlkit-bdd-steps" }
+scenario-contract.workspace = true
+receipt-types.workspace = true
+xbrlkit-bdd-steps.workspace = true
 
 [lints]
 workspace = true
