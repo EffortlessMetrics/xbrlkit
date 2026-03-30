@@ -10,7 +10,7 @@ description.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-receipt-types = { path = "../receipt-types" }
+receipt-types.workspace = true
 serde_json.workspace = true
 
 [lints]

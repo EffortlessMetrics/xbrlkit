@@ -154,10 +154,10 @@ fn execution(world: &World) -> anyhow::Result<&ScenarioExecution> {
 }
 
 fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> anyhow::Result<()> {
-    if let Some(profile_id) = &world.profile_id {
-        if scenario.profile_pack.as_deref() != Some(profile_id.as_str()) {
-            anyhow::bail!("declared profile pack does not match scenario metadata");
-        }
+    if let Some(profile_id) = &world.profile_id
+        && scenario.profile_pack.as_deref() != Some(profile_id.as_str())
+    {
+        anyhow::bail!("declared profile pack does not match scenario metadata");
     }
 
     if !world.fixture_dirs.is_empty() {
@@ -776,13 +776,13 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         let required_dim = world.dimension_context.required_dimension.clone();
 
         // Check for missing required dimension
-        if let Some(_req_dim) = required_dim {
-            if !has_dimension {
-                world
-                    .dimension_context
-                    .validation_findings
-                    .push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
-            }
+        if let Some(_req_dim) = required_dim
+            && !has_dimension
+        {
+            world
+                .dimension_context
+                .validation_findings
+                .push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
         }
 
         return Ok(true);

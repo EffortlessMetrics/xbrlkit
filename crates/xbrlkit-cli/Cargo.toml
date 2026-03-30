@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description.workspace = true
+publish = false
 
 [[bin]]
 name = "xbrlkit-cli"
@@ -15,16 +16,16 @@ anyhow.workspace = true
 clap.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
-corpus-fs = { path = "../corpus-fs" }
-sec-profile-types = { path = "../sec-profile-types" }
-validation-run = { path = "../validation-run" }
-export-run = { path = "../export-run" }
-render-json = { path = "../render-json" }
-render-md = { path = "../render-md" }
-xbrl-report-types = { path = "../xbrl-report-types" }
-xbrl-contexts = { path = "../xbrl-contexts" }
-taxonomy-loader = { path = "../taxonomy-loader" }
-taxonomy-dimensions = { path = "../taxonomy-dimensions" }
+corpus-fs.workspace = true
+sec-profile-types.workspace = true
+validation-run.workspace = true
+export-run.workspace = true
+render-json.workspace = true
+render-md.workspace = true
+xbrl-report-types.workspace = true
+xbrl-contexts.workspace = true
+taxonomy-loader.workspace = true
+taxonomy-dimensions.workspace = true
 
 [lints]
 workspace = true

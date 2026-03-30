@@ -9,6 +9,7 @@ use receipt_types::{Receipt, RunResult};
 use scenario_contract::{BundleManifest, FeatureGrid, ImpactReport, ScenarioRecord};
 use scenario_runner::{assert_scenario_outcome, execute_scenario, write_execution_receipts};
 use std::path::{Path, PathBuf};
+use std::process::Command as ProcessCommand;
 
 #[derive(Debug, Parser)]
 #[command(name = "xtask")]
@@ -36,6 +37,8 @@ enum Command {
     SchemaCheck,
     /// Run the alpha upload gate.
     AlphaCheck,
+    /// Verify publishable crates package cleanly for crates.io.
+    PackageCheck,
     /// Run the active BDD scenarios selected by tag.
     Bdd {
         #[arg(long)]
@@ -60,6 +63,7 @@ fn main() -> anyhow::Result<()> {
         Command::TestAc { ac_id } => test_ac(&ac_id),
         Command::SchemaCheck => schema_check::run(),
         Command::AlphaCheck => alpha_check::run(),
+        Command::PackageCheck => package_check(),
         Command::Bdd { tags } => bdd(tags.as_deref().unwrap_or("@alpha-active")),
         Command::CockpitPack => cockpit_pack(),
     }
@@ -72,11 +76,10 @@ fn repo_root() -> PathBuf {
     if let Ok(output) = std::process::Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .output()
+        && output.status.success()
     {
-        if output.status.success() {
-            let path = String::from_utf8_lossy(&output.stdout);
-            return PathBuf::from(path.trim());
-        }
+        let path = String::from_utf8_lossy(&output.stdout);
+        return PathBuf::from(path.trim());
     }
 
     // Fallback: compile-time path for non-git environments
@@ -202,6 +205,15 @@ fn cockpit_pack() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn package_check() -> anyhow::Result<()> {
+    let packages = publishable_packages()?;
+    for package in &packages {
+        run_cargo_package(package)?;
+    }
+    println!("package-check: packaged {} crate(s)", packages.len());
+    Ok(())
+}
+
 fn write_json(path: &Path, value: &impl serde::Serialize) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)
@@ -210,6 +222,74 @@ fn write_json(path: &Path, value: &impl serde::Serialize) -> anyhow::Result<()> 
     let bytes = serde_json::to_vec_pretty(value).context("serializing json")?;
     std::fs::write(path, bytes).with_context(|| format!("writing {}", path.display()))?;
     Ok(())
+}
+
+fn publishable_packages() -> anyhow::Result<Vec<String>> {
+    let output = ProcessCommand::new("cargo")
+        .args(["metadata", "--format-version", "1", "--no-deps"])
+        .current_dir(repo_root())
+        .output()
+        .context("running cargo metadata for package-check")?;
+    if !output.status.success() {
+        anyhow::bail!(
+            "package-check: cargo metadata failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let metadata: CargoMetadata =
+        serde_json::from_slice(&output.stdout).context("parsing cargo metadata output")?;
+    let mut packages = metadata
+        .packages
+        .into_iter()
+        .filter(package_is_publishable)
+        .map(|package| package.name)
+        .collect::<Vec<_>>();
+    packages.sort();
+    Ok(packages)
+}
+
+fn package_is_publishable(package: &CargoMetadataPackage) -> bool {
+    package
+        .publish
+        .as_ref()
+        .is_none_or(|registries| !registries.is_empty())
+}
+
+fn run_cargo_package(package: &str) -> anyhow::Result<()> {
+    let output = ProcessCommand::new("cargo")
+        .args([
+            "package",
+            "-p",
+            package,
+            "--allow-dirty",
+            "--locked",
+            "--list",
+        ])
+        .current_dir(repo_root())
+        .output()
+        .with_context(|| format!("packaging {package}"))?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        anyhow::bail!(
+            "package-check: cargo package failed for {package}\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CargoMetadata {
+    packages: Vec<CargoMetadataPackage>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CargoMetadataPackage {
+    name: String,
+    publish: Option<Vec<String>>,
 }
 
 fn sanitize(input: &str) -> String {
@@ -268,7 +348,10 @@ fn scenario_impacted(scenario: &ScenarioRecord, changed: &[String]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_repo_path, scenario_impacted, select_matching_scenarios};
+    use super::{
+        CargoMetadataPackage, normalize_repo_path, package_is_publishable, scenario_impacted,
+        select_matching_scenarios,
+    };
     use scenario_contract::{FeatureGrid, ScenarioRecord};
 
     fn scenario_record() -> ScenarioRecord {
@@ -323,5 +406,21 @@ mod tests {
         )];
 
         assert!(scenario_impacted(&scenario, &changed));
+    }
+
+    #[test]
+    fn package_check_skips_workspace_only_crates() {
+        assert!(package_is_publishable(&CargoMetadataPackage {
+            name: "xbrlkit-core".to_string(),
+            publish: None,
+        }));
+        assert!(!package_is_publishable(&CargoMetadataPackage {
+            name: "xtask".to_string(),
+            publish: Some(Vec::new()),
+        }));
+        assert!(package_is_publishable(&CargoMetadataPackage {
+            name: "custom-registry-crate".to_string(),
+            publish: Some(vec!["crates-io".to_string()]),
+        }));
     }
 }

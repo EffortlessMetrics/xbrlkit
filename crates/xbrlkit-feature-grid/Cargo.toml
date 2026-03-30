@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = false
 
 [lib]
 path = "src/lib.rs"
@@ -13,7 +14,7 @@ anyhow.workspace = true
 serde.workspace = true
 serde_yaml.workspace = true
 walkdir.workspace = true
-scenario-contract = { path = "../scenario-contract" }
+scenario-contract.workspace = true
 
 [lints]
 workspace = true

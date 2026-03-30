@@ -149,7 +149,6 @@ pub(super) fn run() -> anyhow::Result<()> {
     })?;
 
     runner.run_step("schema-check", super::schema_check::run)?;
-
     for ac_id in ACTIVE_ALPHA_ACS {
         let step_name = format!("test-ac:{ac_id}");
         runner.run_step(&step_name, || super::test_ac(ac_id))?;

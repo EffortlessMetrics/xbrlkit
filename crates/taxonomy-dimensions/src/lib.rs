@@ -311,17 +311,17 @@ impl DimensionTaxonomy {
         }
 
         // For explicit dimensions, check the domain
-        if let Some(domain_qname) = self.dimension_domains.get(dimension_qname) {
-            if let Some(domain) = self.domains.get(domain_qname) {
-                if domain.contains(member_qname) {
-                    return Ok(());
-                }
-                return Err(DimensionValidationError::InvalidMember {
-                    dimension: dimension_qname.to_string(),
-                    member: member_qname.to_string(),
-                    domain: domain_qname.clone(),
-                });
+        if let Some(domain_qname) = self.dimension_domains.get(dimension_qname)
+            && let Some(domain) = self.domains.get(domain_qname)
+        {
+            if domain.contains(member_qname) {
+                return Ok(());
             }
+            return Err(DimensionValidationError::InvalidMember {
+                dimension: dimension_qname.to_string(),
+                member: member_qname.to_string(),
+                domain: domain_qname.clone(),
+            });
         }
 
         Err(DimensionValidationError::NoDomain {

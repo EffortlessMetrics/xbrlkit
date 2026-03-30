@@ -10,9 +10,9 @@ description.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-edgar-sgml = { path = "../edgar-sgml" }
-edgar-attachments = { path = "../edgar-attachments" }
-receipt-types = { path = "../receipt-types" }
+edgar-sgml.workspace = true
+edgar-attachments.workspace = true
+receipt-types.workspace = true
 
 [lints]
 workspace = true

@@ -11,7 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 serde.workspace = true
-edgar-identity = { path = "../edgar-identity" }
+edgar-identity.workspace = true
 
 [lints]
 workspace = true

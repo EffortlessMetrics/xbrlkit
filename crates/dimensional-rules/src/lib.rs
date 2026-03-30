@@ -165,22 +165,22 @@ fn validate_dimension_member(
     }
 
     // For explicit dimensions, validate the member against the domain
-    if let Some(domain_qname) = dim_taxonomy.dimension_domains.get(&dim_member.dimension) {
-        if let Some(domain) = dim_taxonomy.domains.get(domain_qname) {
-            if domain.contains(&dim_member.member) {
-                return Ok(());
-            }
-            return Err(ValidationFinding {
-                rule_id: "XBRL.DIMENSION.INVALID_MEMBER".to_string(),
-                severity: "error".to_string(),
-                message: format!(
-                    "Member {} is not valid for dimension {} in domain {}",
-                    dim_member.member, dim_member.dimension, domain_qname
-                ),
-                member: Some(dim_member.member.clone()),
-                subject: Some(dim_member.dimension.clone()),
-            });
+    if let Some(domain_qname) = dim_taxonomy.dimension_domains.get(&dim_member.dimension)
+        && let Some(domain) = dim_taxonomy.domains.get(domain_qname)
+    {
+        if domain.contains(&dim_member.member) {
+            return Ok(());
         }
+        return Err(ValidationFinding {
+            rule_id: "XBRL.DIMENSION.INVALID_MEMBER".to_string(),
+            severity: "error".to_string(),
+            message: format!(
+                "Member {} is not valid for dimension {} in domain {}",
+                dim_member.member, dim_member.dimension, domain_qname
+            ),
+            member: Some(dim_member.member.clone()),
+            subject: Some(dim_member.dimension.clone()),
+        });
     }
 
     // No domain defined for this dimension
@@ -318,11 +318,11 @@ fn validate_date(value: &str, dim_member: &DimensionMember) -> Result<(), Valida
                     parts[0].parse::<u32>(),
                     parts[1].parse::<u32>(),
                     parts[2].parse::<u32>(),
-                ) {
-                    if (1..=12).contains(&month) && (1..=31).contains(&day) {
-                        // Basic check passed (full calendar validation optional)
-                        return Ok(());
-                    }
+                ) && (1..=12).contains(&month)
+                    && (1..=31).contains(&day)
+                {
+                    // Basic check passed (full calendar validation optional)
+                    return Ok(());
                 }
             }
         }

@@ -10,7 +10,7 @@ description.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-taxonomy-types = { path = "../taxonomy-types" }
+taxonomy-types.workspace = true
 
 [lints]
 workspace = true

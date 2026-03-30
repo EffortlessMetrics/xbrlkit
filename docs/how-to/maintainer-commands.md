@@ -219,6 +219,30 @@ cargo xtask alpha-check
 
 ---
 
+### `cargo xtask package-check`
+
+**Purpose:** Verify that every publishable workspace crate packages cleanly for crates.io.
+
+**What it does:**
+1. Enumerates workspace crates
+2. Skips workspace-only crates marked out of the publish surface
+3. Runs `cargo package -p <crate> --allow-dirty --locked --list` for each remaining crate
+
+`--list` is intentional here. It validates the package layout and manifest rewrite without requiring interdependent workspace crates to already exist on crates.io yet.
+
+**When to use:**
+- Before opening a release preparation PR
+- After changing `Cargo.toml` files or crate boundaries
+- Before publishing crates to crates.io
+
+**Example:**
+```bash
+cargo xtask package-check
+# Output: package-check: packaged 40 crate(s)
+```
+
+---
+
 ### `cargo xtask impact --changed <paths>`
 
 **Purpose:** Determine which scenarios are impacted by changed file paths.
@@ -306,10 +330,13 @@ cargo xtask test-ac AC-XK-TAXONOMY-001
 # 1. Full validation
 make full
 
-# 2. Verify clean git state
+# 2. If the change touches release metadata or crate boundaries
+cargo xtask package-check
+
+# 3. Verify clean git state
 git status
 
-# 3. Push and create PR
+# 4. Push and create PR
 git push origin feature-branch
 gh pr create --title "feat: description" --body "Details..."
 ```

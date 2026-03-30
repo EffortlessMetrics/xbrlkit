@@ -1677,6 +1677,35 @@
       ],
       "suite": "synthetic",
       "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-006",
+      "ac_id": "AC-XK-WORKFLOW-004",
+      "req_id": "REQ-XK-WORKFLOW",
+      "feature_file": "specs/features/workflow/package_check.feature",
+      "sidecar_file": "specs/features/workflow/package_check.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-PACKAGE:package-check",
+      "crates": [
+        "xtask",
+        "xbrlkit-core"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "Cargo.toml",
+        "CHANGELOG.md",
+        "crates",
+        "docs/how-to",
+        ".github/workflows",
+        "specs/features/workflow",
+        "xtask"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
     }
   ]
 }
