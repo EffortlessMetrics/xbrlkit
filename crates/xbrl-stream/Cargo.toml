@@ -16,7 +16,7 @@ anyhow = "1.0"
 xbrl-report-types = { path = "../xbrl-report-types" }
 
 [dev-dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio.workspace = true
 
 [lints]
 workspace = true
