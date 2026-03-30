@@ -152,9 +152,11 @@ mod tests {
         let findings = validate_negative_values(&facts, &prohibited);
 
         assert_eq!(findings.len(), 1);
-        assert!(findings[0]
-            .rule_id
-            .contains("SEC.NEGATIVE_VALUE.DEI_ENTITYCOMMONSTOCKSHARESOUTSTANDING"));
+        assert!(
+            findings[0]
+                .rule_id
+                .contains("SEC.NEGATIVE_VALUE.DEI_ENTITYCOMMONSTOCKSHARESOUTSTANDING")
+        );
         assert_eq!(findings[0].severity, "error");
     }
 
@@ -186,9 +188,11 @@ mod tests {
         let findings = validate_negative_values(&facts, &prohibited);
 
         assert_eq!(findings.len(), 1);
-        assert!(findings[0]
-            .rule_id
-            .contains("SEC.NEGATIVE_VALUE.DEI_ENTITYNUMBEROFEMPLOYEES"));
+        assert!(
+            findings[0]
+                .rule_id
+                .contains("SEC.NEGATIVE_VALUE.DEI_ENTITYNUMBEROFEMPLOYEES")
+        );
     }
 
     #[test]
