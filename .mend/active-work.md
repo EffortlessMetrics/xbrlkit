@@ -1,39 +1,101 @@
 # Active Work Queue — xbrlkit
 
+## Agentic SDLC Status
+**FULLY OPERATIONAL** 🟢🟢
+Planning scheduler: ENABLED | Review scheduler: ENABLED
+13 agents, 13 gates. End-to-end agentic.
+
+## Workflow
+```
+Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI → Quality → Tests → Arch → Integ → Agentic → Deep → Maintainer → Merge
+```
+
 ## Current Sprint
 
-### In Review
-| PR | Description | Status | Next Action |
-|----|-------------|--------|-------------|
-| #97 | Taxonomy loader BDD scenarios (8 ACs) | 🟢 Green CI, needs review | User review/merge |
+### In Planning (Scheduler Active)
+| Issue | Description | Label | Next Agent |
+|-------|-------------|-------|------------|
+| #100 | Taxonomy Loader BDD | **needs-plan** | planner-initial |
+| #101 | Legacy PR Cleanup | **needs-plan** | planner-initial |
+| #102 | ADR: HTTP client architecture | **needs-plan** | planner-initial |
 
-### Blocked / Waiting
-| Item | Blocker | ETA |
-|------|---------|-----|
-| Legacy PR cleanup (#11-15) | User decision on stale PRs | — |
+### In Review (Code Phase)
+| PR | CI | Q | T | A | I | Ag | D | M | Status |
+|----|----|---|---|---|---|----|---|---|--------|
+| #97 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
+| #99 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
+| #103 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
 
-### Queue (Next Up)
-| Priority | Item | Confidence | Value |
-|----------|------|------------|-------|
-| P0 | Create GitHub issues for active work | High | Process |
-| P0 | Set up autonomous labels | High | Process |
-| P1 | ADR: Blocking reqwest vs tokio in taxonomy-loader | High | Documentation |
-| P1 | Close/refresh legacy PRs #11-15 | Medium | Hygiene |
-| P2 | CLI dimension inspection extension | High | Feature |
-| P2 | Typed dimension validation scenarios | High | Feature |
-| P3 | Hypercube validation scenarios | Medium | Feature |
+**Legend:** Q=Quality, T=Tests, A=Arch, I=Integ, Ag=Agentic, D=Deep, M=Maintainer
 
-## Decisions Needed
-1. **Auto-merge authority**: Can I merge my own green PRs with `autonomous` label?
-2. **Legacy PRs**: Close #11-15 as stale, or rebase anything still relevant?
-3. **Issue tracking**: Should I create GitHub issues for each PR/feature?
+## Agent Definitions (13 Total)
 
-## Background Processes
-| Job | Status | Last Run | Finding |
-|-----|--------|----------|---------|
-| CI Health | ✅ Active | Hourly | Green |
-| Friction Scan | ✅ Active | Every 6h | — |
-| Queue Check | ⚠️ Needs fix | — | Looks for this file |
+### Planning Phase (4)
+| Agent | Purpose | File |
+|-------|---------|------|
+| planner-initial | Create plan from issue | `.mend/agents/planner-initial.md` |
+| reviewer-plan | Review plan feasibility | `.mend/agents/reviewer-plan.md` |
+| reviewer-deep-plan | Deep plan review | `.mend/agents/reviewer-deep-plan.md` |
+| reviewer-repo-alignment | Check plan vs repo patterns | `.mend/agents/reviewer-repo-alignment.md` |
+
+### Implementation Phase (1)
+| Agent | Purpose | File |
+|-------|---------|------|
+| builder-implement | Implement plan, create PR | `.mend/agents/builder-implement.md` |
+
+### Review Phase (8)
+| Agent | Purpose | File |
+|-------|---------|------|
+| reviewer-quality | Code quality, clippy | `.mend/agents/reviewer-quality.md` |
+| reviewer-tests | Test coverage, BDD | `.mend/agents/reviewer-tests.md` |
+| reviewer-arch | Architecture | `.mend/agents/reviewer-arch.md` |
+| reviewer-integ | Integration | `.mend/agents/reviewer-integ.md` |
+| reviewer-agentic | Cross-cutting + CI | `.mend/agents/reviewer-agentic.md` |
+| reviewer-deep | Improvements, cleanup | `.mend/agents/reviewer-deep.md` |
+| maintainer-alignment | Direction, strategy | `.mend/agents/maintainer-alignment.md` |
+| merger-final | Verify + merge | `.mend/agents/merger-final.md` |
+
+## Labels
+
+### Planning
+- `needs-plan` → `plan-draft` → `plan-reviewed` → `deep-plan-reviewed` → `repo-aligned`
+- `plan-needs-work` — Bounce to revision
+
+### Implementation
+- `building` — Implementation in progress
+- `ready-for-review` — Entering review pipeline
+
+### Review
+- `quality-passed` → `tests-passed` → `arch-passed` → `integ-passed` → `agentic-passed` → `deep-passed` → `maintainer-approved` → `agent-merge-approved`
+- `changes-requested` — Bounce to revision
+
+## Cron Jobs
+| Job | Schedule | Status |
+|-----|----------|--------|
+| **xbrlkit-planning-scheduler** | Every 15 min | 🟢 **ENABLED** |
+| **xbrlkit-review-scheduler** | Every 15 min | 🟢 **ENABLED** |
+| xbrlkit-tree-cleanup | Every 6 hours | 🟡 Disabled |
+| xbrlkit-ci-health | Hourly | 🟢 Active |
+
+## What Happens Now
+
+### Planning Phase (Next 15 min)
+1. Planning scheduler picks up issues #100, #101, #102
+2. Spawns `planner-initial` agents
+3. Agents create `.mend/plans/ISSUE-{n}.md` documents
+4. Labels progress: needs-plan → plan-draft
+
+### Review Phase (Ongoing)
+1. Review scheduler checks PRs #97, #99, #103 every 15 min
+2. Spawns `reviewer-quality` agents (first gate)
+3. Labels progress through 8 review gates
+4. Final `merger-final` executes merge
+
+## Monitoring
+- `.mend/plans/` — Watch for new plan documents
+- `.mend/session-log.md` — Agent activity log
+- PR labels — Gate progression
+- Issue labels — Planning phase progression
 
 ---
-*Updated: Auto-generated by agent session*
+*Status: BOTH SCHEDULERS ENABLED — Full agentic workflow operational*
