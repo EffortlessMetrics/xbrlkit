@@ -1025,14 +1025,13 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             .context("schema path not set")?;
 
         // For synthetic test schemas that may not exist, create a minimal taxonomy
-        let taxonomy = if schema_path.contains("fixtures/")
-            && !std::path::Path::new(&schema_path).exists()
-        {
-            // Create synthetic taxonomy for testing
-            create_synthetic_taxonomy()
-        } else {
-            loader.load(&schema_path)?
-        };
+        let taxonomy =
+            if schema_path.contains("fixtures/") && !std::path::Path::new(&schema_path).exists() {
+                // Create synthetic taxonomy for testing
+                create_synthetic_taxonomy()
+            } else {
+                loader.load(&schema_path)?
+            };
 
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
@@ -1470,9 +1469,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .as_ref()
             .context("taxonomy not loaded")?;
         let has_explicit_with_domain = taxonomy.dimensions.iter().any(|(_, d)| match d {
-            Dimension::Explicit { default_domain, .. } => {
-                default_domain.is_some()
-            }
+            Dimension::Explicit { default_domain, .. } => default_domain.is_some(),
             _ => false,
         });
         if !has_explicit_with_domain && !taxonomy.dimensions.is_empty() {
@@ -1487,10 +1484,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .taxonomy
             .as_ref()
             .context("taxonomy not loaded")?;
-        let has_members = taxonomy
-            .domains
-            .values()
-            .any(|d| !d.members.is_empty());
+        let has_members = taxonomy.domains.values().any(|d| !d.members.is_empty());
         if !has_members {
             anyhow::bail!("no domains have members defined");
         }

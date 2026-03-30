@@ -181,9 +181,10 @@ impl TaxonomyLoader {
         };
 
         // Fetch content via HTTP (blocking)
-        let response = client.get(url).send().map_err(|e| {
-            TaxonomyLoaderError::HttpError(url.to_string(), e.to_string())
-        })?;
+        let response = client
+            .get(url)
+            .send()
+            .map_err(|e| TaxonomyLoaderError::HttpError(url.to_string(), e.to_string()))?;
 
         // Check for HTTP errors
         if !response.status().is_success() {
@@ -193,9 +194,9 @@ impl TaxonomyLoader {
             ));
         }
 
-        let content = response.text().map_err(|e| {
-            TaxonomyLoaderError::HttpError(url.to_string(), e.to_string())
-        })?;
+        let content = response
+            .text()
+            .map_err(|e| TaxonomyLoaderError::HttpError(url.to_string(), e.to_string()))?;
 
         // Write to cache if configured
         if let Some(ref cache_dir) = self.cache_dir {
