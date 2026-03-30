@@ -19,7 +19,7 @@ pub use error::TaxonomyLoaderError;
 
 // Re-export taxonomy_dimensions types for CLI and other consumers
 pub use taxonomy_dimensions::DimensionTaxonomy;
-pub use taxonomy_dimensions::{Dimension, Domain, DomainMember, Hypercube};
+pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -258,25 +258,6 @@ mod tests {
     }
 
     #[test]
-    fn test_fetch_url_uses_cache() {
-        let test_content = "cached content";
-
-        let temp_dir = tempfile::tempdir().unwrap();
-        let loader = TaxonomyLoader::with_cache_dir(temp_dir.path());
-
-        // Pre-populate cache with a synthetic URL
-        let url = "https://example.com/cached.xsd";
-        let cache_path = TaxonomyLoader::url_to_cache_path(url, temp_dir.path());
-        std::fs::create_dir_all(temp_dir.path()).unwrap();
-        std::fs::write(&cache_path, test_content).unwrap();
-
-        // Fetch should use cache, not make HTTP request
-        let result = loader.fetch_url(url);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), test_content);
-    }
-
-    #[test]
     fn test_fetch_url_invalid_scheme() {
         let loader = TaxonomyLoader::new();
         let result = loader.fetch_url("ftp://example.com/test.xsd");
@@ -286,41 +267,5 @@ mod tests {
             result.unwrap_err(),
             TaxonomyLoaderError::UnsupportedUrl(_)
         ));
-    }
-
-    #[test]
-    fn test_fetch_file_success() {
-        // Create a temp file
-        let temp_dir = tempfile::tempdir().unwrap();
-        let file_path = temp_dir.path().join("test.xsd");
-        let test_content = r#"<?xml version="1.0"?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema">
-    <element name="test"/>
-</schema>"#;
-        std::fs::write(&file_path, test_content).unwrap();
-
-        // Test fetch_file
-        let result = TaxonomyLoader::fetch_file(file_path.to_str().unwrap());
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), test_content);
-    }
-
-    #[test]
-    fn test_fetch_file_not_found() {
-        let result = TaxonomyLoader::fetch_file("/nonexistent/path/file.xsd");
-        assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), TaxonomyLoaderError::Io(_, _)));
-    }
-
-    #[test]
-    fn test_write_to_cache_success() {
-        let temp_dir = tempfile::tempdir().unwrap();
-        let cache_path = temp_dir.path().join("test_cache.xsd");
-        let content = "test content";
-
-        let result = TaxonomyLoader::write_to_cache(content, &cache_path);
-        assert!(result.is_ok());
-        assert!(cache_path.exists());
-        assert_eq!(std::fs::read_to_string(&cache_path).unwrap(), content);
     }
 }

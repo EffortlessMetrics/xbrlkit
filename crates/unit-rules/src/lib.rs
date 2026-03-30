@@ -8,7 +8,7 @@ pub mod patterns;
 pub mod validator;
 
 pub use patterns::ExpectedUnitType;
-pub use validator::{validate_unit_consistency, UnitValidator};
+pub use validator::{UnitValidator, validate_unit_consistency};
 
 /// Check if a unit matches the expected type
 pub fn unit_matches_type(unit_measure: &str, expected: &ExpectedUnitType) -> bool {
