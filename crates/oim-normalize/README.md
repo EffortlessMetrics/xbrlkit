@@ -1,4 +1,4 @@
-# oim-normalize
+# xbrlkit-oim-normalize
 
 Open Information Model (OIM) normalization.
 
@@ -6,7 +6,7 @@ Open Information Model (OIM) normalization.
 
 ```toml
 [dependencies]
-oim-normalize = "0.1.0-alpha.1"
+xbrlkit-oim-normalize = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

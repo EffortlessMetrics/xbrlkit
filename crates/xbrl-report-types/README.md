@@ -1,4 +1,4 @@
-# xbrl-report-types
+# xbrlkit-xbrl-report-types
 
 XBRL report data types and structures.
 
@@ -6,7 +6,7 @@ XBRL report data types and structures.
 
 ```toml
 [dependencies]
-xbrl-report-types = "0.1.0-alpha.1"
+xbrlkit-xbrl-report-types = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

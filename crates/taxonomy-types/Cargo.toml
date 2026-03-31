@@ -1,5 +1,5 @@
 [package]
-name = "taxonomy-types"
+name = "xbrlkit-taxonomy-types"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

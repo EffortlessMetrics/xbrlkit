@@ -1,4 +1,4 @@
-# sec-http
+# xbrlkit-sec-http
 
 HTTP client utilities for SEC EDGAR API access.
 
@@ -6,7 +6,7 @@ HTTP client utilities for SEC EDGAR API access.
 
 ```toml
 [dependencies]
-sec-http = "0.1.0-alpha.1"
+xbrlkit-sec-http = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

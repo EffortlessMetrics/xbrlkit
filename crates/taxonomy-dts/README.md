@@ -1,4 +1,4 @@
-# taxonomy-dts
+# xbrlkit-taxonomy-dts
 
 Discoverable Taxonomy Set (DTS) processing.
 
@@ -6,7 +6,7 @@ Discoverable Taxonomy Set (DTS) processing.
 
 ```toml
 [dependencies]
-taxonomy-dts = "0.1.0-alpha.1"
+xbrlkit-taxonomy-dts = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

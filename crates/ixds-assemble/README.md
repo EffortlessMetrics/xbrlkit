@@ -1,4 +1,4 @@
-# ixds-assemble
+# xbrlkit-ixds-assemble
 
 Inline XBRL Dataset assembly from documents.
 
@@ -6,7 +6,7 @@ Inline XBRL Dataset assembly from documents.
 
 ```toml
 [dependencies]
-ixds-assemble = "0.1.0-alpha.1"
+xbrlkit-ixds-assemble = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

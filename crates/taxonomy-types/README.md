@@ -1,4 +1,4 @@
-# taxonomy-types
+# xbrlkit-taxonomy-types
 
 Taxonomy DTOs for XBRL taxonomy processing.
 
@@ -6,7 +6,7 @@ Taxonomy DTOs for XBRL taxonomy processing.
 
 ```toml
 [dependencies]
-taxonomy-types = "0.1.0-alpha.1"
+xbrlkit-taxonomy-types = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

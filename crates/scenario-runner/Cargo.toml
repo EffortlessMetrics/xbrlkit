@@ -1,5 +1,5 @@
 [package]
-name = "scenario-runner"
+name = "xbrlkit-scenario-runner"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

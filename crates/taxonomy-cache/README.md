@@ -1,4 +1,4 @@
-# taxonomy-cache
+# xbrlkit-taxonomy-cache
 
 Taxonomy caching and indexing.
 
@@ -6,7 +6,7 @@ Taxonomy caching and indexing.
 
 ```toml
 [dependencies]
-taxonomy-cache = "0.1.0-alpha.1"
+xbrlkit-taxonomy-cache = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

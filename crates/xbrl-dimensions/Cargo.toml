@@ -1,5 +1,5 @@
 [package]
-name = "xbrl-dimensions"
+name = "xbrlkit-xbrl-dimensions"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

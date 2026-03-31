@@ -1,5 +1,5 @@
 [package]
-name = "taxonomy-dimensions"
+name = "xbrlkit-taxonomy-dimensions"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

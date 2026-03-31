@@ -1,5 +1,5 @@
 [package]
-name = "edgar-sgml"
+name = "xbrlkit-edgar-sgml"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

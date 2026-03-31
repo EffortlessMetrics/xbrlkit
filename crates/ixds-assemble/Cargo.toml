@@ -1,5 +1,5 @@
 [package]
-name = "ixds-assemble"
+name = "xbrlkit-ixds-assemble"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
