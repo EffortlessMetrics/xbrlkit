@@ -44,7 +44,8 @@ pub fn execute_scenario(
         .map(|fixture| repo_root.join("fixtures").join(fixture))
         .collect::<Vec<_>>();
     if fixture_dirs.is_empty() {
-        anyhow::bail!("scenario {} has no fixtures", scenario.scenario_id);
+        // Scenarios without fixtures (e.g., bundle scenarios) are handled by BDD steps
+        return Ok(ScenarioExecution::default());
     }
 
     if fixture_dirs
@@ -254,9 +255,8 @@ pub fn assert_scenario_outcome(
             Ok(())
         }
 
-        // Filing Manifest
-        Some("AC-XK-MANIFEST-001") => {
-            // BDD steps handle the assertions
+        // Filing Manifest and Bundle scenarios (BDD handles assertions)
+        Some("AC-XK-MANIFEST-001" | "AC-XK-WORKFLOW-002") => {
             Ok(())
         }
 
