@@ -19,6 +19,7 @@ pub struct ScenarioExecution {
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
+    pub sensor_receipt: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -101,6 +102,7 @@ pub fn execute_scenario(
         taxonomy_resolution: None,
         ixds_receipt,
         export_receipt,
+        sensor_receipt: None,
     })
 }
 
@@ -255,6 +257,14 @@ pub fn assert_scenario_outcome(
         // Filing Manifest
         Some("AC-XK-MANIFEST-001") => {
             // BDD steps handle the assertions
+            Ok(())
+        }
+
+        // Cockpit Pack (Sensor Report)
+        Some("AC-XK-WORKFLOW-003") => {
+            if execution.sensor_receipt.is_none() {
+                anyhow::bail!("sensor report receipt was not emitted");
+            }
             Ok(())
         }
 
