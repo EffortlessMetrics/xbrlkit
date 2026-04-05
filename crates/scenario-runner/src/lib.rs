@@ -256,9 +256,7 @@ pub fn assert_scenario_outcome(
         }
 
         // Filing Manifest and Bundle scenarios (BDD handles assertions)
-        Some("AC-XK-MANIFEST-001" | "AC-XK-WORKFLOW-002") => {
-            Ok(())
-        }
+        Some("AC-XK-MANIFEST-001" | "AC-XK-WORKFLOW-002") => Ok(()),
 
         // Cockpit Pack (Sensor Report)
         Some("AC-XK-WORKFLOW-003") => {

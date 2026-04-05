@@ -25,7 +25,7 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     // AC-XK-CONTEXT-001..004 require BDD step handlers and proper fixtures (tracked separately)
     "AC-XK-WORKFLOW-002", // tested via @alpha-active BDD tag for bundle
     "AC-XK-WORKFLOW-003", // tested via @alpha-active BDD tag for sensor report
-    // AC-XK-MANIFEST-001 tested via @alpha-active BDD tag
+                          // AC-XK-MANIFEST-001 tested via @alpha-active BDD tag
 ];
 
 /// Summary of a single alpha-check step.
