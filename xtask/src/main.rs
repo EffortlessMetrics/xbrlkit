@@ -152,8 +152,23 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
         anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
     }
 
+    // Filter out synthetic/BDD scenarios - they run via BDD @alpha-active
+    let scenarios_with_fixtures: Vec<_> = scenarios
+        .iter()
+        .filter(|s| {
+            !s.fixtures.is_empty() && s.suite.as_deref() != Some("synthetic")
+        })
+        .cloned()
+        .collect();
+
+    if scenarios_with_fixtures.is_empty() {
+        // All scenarios for this AC are BDD-style, skip test-ac (they run via BDD)
+        println!("test-ac: skipped {ac_id} (BDD scenarios tested via @alpha-active)");
+        return Ok(());
+    }
+
     let mut scenario_receipt = Receipt::new("scenario.run", ac_id, RunResult::Success);
-    for scenario in &scenarios {
+    for scenario in &scenarios_with_fixtures {
         let execution = execute_scenario(&repo_root(), scenario)?;
         write_execution_receipts(&repo_root(), &execution)?;
         assert_scenario_outcome(scenario, &execution)?;
@@ -166,7 +181,7 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     write_json(&receipt_path, &scenario_receipt)?;
     println!(
         "test-ac: executed {} scenario(s) for {}",
-        scenarios.len(),
+        scenarios_with_fixtures.len(),
         ac_id
     );
     Ok(())

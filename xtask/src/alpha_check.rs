@@ -24,6 +24,7 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-STREAM-004",
     // AC-XK-CONTEXT-001..004 require BDD step handlers and proper fixtures (tracked separately)
     // AC-XK-WORKFLOW-002/003 are tested via @alpha-active BDD tags
+    "AC-XK-WORKFLOW-002",
     "AC-XK-MANIFEST-001",
 ];
 
