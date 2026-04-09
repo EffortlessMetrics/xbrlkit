@@ -9,7 +9,6 @@ description = "XBRL unit consistency validation rules"
 xbrl-report-types = { path = "../xbrl-report-types" }
 sec-profile-types = { path = "../sec-profile-types" }
 regex = "1.10"
-serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 # Test dependencies added as needed
