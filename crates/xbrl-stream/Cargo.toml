@@ -13,7 +13,6 @@ path = "src/lib.rs"
 quick-xml = { version = "0.36", features = ["async-tokio"] }
 thiserror = "1.0"
 anyhow = "1.0"
-xbrl-report-types = { path = "../xbrl-report-types" }
 
 [dev-dependencies]
 tokio.workspace = true
