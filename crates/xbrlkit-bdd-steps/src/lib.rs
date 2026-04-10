@@ -15,7 +15,8 @@ use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
 /// Default schema path for taxonomy loader tests.
-const DEFAULT_TAXONOMY_SCHEMA_PATH: &str = "fixtures/synthetic/taxonomy/standard-location-01/schema.xsd";
+const DEFAULT_TAXONOMY_SCHEMA_PATH: &str =
+    "fixtures/synthetic/taxonomy/standard-location-01/schema.xsd";
 
 /// Ensures the taxonomy loader is initialized with optional cache directory and schema path.
 ///
@@ -34,8 +35,11 @@ fn ensure_taxonomy_loader(
         }
     }
     if world.taxonomy_loader_context.schema_path.is_none() {
-        world.taxonomy_loader_context.schema_path =
-            Some(schema_path.unwrap_or(DEFAULT_TAXONOMY_SCHEMA_PATH).to_string());
+        world.taxonomy_loader_context.schema_path = Some(
+            schema_path
+                .unwrap_or(DEFAULT_TAXONOMY_SCHEMA_PATH)
+                .to_string(),
+        );
     }
 }
 
