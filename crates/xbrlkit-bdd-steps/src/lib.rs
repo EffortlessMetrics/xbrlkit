@@ -11,8 +11,8 @@ use scenario_runner::{
     execute_scenario, write_execution_receipts,
 };
 use std::path::PathBuf;
-use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
-use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
+use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember, Hypercube};
+use xbrl_contexts::{Context, DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Step {
@@ -51,7 +51,7 @@ pub struct DimensionContext {
     pub validation_findings: Vec<String>,
     pub typed_value_type: Option<String>,
     pub parsed_members: Vec<DimensionMember>,
-    pub parsed_context: Option<xbrl_contexts::Context>,
+    pub parsed_context: Option<Context>,
     pub use_segment: bool,
 }
 
@@ -948,10 +948,14 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             xml.push_str("<segment>");
             for m in &segment_members {
                 if m.is_typed {
-                    xml.push_str(&format!(
-                        r#"<xbrldi:typedMember dimension="{}"><dim:value>{}</dim:value></xbrldi:typedMember>"#,
-                        m.dimension, m.member
-                    ));
+                    let typed_xml = format!(
+                        r#"<xbrldi:typedMember dimension="{}">"#,
+                        m.dimension
+                    ) + &format!(
+                        r#"<dim:value>{}</dim:value>"#,
+                        m.member
+                    ) + r#"</xbrldi:typedMember>"#;
+                    xml.push_str(&typed_xml);
                 } else {
                     xml.push_str(&format!(
                         r#"<xbrldi:explicitMember dimension="{}">{}</xbrldi:explicitMember>"#,
@@ -968,10 +972,14 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             xml.push_str("<scenario>");
             for m in &scenario_members {
                 if m.is_typed {
-                    xml.push_str(&format!(
-                        r#"<xbrldi:typedMember dimension="{}"><dim:value>{}</dim:value></xbrldi:typedMember>"#,
-                        m.dimension, m.member
-                    ));
+                    let typed_xml = format!(
+                        r#"<xbrldi:typedMember dimension="{}">"#,
+                        m.dimension
+                    ) + &format!(
+                        r#"<dim:value>{}</dim:value>"#,
+                        m.member
+                    ) + r#"</xbrldi:typedMember>"#;
+                    xml.push_str(&typed_xml);
                 } else {
                     xml.push_str(&format!(
                         r#"<xbrldi:explicitMember dimension="{}">{}</xbrldi:explicitMember>"#,
@@ -1577,11 +1585,6 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         return Ok(());
     }
 
-    if step.text == "line numbers should indicate error locations" {
-        // Line number tracking would be implemented in real streaming parser
-        return Ok(());
-    }
-
     if step.text == "the handler should receive each fact" {
         if world.streaming_context.facts_processed.is_empty() {
             anyhow::bail!("handler did not receive any facts");
@@ -1646,18 +1649,106 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "members should maintain parent-child relationships" {
+        let taxonomy = world
+            .taxonomy_loader_context
+            .taxonomy
+            .as_ref()
+            .context("taxonomy not loaded")?;
+        let has_hierarchy = taxonomy
+            .domains
+            .values()
+            .any(|d| d.members.values().any(|m| m.parent.is_some()));
+        if !has_hierarchy {
+            anyhow::bail!("no members have parent-child relationships defined");
+        }
         return Ok(());
     }
 
     if step.text == "typed dimensions should have value types" {
+        let taxonomy = world
+            .taxonomy_loader_context
+            .taxonomy
+            .as_ref()
+            .context("taxonomy not loaded")?;
+        let typed_dims: Vec<_> = taxonomy
+            .dimensions
+            .values()
+            .filter(|d| !d.is_explicit())
+            .collect();
+        if typed_dims.is_empty() {
+            anyhow::bail!("no typed dimensions found in taxonomy");
+        }
+        let all_have_types = typed_dims.iter().all(|d| match d {
+            Dimension::Typed { value_type, .. } => !value_type.is_empty(),
+            _ => false,
+        });
+        if !all_have_types {
+            anyhow::bail!("some typed dimensions are missing value types");
+        }
         return Ok(());
     }
 
     if step.text == "the value types should be valid XSD types" {
+        let taxonomy = world
+            .taxonomy_loader_context
+            .taxonomy
+            .as_ref()
+            .context("taxonomy not loaded")?;
+        let valid_xsd_types: std::collections::HashSet<&str> = [
+            "xs:string",
+            "xs:decimal",
+            "xs:integer",
+            "xs:boolean",
+            "xs:date",
+            "xs:dateTime",
+            "xs:time",
+            "xs:float",
+            "xs:double",
+            "xs:nonNegativeInteger",
+            "xs:positiveInteger",
+            "xs:anyURI",
+            "xs:QName",
+            "xs:token",
+            "xs:normalizedString",
+        ]
+        .iter()
+        .copied()
+        .collect();
+        let typed_dims: Vec<_> = taxonomy
+            .dimensions
+            .values()
+            .filter(|d| !d.is_explicit())
+            .collect();
+        if typed_dims.is_empty() {
+            anyhow::bail!("no typed dimensions found to validate value types");
+        }
+        for dim in typed_dims {
+            if let Dimension::Typed { value_type, .. } = dim {
+                if !valid_xsd_types.contains(value_type.as_str()) {
+                    anyhow::bail!(
+                        "typed dimension '{}' has invalid XSD type '{}'",
+                        dim.qname(),
+                        value_type
+                    );
+                }
+            }
+        }
         return Ok(());
     }
 
     if step.text == "hypercubes should contain their dimensions" {
+        let taxonomy = world
+            .taxonomy_loader_context
+            .taxonomy
+            .as_ref()
+            .context("taxonomy not loaded")?;
+        let has_dimensions = taxonomy
+            .hypercubes
+            .values()
+            .any(|h| !h.dimensions.is_empty());
+        if !has_dimensions {
+            anyhow::bail!("no hypercubes contain dimensions");
+        }
         return Ok(());
     }
 
@@ -1686,11 +1777,24 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "subsequent loads should use the cache" {
-        return Ok(());
+        anyhow::bail!(
+            "cache hit validation not yet implemented — \
+             requires file-system taxonomy loader integration"
+        );
     }
 
     if step.text == "imported schemas should be loaded" {
-        return Ok(());
+        anyhow::bail!(
+            "schema import validation not yet implemented — \
+             requires recursive schema loader"
+        );
+    }
+
+    if step.text == "line numbers should indicate error locations" {
+        anyhow::bail!(
+            "Line number tracking not yet implemented — \
+             tracked in #XXX (streaming parser feature)"
+        );
     }
 
     if step.text == "all dimension definitions should be available" {
@@ -1701,6 +1805,196 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .context("taxonomy not loaded")?;
         if taxonomy.dimensions.is_empty() {
             anyhow::bail!("no dimension definitions available");
+        }
+        return Ok(());
+    }
+
+    // Dimension parsing Then steps
+    if step.text == "the dimension should be marked as typed" {
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let scenario_dims = ctx.scenario.as_ref().map(|s| s.dimensions.as_slice()).unwrap_or(&[]);
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let all_dims: Vec<_> = scenario_dims.iter().chain(segment_dims.iter()).collect();
+        let has_typed = all_dims.iter().any(|d| d.is_typed);
+        if !has_typed {
+            anyhow::bail!("no typed dimension found in parsed context");
+        }
+        return Ok(());
+    }
+
+    if let Some(expected) = step.text.strip_prefix("the typed value should be \"") {
+        let expected = expected.trim_end_matches('"');
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let scenario_dims = ctx.scenario.as_ref().map(|s| s.dimensions.as_slice()).unwrap_or(&[]);
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let typed_value = scenario_dims
+            .iter()
+            .chain(segment_dims.iter())
+            .find(|d| d.is_typed)
+            .and_then(|d| d.typed_value.as_ref());
+        match typed_value {
+            Some(v) if v == expected => return Ok(()),
+            Some(v) => anyhow::bail!("expected typed value '{}' but got '{}'", expected, v),
+            None => anyhow::bail!("no typed value found in parsed context"),
+        }
+    }
+
+    if step.text == "the typed value should be empty" {
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let scenario_dims = ctx.scenario.as_ref().map(|s| s.dimensions.as_slice()).unwrap_or(&[]);
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let typed_value = scenario_dims
+            .iter()
+            .chain(segment_dims.iter())
+            .find(|d| d.is_typed)
+            .and_then(|d| d.typed_value.as_ref());
+        match typed_value {
+            Some(v) if v.is_empty() => return Ok(()),
+            Some(v) => anyhow::bail!("expected empty typed value but got '{}'", v),
+            None => return Ok(()), // No typed value is also considered empty
+        }
+    }
+
+    if let Some(expected) = step.text.strip_prefix("the member should be \"") {
+        let expected = expected.trim_end_matches('"');
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let scenario_dims = ctx.scenario.as_ref().map(|s| s.dimensions.as_slice()).unwrap_or(&[]);
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let found = scenario_dims
+            .iter()
+            .chain(segment_dims.iter())
+            .any(|d| d.member == expected);
+        if !found {
+            anyhow::bail!("expected member '{}' not found in parsed context", expected);
+        }
+        return Ok(());
+    }
+
+    if let Some(expected) = step.text.strip_prefix("the explicit dimension should have member \"") {
+        let expected = expected.trim_end_matches('"');
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let scenario_dims = ctx.scenario.as_ref().map(|s| s.dimensions.as_slice()).unwrap_or(&[]);
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let found = scenario_dims
+            .iter()
+            .chain(segment_dims.iter())
+            .any(|d| !d.is_typed && d.member == expected);
+        if !found {
+            anyhow::bail!(
+                "expected explicit dimension with member '{}' not found",
+                expected
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(expected) = step.text.strip_prefix("the typed dimension should have value \"") {
+        let expected = expected.trim_end_matches('"');
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let scenario_dims = ctx.scenario.as_ref().map(|s| s.dimensions.as_slice()).unwrap_or(&[]);
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let found = scenario_dims
+            .iter()
+            .chain(segment_dims.iter())
+            .any(|d| {
+                d.is_typed
+                    && d.typed_value
+                        .as_ref()
+                        .map_or(false, |v| v == expected)
+            });
+        if !found {
+            anyhow::bail!(
+                "expected typed dimension with value '{}' not found",
+                expected
+            );
+        }
+        return Ok(());
+    }
+
+    if step.text == "both dimensions should be accessible" {
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let scenario_dims = ctx.scenario.as_ref().map(|s| s.dimensions.as_slice()).unwrap_or(&[]);
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let total = scenario_dims.len() + segment_dims.len();
+        if total < 2 {
+            anyhow::bail!(
+                "expected at least 2 dimensions but found {}",
+                total
+            );
+        }
+        return Ok(());
+    }
+
+    if step.text == "the typed dimension should be in the entity segment" {
+        let ctx = world
+            .dimension_context
+            .parsed_context
+            .as_ref()
+            .context("no parsed context available")?;
+        let segment_dims = ctx
+            .entity_segment
+            .as_ref()
+            .map(|s| s.dimensions.as_slice())
+            .unwrap_or(&[]);
+        let has_typed_in_segment = segment_dims.iter().any(|d| d.is_typed);
+        if !has_typed_in_segment {
+            anyhow::bail!("no typed dimension found in entity segment");
         }
         return Ok(());
     }
@@ -1725,6 +2019,13 @@ fn create_synthetic_taxonomy() -> DimensionTaxonomy {
         order: 2,
         label: None,
     });
+    // Add a member with a parent to test parent-child relationships
+    scenario_domain.add_member(DomainMember {
+        qname: "us-gaap:ScenarioRestatedMember".to_string(),
+        parent: Some("us-gaap:ScenarioActualMember".to_string()),
+        order: 3,
+        label: None,
+    });
     taxonomy.add_domain(scenario_domain);
 
     taxonomy.add_dimension(Dimension::Explicit {
@@ -1742,6 +2043,12 @@ fn create_synthetic_taxonomy() -> DimensionTaxonomy {
         value_type: "xs:string".to_string(),
         required: false,
     });
+
+    // Add a hypercube with dimensions
+    let mut hypercube = Hypercube::new("us-gaap:AllScenarioHypercube");
+    hypercube.add_dimension("us-gaap:StatementScenarioAxis".to_string());
+    hypercube.add_dimension("dim:CustomerAxis".to_string());
+    taxonomy.add_hypercube(hypercube);
 
     taxonomy
 }
