@@ -13,18 +13,34 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 ## Current Sprint
 
 ### In Planning (Scheduler Active)
+
+**No items currently in planning.** All planning-phase issues completed.
+
 | Issue | Description | Label | Next Agent |
 |-------|-------------|-------|------------|
-| #100 | Taxonomy Loader BDD | **needs-plan** | planner-initial |
-| #101 | Legacy PR Cleanup | **needs-plan** | planner-initial |
-| #102 | ADR: HTTP client architecture | **needs-plan** | planner-initial |
+
+### Completed Recently
+| Issue | Description | PR |
+|-------|-------------|-----|
+| #100 | Taxonomy Loader BDD | #104 |
+| #101 | Legacy PR Cleanup | #108 |
+| #102 | ADR: HTTP client architecture | #107, #109 |
 
 ### In Review (Code Phase)
+
 | PR | CI | Q | T | A | I | Ag | D | M | Status |
 |----|----|---|---|---|---|----|---|---|--------|
-| #97 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
-| #99 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
-| #103 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
+| #126 | 🟢 | ✅ | ✅ | — | — | — | — | — | changes-requested |
+| #127 | 🟢 | ✅ | ✅ | — | — | — | — | — | changes-requested |
+| #128 | 🟢 | ✅ | ✅ | — | — | — | — | — | tests-alpha-failed |
+| #129 | 🟢 | ✅ | ✅ | — | — | — | — | — | tests-alpha-failed |
+| #134 | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | changes-requested |
+| #138 | 🟢 | ✅ | ✅ | — | — | — | — | — | changes-requested |
+| #180 | 🟢 | ✅ | ✅ | — | — | — | — | — | ready-for-review |
+| #181 | 🟢 | ✅ | ✅ | — | — | — | — | — | ready-for-review |
+| #182 | 🟢 | ✅ | ✅ | — | — | — | — | — | ready-for-review |
+| #183 | 🟢 | ✅ | ✅ | — | — | — | — | — | quality-final-passed |
+| #184 | 🟢 | ✅ | ✅ | — | — | — | — | — | quality-final-failed |
 
 **Legend:** Q=Quality, T=Tests, A=Arch, I=Integ, Ag=Agentic, D=Deep, M=Maintainer
 
