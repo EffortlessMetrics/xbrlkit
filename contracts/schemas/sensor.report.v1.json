@@ -8,7 +8,9 @@
     "kind": { "type": "string" },
     "version": { "type": "string" },
     "subject": { "type": "string" },
-    "result": { "type": "string" }
+    "result": { "type": "string" },
+    "sensor_id": { "type": "string" },
+    "inner_receipt": { "type": "object" }
   },
   "required": ["kind", "version", "subject", "result"]
 }

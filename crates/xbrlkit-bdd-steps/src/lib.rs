@@ -49,7 +49,10 @@ pub struct DimensionContext {
     pub concept: Option<String>,
     pub required_dimension: Option<String>,
     pub validation_findings: Vec<String>,
-    pub typed_value_type: Option<String>, // Added for typed value validation
+    pub typed_value_type: Option<String>,
+    pub parsed_members: Vec<DimensionMember>,
+    pub parsed_context: Option<xbrl_contexts::Context>,
+    pub use_segment: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -213,22 +216,49 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     // Dimension-related Given steps
     if step.text == "the taxonomy has dimension definitions" {
-        // Stub - implement actual taxonomy loading when needed
+        let taxonomy = create_synthetic_taxonomy();
+        if taxonomy.dimensions.is_empty() {
+            anyhow::bail!("taxonomy has no dimension definitions");
+        }
+        world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         return Ok(true);
     }
 
     if step.text == "the taxonomy has domain hierarchies" {
-        // Stub - implement actual taxonomy loading when needed
+        let taxonomy = world
+            .taxonomy_loader_context
+            .taxonomy
+            .take()
+            .unwrap_or_else(create_synthetic_taxonomy);
+        if taxonomy.domains.is_empty() {
+            anyhow::bail!("taxonomy has no domain hierarchies");
+        }
+        world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         return Ok(true);
     }
 
     if step.text == "the taxonomy has hypercube definitions" {
-        // Stub - implement actual taxonomy loading when needed
+        let taxonomy = world
+            .taxonomy_loader_context
+            .taxonomy
+            .take()
+            .unwrap_or_else(create_synthetic_taxonomy);
+        if taxonomy.hypercubes.is_empty() {
+            anyhow::bail!("taxonomy has no hypercube definitions");
+        }
+        world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         return Ok(true);
     }
 
     if let Some(dimension) = step.text.strip_prefix("a context with dimension \"") {
-        world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
+        let dim = dimension.trim_end_matches('"').to_string();
+        world.dimension_context.dimension = Some(dim.clone());
+        world.dimension_context.parsed_members.push(DimensionMember {
+            dimension: dim,
+            member: String::new(),
+            is_typed: false,
+            typed_value: None,
+        });
         return Ok(true);
     }
 
@@ -236,17 +266,32 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         .text
         .strip_prefix("a context with unknown dimension \"")
     {
-        world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
+        let dim = dimension.trim_end_matches('"').to_string();
+        world.dimension_context.dimension = Some(dim.clone());
+        world.dimension_context.parsed_members.push(DimensionMember {
+            dimension: dim,
+            member: String::new(),
+            is_typed: false,
+            typed_value: None,
+        });
         return Ok(true);
     }
 
     if let Some(member) = step.text.strip_prefix("the member \"") {
-        world.dimension_context.member = Some(member.trim_end_matches('"').to_string());
+        let m = member.trim_end_matches('"').to_string();
+        world.dimension_context.member = Some(m.clone());
+        if let Some(last) = world.dimension_context.parsed_members.last_mut() {
+            last.member = m;
+        }
         return Ok(true);
     }
 
     if let Some(member) = step.text.strip_prefix("an invalid member \"") {
-        world.dimension_context.member = Some(member.trim_end_matches('"').to_string());
+        let m = member.trim_end_matches('"').to_string();
+        world.dimension_context.member = Some(m.clone());
+        if let Some(last) = world.dimension_context.parsed_members.last_mut() {
+            last.member = m;
+        }
         return Ok(true);
     }
 
@@ -270,18 +315,55 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     // Typed dimension Given steps
     if let Some(dimension) = step.text.strip_prefix("a context with typed dimension \"") {
         let rest = dimension.trim_end_matches('"');
-        // Handle "dim:Axis" of type "xs:type" format
-        if let Some((dim, type_part)) = rest.split_once("\" of type \"") {
+        // Check for " in segment" suffix first
+        let (rest_body, in_segment) = if let Some(r) = rest.strip_suffix(" in segment") {
+            (r, true)
+        } else {
+            (rest, false)
+        };
+        // Handle "dim:Axis\" of type \"xs:type\" format
+        if let Some((dim, type_part)) = rest_body.split_once("\" of type \"") {
             world.dimension_context.dimension = Some(dim.to_string());
             world.dimension_context.typed_value_type = Some(type_part.to_string());
+            world.dimension_context.parsed_members.push(DimensionMember {
+                dimension: dim.to_string(),
+                member: String::new(),
+                is_typed: true,
+                typed_value: None,
+            });
         } else {
-            world.dimension_context.dimension = Some(rest.to_string());
+            world.dimension_context.dimension = Some(rest_body.to_string());
+            world.dimension_context.parsed_members.push(DimensionMember {
+                dimension: rest_body.to_string(),
+                member: String::new(),
+                is_typed: true,
+                typed_value: None,
+            });
         }
+        world.dimension_context.use_segment = in_segment;
+        return Ok(true);
+    }
+
+    // Short form: "a typed dimension \"...\"" (without "a context with")
+    if let Some(dimension) = step.text.strip_prefix("a typed dimension \"") {
+        let dim = dimension.trim_end_matches('"').to_string();
+        world.dimension_context.dimension = Some(dim.clone());
+        world.dimension_context.parsed_members.push(DimensionMember {
+            dimension: dim,
+            member: String::new(),
+            is_typed: true,
+            typed_value: None,
+        });
         return Ok(true);
     }
 
     if let Some(value) = step.text.strip_prefix("the typed member value \"") {
-        world.dimension_context.member = Some(value.trim_end_matches('"').to_string());
+        let v = value.trim_end_matches('"').to_string();
+        world.dimension_context.member = Some(v.clone());
+        if let Some(last) = world.dimension_context.parsed_members.last_mut() {
+            last.member = v.clone();
+            last.typed_value = Some(v);
+        }
         return Ok(true);
     }
 
@@ -837,6 +919,78 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 .dimension_context
                 .validation_findings
                 .push(finding.rule_id.clone());
+        }
+
+        return Ok(true);
+    }
+
+    if step.text == "I parse the context dimensions" {
+        // Build a synthetic XBRL context XML from accumulated parsed_members
+        let mut segment_members = Vec::new();
+        let mut scenario_members = Vec::new();
+
+        for member in &world.dimension_context.parsed_members {
+            if world.dimension_context.use_segment {
+                segment_members.push(member.clone());
+            } else {
+                scenario_members.push(member.clone());
+            }
+        }
+
+        // Build XML
+        let mut xml = String::from(
+            r#"<xbrl xmlns="http://www.xbrl.org/2003/instance" xmlns:xbrldi="http://xbrl.org/2006/xbrldi">"#,
+        );
+        xml.push_str(r#"<context id="test-context" xmlns="http://www.xbrl.org/2003/instance">"#);
+        xml.push_str(r#"<entity><identifier scheme="http://www.sec.gov/CIK">0001234567</identifier>"#);
+
+        if !segment_members.is_empty() {
+            xml.push_str("<segment>");
+            for m in &segment_members {
+                if m.is_typed {
+                    xml.push_str(&format!(
+                        r#"<xbrldi:typedMember dimension="{}"><dim:value>{}</dim:value></xbrldi:typedMember>"#,
+                        m.dimension, m.member
+                    ));
+                } else {
+                    xml.push_str(&format!(
+                        r#"<xbrldi:explicitMember dimension="{}">{}</xbrldi:explicitMember>"#,
+                        m.dimension, m.member
+                    ));
+                }
+            }
+            xml.push_str("</segment>");
+        }
+
+        xml.push_str("</entity><period><instant>2024-12-31</instant></period>");
+
+        if !scenario_members.is_empty() {
+            xml.push_str("<scenario>");
+            for m in &scenario_members {
+                if m.is_typed {
+                    xml.push_str(&format!(
+                        r#"<xbrldi:typedMember dimension="{}"><dim:value>{}</dim:value></xbrldi:typedMember>"#,
+                        m.dimension, m.member
+                    ));
+                } else {
+                    xml.push_str(&format!(
+                        r#"<xbrldi:explicitMember dimension="{}">{}</xbrldi:explicitMember>"#,
+                        m.dimension, m.member
+                    ));
+                }
+            }
+            xml.push_str("</scenario>");
+        }
+
+        xml.push_str("</context></xbrl>");
+
+        let context_set = xbrl_contexts::parse_contexts(&xml)
+            .map_err(|e| anyhow::anyhow!("failed to parse context XML: {e}"))?;
+
+        if let Some(ctx) = context_set.get("test-context") {
+            world.dimension_context.parsed_context = Some(ctx.clone());
+        } else {
+            anyhow::bail!("parsed context set did not contain 'test-context'");
         }
 
         return Ok(true);
