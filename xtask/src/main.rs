@@ -155,9 +155,7 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     // Filter out synthetic/BDD scenarios - they run via BDD @alpha-active
     let scenarios_with_fixtures: Vec<_> = scenarios
         .iter()
-        .filter(|s| {
-            !s.fixtures.is_empty() && s.suite.as_deref() != Some("synthetic")
-        })
+        .filter(|s| !s.fixtures.is_empty() && s.suite.as_deref() != Some("synthetic"))
         .cloned()
         .collect();
 
