@@ -9,7 +9,8 @@
 /// ```
 #[allow(dead_code)]
 pub fn extract_quoted(step: &str, prefix: &str) -> Option<String> {
-    step.strip_prefix(prefix).map(|s| s.trim_end_matches('"').to_string())
+    step.strip_prefix(prefix)
+        .map(|s| s.trim_end_matches('"').to_string())
 }
 
 /// Extract all quoted substrings from a step text.

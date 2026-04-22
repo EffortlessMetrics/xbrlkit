@@ -1,6 +1,6 @@
 //! Then step handlers and parameterized assertions for BDD scenario execution.
 
-use crate::{execution, parsing, World};
+use crate::{World, execution, parsing};
 use anyhow::Context;
 
 pub(crate) fn handle_then(world: &mut World, step: &crate::Step) -> anyhow::Result<()> {
@@ -194,10 +194,7 @@ fn handle_bundle_assertions(world: &mut World, step: &crate::Step) -> anyhow::Re
     Ok(false)
 }
 
-fn handle_feature_grid_assertions(
-    world: &mut World,
-    step: &crate::Step,
-) -> anyhow::Result<bool> {
+fn handle_feature_grid_assertions(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
     if let Some(scenario_id) = step
         .text
         .strip_prefix("the feature grid contains scenario \"")
@@ -306,7 +303,10 @@ fn handle_context_completeness_assertions(
         return Ok(true);
     }
 
-    if let Some(count_str) = step.text.strip_prefix("context-missing errors are reported") {
+    if let Some(count_str) = step
+        .text
+        .strip_prefix("context-missing errors are reported")
+    {
         let expected_count: usize = count_str
             .split_whitespace()
             .next()
@@ -513,10 +513,7 @@ fn handle_taxonomy_dimensions_assertions(
     Ok(false)
 }
 
-fn handle_taxonomy_types_assertions(
-    world: &mut World,
-    step: &crate::Step,
-) -> anyhow::Result<bool> {
+fn handle_taxonomy_types_assertions(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
     if step.text == "typed dimensions should have value types" {
         let taxonomy = world
             .taxonomy_loader_context
@@ -654,7 +651,10 @@ fn handle_parameterized_assertions(world: &World, step: &crate::Step) -> anyhow:
     Ok(false)
 }
 
-fn handle_validation_report_parameterized(world: &World, step: &crate::Step) -> anyhow::Result<bool> {
+fn handle_validation_report_parameterized(
+    world: &World,
+    step: &crate::Step,
+) -> anyhow::Result<bool> {
     if let Some(rule_id) = step
         .text
         .strip_prefix("the validation report contains rule \"")

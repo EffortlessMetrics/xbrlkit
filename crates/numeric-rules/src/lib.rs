@@ -4,7 +4,7 @@
 //! including negative value detection where prohibited by taxonomy
 //! and decimal precision validation per SEC EFM 6.5.37.
 
-use xbrl_report_types::{Fact, ValidationFinding};
+use xbrl_report_types::{Fact, ValidationFinding, sanitize_for_rule_id};
 
 pub mod decimal_precision;
 
@@ -35,16 +35,16 @@ pub fn validate_negative_values(
             && is_negative
             && concept_prohibits_negative(&fact.concept, prohibited_concepts)
         {
-            findings.push(ValidationFinding {
-                rule_id: format!("SEC.NEGATIVE_VALUE.{}", sanitize_for_rule_id(&fact.concept)),
-                severity: "error".to_string(),
-                message: format!(
-                    "Concept '{}' has negative value '{}' but does not allow negative values",
-                    fact.concept, fact.value
-                ),
-                member: Some(fact.member.clone()),
-                subject: Some(fact.concept.clone()),
-            });
+            findings.push(
+                ValidationFinding::error(
+                    format!("SEC.NEGATIVE_VALUE.{}", sanitize_for_rule_id(&fact.concept)),
+                    format!(
+                        "Concept '{}' has negative value '{}' but does not allow negative values",
+                        fact.concept, fact.value
+                    ),
+                )
+                .for_fact(fact),
+            );
         }
     }
 
@@ -108,20 +108,6 @@ fn concept_prohibits_negative(concept: &str, prohibited_concepts: &[String]) -> 
     }
 
     false
-}
-
-/// Sanitizes a concept name for use in a rule ID.
-fn sanitize_for_rule_id(value: &str) -> String {
-    value
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() {
-                ch.to_ascii_uppercase()
-            } else {
-                '_'
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]

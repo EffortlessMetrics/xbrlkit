@@ -14,19 +14,19 @@ pub(crate) fn handle_given(
     if handle_fixture(world, scenario, step)? {
         return Ok(true);
     }
-    if handle_dimension_setup(world, step)? {
+    if handle_dimension_setup(world, step) {
         return Ok(true);
     }
-    if handle_typed_dimension_setup(world, step)? {
+    if handle_typed_dimension_setup(world, step) {
         return Ok(true);
     }
     if handle_bundle_setup(world, step)? {
         return Ok(true);
     }
-    if handle_cockpit_setup(world, step)? {
+    if handle_cockpit_setup(world, step) {
         return Ok(true);
     }
-    if handle_cli_setup(world, step)? {
+    if handle_cli_setup(world, step) {
         return Ok(true);
     }
     if handle_alpha_setup(world, step)? {
@@ -41,7 +41,7 @@ pub(crate) fn handle_given(
     if handle_streaming_setup(world, step)? {
         return Ok(true);
     }
-    if handle_taxonomy_loader_setup(world, step)? {
+    if handle_taxonomy_loader_setup(world, step) {
         return Ok(true);
     }
 
@@ -92,12 +92,12 @@ fn handle_fixture(
     Ok(false)
 }
 
-fn handle_dimension_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
+fn handle_dimension_setup(world: &mut World, step: &Step) -> bool {
     if let Some(dimension) = step.text.strip_prefix("a context with dimension \"") {
         let dim = dimension.trim_end_matches('"').to_string();
         world.dimension_context.dimension = Some(dim.clone());
         world.dimension_context.explicit_dimension = Some(dim);
-        return Ok(true);
+        return true;
     }
 
     if let Some(dimension) = step
@@ -105,7 +105,7 @@ fn handle_dimension_setup(world: &mut World, step: &Step) -> anyhow::Result<bool
         .strip_prefix("a context with unknown dimension \"")
     {
         world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
-        return Ok(true);
+        return true;
     }
 
     if let Some(member) = step.text.strip_prefix("the member \"") {
@@ -114,35 +114,35 @@ fn handle_dimension_setup(world: &mut World, step: &Step) -> anyhow::Result<bool
         if world.dimension_context.explicit_dimension.is_some() {
             world.dimension_context.explicit_member = Some(m);
         }
-        return Ok(true);
+        return true;
     }
 
     if let Some(member) = step.text.strip_prefix("an invalid member \"") {
         world.dimension_context.member = Some(member.trim_end_matches('"').to_string());
-        return Ok(true);
+        return true;
     }
 
     if let Some(concept) = step.text.strip_prefix("a fact for concept \"") {
         world.dimension_context.concept = Some(concept.trim_end_matches('"').to_string());
-        return Ok(true);
+        return true;
     }
 
     if let Some(dimension) = step.text.strip_prefix("the concept requires dimension \"") {
         world.dimension_context.required_dimension =
             Some(dimension.trim_end_matches('"').to_string());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a context without that dimension" {
         world.dimension_context.dimension = None;
         world.dimension_context.explicit_dimension = None;
-        return Ok(true);
+        return true;
     }
 
-    Ok(false)
+    false
 }
 
-fn handle_typed_dimension_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
+fn handle_typed_dimension_setup(world: &mut World, step: &Step) -> bool {
     if let Some(dimension) = step.text.strip_prefix("a context with typed dimension \"") {
         let rest = dimension;
         if let Some((dim_part, after_dim)) = rest.split_once("\" of type \"") {
@@ -150,17 +150,17 @@ fn handle_typed_dimension_setup(world: &mut World, step: &Step) -> anyhow::Resul
             world.dimension_context.dimension = Some(dim_part.to_string());
             world.dimension_context.typed_dimension = Some(dim_part.to_string());
             world.dimension_context.typed_value_type = Some(type_part.to_string());
-            return Ok(true);
+            return true;
         }
         if let Some((dim_part, _)) = rest.split_once("\" in segment") {
             world.dimension_context.segment_dimension = Some(dim_part.to_string());
             world.dimension_context.segment_member = world.dimension_context.member.clone();
-            return Ok(true);
+            return true;
         }
         let dim = rest.trim_end_matches('"').to_string();
         world.dimension_context.dimension = Some(dim.clone());
         world.dimension_context.typed_dimension = Some(dim);
-        return Ok(true);
+        return true;
     }
 
     if let Some(value) = step.text.strip_prefix("the typed member value \"") {
@@ -171,16 +171,16 @@ fn handle_typed_dimension_setup(world: &mut World, step: &Step) -> anyhow::Resul
         {
             world.dimension_context.typed_member = Some(v);
         }
-        return Ok(true);
+        return true;
     }
 
     if let Some(dimension) = step.text.strip_prefix("a typed dimension \"") {
         let dim = dimension.trim_end_matches('"').to_string();
         world.dimension_context.typed_dimension = Some(dim);
-        return Ok(true);
+        return true;
     }
 
-    Ok(false)
+    false
 }
 
 fn handle_bundle_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
@@ -213,24 +213,24 @@ fn handle_bundle_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
     Ok(false)
 }
 
-fn handle_cockpit_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
+fn handle_cockpit_setup(world: &mut World, step: &Step) -> bool {
     if step.text == "a validation report receipt" {
         world.validation_receipt = Some(receipt_types::Receipt::new(
             "validation.report",
             "synthetic-subject",
             receipt_types::RunResult::Success,
         ));
-        return Ok(true);
+        return true;
     }
-    Ok(false)
+    false
 }
 
-fn handle_cli_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
+fn handle_cli_setup(world: &mut World, step: &Step) -> bool {
     if step.text == "a SEC profile is configured" {
         world.profile_id = Some("sec/efm-77/opco".to_string());
-        return Ok(true);
+        return true;
     }
-    Ok(false)
+    false
 }
 
 fn handle_alpha_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
@@ -461,44 +461,44 @@ fn handle_streaming_setup(world: &mut World, step: &Step) -> anyhow::Result<bool
     Ok(false)
 }
 
-fn handle_taxonomy_loader_setup(world: &mut World, step: &Step) -> anyhow::Result<bool> {
+fn handle_taxonomy_loader_setup(world: &mut World, step: &Step) -> bool {
     if step.text == "the taxonomy loader is available" {
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a taxonomy schema with dimension elements" {
         world.taxonomy_loader_context.schema_path =
             Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a taxonomy definition linkbase with domain members" {
         world.taxonomy_loader_context.schema_path =
             Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a taxonomy with typed dimensions" {
         world.taxonomy_loader_context.schema_path =
             Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a taxonomy with hypercube elements" {
         world.taxonomy_loader_context.schema_path =
             Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a taxonomy URL to load" {
         world.taxonomy_loader_context.schema_path =
             Some("fixtures/synthetic/taxonomy/url-test/schema.xsd".to_string());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a cache directory is configured" {
@@ -507,14 +507,14 @@ fn handle_taxonomy_loader_setup(world: &mut World, step: &Step) -> anyhow::Resul
         world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
         world.taxonomy_loader_context.loader =
             Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a taxonomy schema that imports another schema" {
         world.taxonomy_loader_context.schema_path =
             Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
-        return Ok(true);
+        return true;
     }
 
     if step.text == "a loaded taxonomy with dimension definitions" {
@@ -547,8 +547,8 @@ fn handle_taxonomy_loader_setup(world: &mut World, step: &Step) -> anyhow::Resul
 
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
-        return Ok(true);
+        return true;
     }
 
-    Ok(false)
+    false
 }

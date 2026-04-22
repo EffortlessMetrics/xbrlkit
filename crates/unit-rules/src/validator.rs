@@ -72,16 +72,16 @@ impl UnitValidator {
         if valid {
             None
         } else {
-            Some(ValidationFinding {
-                rule_id: "SEC-UNIT-001".to_string(),
-                severity: "error".to_string(),
-                message: format!(
-                    "Unit inconsistency: concept '{}' expects {:?} unit but found '{}'",
-                    fact.concept, expected, unit_measure
-                ),
-                member: Some(fact.member.clone()),
-                subject: Some(fact.concept.clone()),
-            })
+            Some(
+                ValidationFinding::error(
+                    "SEC-UNIT-001",
+                    format!(
+                        "Unit inconsistency: concept '{}' expects {:?} unit but found '{}'",
+                        fact.concept, expected, unit_measure
+                    ),
+                )
+                .for_fact(fact),
+            )
         }
     }
 

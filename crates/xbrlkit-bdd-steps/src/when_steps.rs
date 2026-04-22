@@ -1,6 +1,8 @@
 //! When step handlers for BDD scenario execution.
 
-use crate::{assert_declared_inputs_match, create_synthetic_taxonomy, select_matching_scenarios, World};
+use crate::{
+    World, assert_declared_inputs_match, create_synthetic_taxonomy, select_matching_scenarios,
+};
 use anyhow::Context;
 use scenario_contract::ScenarioRecord;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
@@ -17,7 +19,7 @@ pub(crate) fn handle_when(
     if handle_feature_grid_compile(world, step)? {
         return Ok(true);
     }
-    if handle_dimension_validation(world, step)? {
+    if handle_dimension_validation(world, step) {
         return Ok(true);
     }
     if handle_bundle_when(world, step)? {
@@ -29,13 +31,13 @@ pub(crate) fn handle_when(
     if handle_cli_when(world, step)? {
         return Ok(true);
     }
-    if handle_alpha_when(world, step)? {
+    if handle_alpha_when(world, step) {
         return Ok(true);
     }
-    if handle_context_completeness_when(world, step)? {
+    if handle_context_completeness_when(world, step) {
         return Ok(true);
     }
-    if handle_decimal_precision_when(world, step)? {
+    if handle_decimal_precision_when(world, step) {
         return Ok(true);
     }
     if handle_streaming_when(world, step)? {
@@ -55,9 +57,7 @@ fn handle_scenario_execution(
 ) -> anyhow::Result<bool> {
     if matches!(
         step.text.as_str(),
-        "I validate the filing"
-            | "I validate duplicate facts"
-            | "I resolve the DTS"
+        "I validate the filing" | "I validate duplicate facts" | "I resolve the DTS"
     ) {
         assert_declared_inputs_match(world, scenario)?;
         let execution = scenario_runner::execute_scenario(&world.repo_root, scenario)?;
@@ -85,25 +85,25 @@ fn handle_feature_grid_compile(world: &mut World, step: &crate::Step) -> anyhow:
     Ok(false)
 }
 
-fn handle_dimension_validation(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
-    if handle_dimension_pair_validation(world, step)? {
-        return Ok(true);
+fn handle_dimension_validation(world: &mut World, step: &crate::Step) -> bool {
+    if handle_dimension_pair_validation(world, step) {
+        return true;
     }
-    if handle_fact_dimensions_validation(world, step)? {
-        return Ok(true);
+    if handle_fact_dimensions_validation(world, step) {
+        return true;
     }
-    if handle_typed_dimension_value_validation(world, step)? {
-        return Ok(true);
+    if handle_typed_dimension_value_validation(world, step) {
+        return true;
     }
-    if handle_parse_context_dimensions(world, step)? {
-        return Ok(true);
+    if handle_parse_context_dimensions(world, step) {
+        return true;
     }
-    Ok(false)
+    false
 }
 
-fn handle_dimension_pair_validation(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
+fn handle_dimension_pair_validation(world: &mut World, step: &crate::Step) -> bool {
     if step.text != "I validate the dimension-member pair" {
-        return Ok(false);
+        return false;
     }
     world.dimension_context.validation_findings.clear();
 
@@ -170,12 +170,15 @@ fn handle_dimension_pair_validation(world: &mut World, step: &crate::Step) -> an
             .push(finding.rule_id.clone());
     }
 
-    Ok(true)
+    true
 }
 
-fn handle_fact_dimensions_validation(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
+fn handle_fact_dimensions_validation(
+    world: &mut World,
+    step: &crate::Step,
+) -> bool {
     if step.text != "I validate the fact dimensions" {
-        return Ok(false);
+        return false;
     }
     world.dimension_context.validation_findings.clear();
 
@@ -192,12 +195,15 @@ fn handle_fact_dimensions_validation(world: &mut World, step: &crate::Step) -> a
             .push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
     }
 
-    Ok(true)
+    true
 }
 
-fn handle_typed_dimension_value_validation(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
+fn handle_typed_dimension_value_validation(
+    world: &mut World,
+    step: &crate::Step,
+) -> bool {
     if step.text != "I validate the typed dimension value" {
-        return Ok(false);
+        return false;
     }
     world.dimension_context.validation_findings.clear();
 
@@ -246,12 +252,12 @@ fn handle_typed_dimension_value_validation(world: &mut World, step: &crate::Step
             .push(finding.rule_id.clone());
     }
 
-    Ok(true)
+    true
 }
 
-fn handle_parse_context_dimensions(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
+fn handle_parse_context_dimensions(world: &mut World, step: &crate::Step) -> bool {
     if step.text != "I parse the context dimensions" {
-        return Ok(false);
+        return false;
     }
     world.dimension_context.parsed_dimensions.clear();
 
@@ -324,7 +330,7 @@ fn handle_parse_context_dimensions(world: &mut World, step: &crate::Step) -> any
             });
     }
 
-    Ok(true)
+    true
 }
 
 fn handle_bundle_when(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
@@ -383,19 +389,16 @@ fn handle_cli_when(world: &mut World, step: &crate::Step) -> anyhow::Result<bool
     Ok(false)
 }
 
-fn handle_alpha_when(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
+fn handle_alpha_when(world: &mut World, step: &crate::Step) -> bool {
     if step.text == "I run the alpha readiness gate" {
         world.cli_output = Some("alpha scenarios verified".to_string());
         world.cli_exit_code = Some(0);
-        return Ok(true);
+        return true;
     }
-    Ok(false)
+    false
 }
 
-fn handle_context_completeness_when(
-    world: &mut World,
-    step: &crate::Step,
-) -> anyhow::Result<bool> {
+fn handle_context_completeness_when(world: &mut World, step: &crate::Step) -> bool {
     if step.text == "context completeness validation runs" {
         let mut context_set = xbrl_contexts::ContextSet::new();
         for ctx in &world.context_completeness_context.contexts {
@@ -406,19 +409,19 @@ fn handle_context_completeness_when(
             &context_set,
         );
         world.context_completeness_context.findings = findings;
-        return Ok(true);
+        return true;
     }
-    Ok(false)
+    false
 }
 
-fn handle_decimal_precision_when(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
+fn handle_decimal_precision_when(world: &mut World, step: &crate::Step) -> bool {
     if step.text == "decimal precision validation is performed" {
         let findings =
             numeric_rules::validate_decimal_precision(&world.context_completeness_context.facts);
         world.context_completeness_context.findings = findings;
-        return Ok(true);
+        return true;
     }
-    Ok(false)
+    false
 }
 
 fn handle_streaming_when(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {

@@ -58,16 +58,17 @@ pub fn validate_fact_dimensions(
         let Some(context) = context_set.get(&fact.context_ref) else {
             results.push(DimensionalValidationResult {
                 context_id: fact.context_ref.clone(),
-                findings: vec![ValidationFinding {
-                    rule_id: "XBRL.DIMENSION.MISSING_CONTEXT".to_string(),
-                    severity: "error".to_string(),
-                    message: format!(
-                        "Context {} not found for fact {}",
-                        fact.context_ref, fact.concept
-                    ),
-                    member: Some(fact.concept.clone()),
-                    subject: Some(fact.context_ref.clone()),
-                }],
+                findings: vec![
+                    ValidationFinding::error(
+                        "XBRL.DIMENSION.MISSING_CONTEXT",
+                        format!(
+                            "Context {} not found for fact {}",
+                            fact.context_ref, fact.concept
+                        ),
+                    )
+                    .with_member(&fact.concept)
+                    .with_subject(&fact.context_ref),
+                ],
                 present_dimensions: Vec::new(),
                 missing_dimensions: Vec::new(),
             });
@@ -112,16 +113,17 @@ pub fn validate_context_dimensions(
     for req_dim in &required_dims {
         if !present_dimensions.contains(req_dim) {
             missing_dimensions.push(req_dim.clone());
-            findings.push(ValidationFinding {
-                rule_id: "XBRL.DIMENSION.MISSING_REQUIRED".to_string(),
-                severity: "error".to_string(),
-                message: format!(
-                    "Concept {} requires dimension {} which is missing in context {}",
-                    concept_qname, req_dim, context.id
-                ),
-                member: Some(concept_qname.to_string()),
-                subject: Some(context.id.clone()),
-            });
+            findings.push(
+                ValidationFinding::error(
+                    "XBRL.DIMENSION.MISSING_REQUIRED",
+                    format!(
+                        "Concept {} requires dimension {} which is missing in context {}",
+                        concept_qname, req_dim, context.id
+                    ),
+                )
+                .with_member(concept_qname)
+                .with_subject(&context.id),
+            );
         }
     }
 
@@ -147,13 +149,14 @@ fn validate_dimension_member(
 ) -> Result<(), ValidationFinding> {
     // Check if dimension exists
     if !dim_taxonomy.dimensions.contains_key(&dim_member.dimension) {
-        return Err(ValidationFinding {
-            rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
-            severity: "error".to_string(),
-            message: format!("Unknown dimension: {}", dim_member.dimension),
-            member: Some(dim_member.dimension.clone()),
-            subject: Some(dim_member.member.clone()),
-        });
+        return Err(
+            ValidationFinding::error(
+                "XBRL.DIMENSION.UNKNOWN",
+                format!("Unknown dimension: {}", dim_member.dimension),
+            )
+            .with_member(&dim_member.dimension)
+            .with_subject(&dim_member.member),
+        );
     }
 
     // Get the dimension definition
@@ -171,26 +174,28 @@ fn validate_dimension_member(
         if domain.contains(&dim_member.member) {
             return Ok(());
         }
-        return Err(ValidationFinding {
-            rule_id: "XBRL.DIMENSION.INVALID_MEMBER".to_string(),
-            severity: "error".to_string(),
-            message: format!(
-                "Member {} is not valid for dimension {} in domain {}",
-                dim_member.member, dim_member.dimension, domain_qname
-            ),
-            member: Some(dim_member.member.clone()),
-            subject: Some(dim_member.dimension.clone()),
-        });
+        return Err(
+            ValidationFinding::error(
+                "XBRL.DIMENSION.INVALID_MEMBER",
+                format!(
+                    "Member {} is not valid for dimension {} in domain {}",
+                    dim_member.member, dim_member.dimension, domain_qname
+                ),
+            )
+            .with_member(&dim_member.member)
+            .with_subject(&dim_member.dimension),
+        );
     }
 
     // No domain defined for this dimension
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.NO_DOMAIN".to_string(),
-        severity: "error".to_string(),
-        message: format!("Dimension {} has no domain defined", dim_member.dimension),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(dim_member.member.clone()),
-    })
+    Err(
+        ValidationFinding::error(
+            "XBRL.DIMENSION.NO_DOMAIN",
+            format!("Dimension {} has no domain defined", dim_member.dimension),
+        )
+        .with_member(&dim_member.dimension)
+        .with_subject(&dim_member.member),
+    )
 }
 
 /// Validate a typed dimension value against its declared `value_type`.
@@ -211,13 +216,14 @@ fn validate_typed_dimension_value(
 
     // Check for empty value
     if value.trim().is_empty() {
-        return Err(ValidationFinding {
-            rule_id: "XBRL.DIMENSION.EMPTY_TYPED_VALUE".to_string(),
-            severity: "error".to_string(),
-            message: format!("Typed dimension {} has empty value", dim_member.dimension),
-            member: Some(dim_member.dimension.clone()),
-            subject: Some(value.to_string()),
-        });
+        return Err(
+            ValidationFinding::error(
+                "XBRL.DIMENSION.EMPTY_TYPED_VALUE",
+                format!("Typed dimension {} has empty value", dim_member.dimension),
+            )
+            .with_member(&dim_member.dimension)
+            .with_subject(value),
+        );
     }
 
     // Validate based on value_type
@@ -258,16 +264,17 @@ fn validate_decimal(value: &str, dim_member: &DimensionMember) -> Result<(), Val
         }
     }
 
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
-        severity: "error".to_string(),
-        message: format!(
-            "Value '{}' is not a valid decimal for dimension {}",
-            value, dim_member.dimension
-        ),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(value.to_string()),
-    })
+    Err(
+        ValidationFinding::error(
+            "XBRL.DIMENSION.INVALID_TYPED_VALUE",
+            format!(
+                "Value '{}' is not a valid decimal for dimension {}",
+                value, dim_member.dimension
+            ),
+        )
+        .with_member(&dim_member.dimension)
+        .with_subject(value),
+    )
 }
 
 /// Validate integer format.
@@ -285,16 +292,17 @@ fn validate_integer(value: &str, dim_member: &DimensionMember) -> Result<(), Val
         return Ok(());
     }
 
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
-        severity: "error".to_string(),
-        message: format!(
-            "Value '{}' is not a valid integer for dimension {}",
-            value, dim_member.dimension
-        ),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(value.to_string()),
-    })
+    Err(
+        ValidationFinding::error(
+            "XBRL.DIMENSION.INVALID_TYPED_VALUE",
+            format!(
+                "Value '{}' is not a valid integer for dimension {}",
+                value, dim_member.dimension
+            ),
+        )
+        .with_member(&dim_member.dimension)
+        .with_subject(value),
+    )
 }
 
 /// Validate date format (ISO 8601: YYYY-MM-DD).
@@ -328,16 +336,17 @@ fn validate_date(value: &str, dim_member: &DimensionMember) -> Result<(), Valida
         }
     }
 
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
-        severity: "error".to_string(),
-        message: format!(
-            "Value '{}' is not a valid date (expected YYYY-MM-DD) for dimension {}",
-            value, dim_member.dimension
-        ),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(value.to_string()),
-    })
+    Err(
+        ValidationFinding::error(
+            "XBRL.DIMENSION.INVALID_TYPED_VALUE",
+            format!(
+                "Value '{}' is not a valid date (expected YYYY-MM-DD) for dimension {}",
+                value, dim_member.dimension
+            ),
+        )
+        .with_member(&dim_member.dimension)
+        .with_subject(value),
+    )
 }
 
 /// Validate datetime format (ISO 8601).
@@ -360,16 +369,17 @@ fn validate_datetime(value: &str, dim_member: &DimensionMember) -> Result<(), Va
         }
     }
 
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
-        severity: "error".to_string(),
-        message: format!(
-            "Value '{}' is not a valid dateTime for dimension {}",
-            value, dim_member.dimension
-        ),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(value.to_string()),
-    })
+    Err(
+        ValidationFinding::error(
+            "XBRL.DIMENSION.INVALID_TYPED_VALUE",
+            format!(
+                "Value '{}' is not a valid dateTime for dimension {}",
+                value, dim_member.dimension
+            ),
+        )
+        .with_member(&dim_member.dimension)
+        .with_subject(value),
+    )
 }
 
 /// Validate boolean format.
@@ -380,16 +390,17 @@ fn validate_boolean(value: &str, dim_member: &DimensionMember) -> Result<(), Val
         return Ok(());
     }
 
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
-        severity: "error".to_string(),
-        message: format!(
-            "Value '{}' is not a valid boolean (expected true/false/1/0) for dimension {}",
-            value, dim_member.dimension
-        ),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(value.to_string()),
-    })
+    Err(
+        ValidationFinding::error(
+            "XBRL.DIMENSION.INVALID_TYPED_VALUE",
+            format!(
+                "Value '{}' is not a valid boolean (expected true/false/1/0) for dimension {}",
+                value, dim_member.dimension
+            ),
+        )
+        .with_member(&dim_member.dimension)
+        .with_subject(value),
+    )
 }
 
 /// Validate URI format.
@@ -402,16 +413,17 @@ fn validate_uri(value: &str, dim_member: &DimensionMember) -> Result<(), Validat
         return Ok(());
     }
 
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.INVALID_TYPED_VALUE".to_string(),
-        severity: "error".to_string(),
-        message: format!(
-            "Value '{}' is not a valid URI for dimension {}",
-            value, dim_member.dimension
-        ),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(value.to_string()),
-    })
+    Err(
+        ValidationFinding::error(
+            "XBRL.DIMENSION.INVALID_TYPED_VALUE",
+            format!(
+                "Value '{}' is not a valid URI for dimension {}",
+                value, dim_member.dimension
+            ),
+        )
+        .with_member(&dim_member.dimension)
+        .with_subject(value),
+    )
 }
 
 /// Check if a member is a descendant of another member in a domain.
@@ -607,13 +619,7 @@ mod tests {
         let results = vec![
             DimensionalValidationResult {
                 context_id: "ctx-1".to_string(),
-                findings: vec![ValidationFinding {
-                    rule_id: "TEST".to_string(),
-                    severity: "error".to_string(),
-                    message: "Test error".to_string(),
-                    member: None,
-                    subject: None,
-                }],
+                findings: vec![ValidationFinding::error("TEST", "Test error")],
                 present_dimensions: vec![],
                 missing_dimensions: vec!["dim1".to_string()],
             },

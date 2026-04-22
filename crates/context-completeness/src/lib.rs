@@ -29,13 +29,13 @@ pub fn validate_context_completeness(
 
         // Check if context exists (case-insensitive lookup)
         if contexts.get(context_ref).is_none() {
-            findings.push(ValidationFinding {
-                rule_id: "SEC-CONTEXT-001".to_string(),
-                severity: "error".to_string(),
-                message: format!("Fact references undefined context: '{}'", context_ref),
-                member: Some(fact.member.clone()),
-                subject: Some(fact.concept.clone()),
-            });
+            findings.push(
+                ValidationFinding::error(
+                    "SEC-CONTEXT-001",
+                    format!("Fact references undefined context: '{}'", context_ref),
+                )
+                .for_fact(fact),
+            );
         }
     }
 
