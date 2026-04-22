@@ -1,3 +1,4 @@
+@REQ-XK-EXPORT
 @layer.workflow
 @suite.synthetic
 Feature: OIM JSON export

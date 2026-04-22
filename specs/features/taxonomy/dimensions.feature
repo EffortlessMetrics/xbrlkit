@@ -1,3 +1,4 @@
+@REQ-XK-DIMENSIONS
 Feature: XBRL Dimensional Validation
   As an XBRL processor
   I want to validate dimensional aspects of facts
