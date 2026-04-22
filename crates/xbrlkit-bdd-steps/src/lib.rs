@@ -153,6 +153,14 @@ fn execution(world: &World) -> anyhow::Result<&ScenarioExecution> {
         .context("scenario step requires a prior execution")
 }
 
+fn extract_all_quoted(step: &str) -> Vec<String> {
+    step.split('"')
+        .enumerate()
+        .filter(|(i, _)| i % 2 == 1)
+        .map(|(_, s)| s.to_string())
+        .collect()
+}
+
 fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> anyhow::Result<()> {
     if let Some(profile_id) = &world.profile_id
         && scenario.profile_pack.as_deref() != Some(profile_id.as_str())
@@ -368,13 +376,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     if step.text.starts_with("an XBRL report with context ") {
         // Parse contexts from the step text
         // Format: "an XBRL report with context \"ctx-1\"" or "an XBRL report with contexts \"ctx-1\" and \"ctx-2\""
-        let text = &step.text;
-        let contexts: Vec<String> = text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let contexts = extract_all_quoted(&step.text);
 
         for ctx_id in contexts {
             let context = xbrl_contexts::Context {
@@ -468,13 +470,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world.context_completeness_context.findings.clear();
 
         // Parse: "a numeric fact with value "1234.56" and decimals "INF""
-        let quoted: Vec<String> = step
-            .text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let quoted = extract_all_quoted(&step.text);
 
         if quoted.len() >= 2 {
             let value = &quoted[0];
@@ -1622,4 +1618,44 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_all_quoted_empty() {
+        assert!(extract_all_quoted("").is_empty());
+    }
+
+    #[test]
+    fn test_extract_all_quoted_single() {
+        assert_eq!(
+            extract_all_quoted("hello \"world\""),
+            vec!["world".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_extract_all_quoted_multiple() {
+        assert_eq!(
+            extract_all_quoted("contexts \"ctx-1\" and \"ctx-2\""),
+            vec!["ctx-1".to_string(), "ctx-2".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_extract_all_quoted_no_quotes() {
+        assert!(extract_all_quoted("no quotes here").is_empty());
+    }
+
+    #[test]
+    fn test_extract_all_quoted_unbalanced() {
+        // Odd number of quotes: last segment is outside quotes
+        assert_eq!(
+            extract_all_quoted("start \"middle\" end"),
+            vec!["middle".to_string()]
+        );
+    }
 }
