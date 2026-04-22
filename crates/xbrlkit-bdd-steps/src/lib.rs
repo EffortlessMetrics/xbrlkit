@@ -409,12 +409,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         // Parse contexts from the step text
         // Format: "an XBRL report with context \"ctx-1\"" or "an XBRL report with contexts \"ctx-1\" and \"ctx-2\""
         let text = &step.text;
-        let contexts: Vec<String> = text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let contexts = parse_quoted_strings(text);
 
         for ctx_id in contexts {
             let context = xbrl_contexts::Context {
@@ -467,13 +462,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         // Parse: "facts referencing concepts \"us-gaap:Revenue\" and \"us-gaap:Assets\" with contexts \"ctx-1\" and \"ctx-2\""
         // For simplicity, we'll create facts for each concept-context pair
         // Parse all quoted strings
-        let quoted: Vec<String> = step
-            .text
-            .split('\"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let quoted = parse_quoted_strings(&step.text);
 
         if quoted.len() >= 2 {
             // First half are concepts, second half are contexts
@@ -508,13 +497,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world.context_completeness_context.findings.clear();
 
         // Parse: "a numeric fact with value "1234.56" and decimals "INF""
-        let quoted: Vec<String> = step
-            .text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let quoted = parse_quoted_strings(&step.text);
 
         if quoted.len() >= 2 {
             let value = &quoted[0];
@@ -1936,6 +1919,15 @@ fn create_synthetic_taxonomy() -> DimensionTaxonomy {
     taxonomy.add_hypercube(hypercube);
 
     taxonomy
+}
+
+/// Extract all quoted strings from text (content inside double quotes).
+fn parse_quoted_strings(text: &str) -> Vec<String> {
+    text.split('"')
+        .enumerate()
+        .filter(|(i, _)| i % 2 == 1)
+        .map(|(_, s)| s.to_string())
+        .collect()
 }
 
 fn parse_count_suffix(step: &str, prefix: &str, noun_stem: &str) -> Option<usize> {
