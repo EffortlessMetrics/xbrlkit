@@ -892,12 +892,15 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 .explicit_member
                 .clone()
                 .unwrap_or_default();
-            world.dimension_context.parsed_dimensions.push(ParsedDimension {
-                dimension: dim.clone(),
-                member,
-                is_typed: false,
-                container: DimensionContainer::Scenario,
-            });
+            world
+                .dimension_context
+                .parsed_dimensions
+                .push(ParsedDimension {
+                    dimension: dim.clone(),
+                    member,
+                    is_typed: false,
+                    container: DimensionContainer::Scenario,
+                });
         }
 
         // Parse typed dimension if set
@@ -908,12 +911,15 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 .clone()
                 .or_else(|| world.dimension_context.member.clone())
                 .unwrap_or_default();
-            world.dimension_context.parsed_dimensions.push(ParsedDimension {
-                dimension: dim.clone(),
-                member,
-                is_typed: true,
-                container: DimensionContainer::Scenario,
-            });
+            world
+                .dimension_context
+                .parsed_dimensions
+                .push(ParsedDimension {
+                    dimension: dim.clone(),
+                    member,
+                    is_typed: true,
+                    container: DimensionContainer::Scenario,
+                });
         }
 
         // Fallback: if only dimension is set (and neither explicit nor typed explicitly set)
@@ -922,12 +928,15 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         {
             let member = world.dimension_context.member.clone().unwrap_or_default();
             let is_typed = world.dimension_context.typed_value_type.is_some();
-            world.dimension_context.parsed_dimensions.push(ParsedDimension {
-                dimension: dim.clone(),
-                member,
-                is_typed,
-                container: DimensionContainer::Scenario,
-            });
+            world
+                .dimension_context
+                .parsed_dimensions
+                .push(ParsedDimension {
+                    dimension: dim.clone(),
+                    member,
+                    is_typed,
+                    container: DimensionContainer::Scenario,
+                });
         }
 
         // Parse segment dimension if set
@@ -938,12 +947,15 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 .clone()
                 .or_else(|| world.dimension_context.member.clone())
                 .unwrap_or_default();
-            world.dimension_context.parsed_dimensions.push(ParsedDimension {
-                dimension: dim.clone(),
-                member,
-                is_typed: true,
-                container: DimensionContainer::Segment,
-            });
+            world
+                .dimension_context
+                .parsed_dimensions
+                .push(ParsedDimension {
+                    dimension: dim.clone(),
+                    member,
+                    is_typed: true,
+                    container: DimensionContainer::Segment,
+                });
         }
 
         return Ok(true);
@@ -1604,9 +1616,10 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .taxonomy
             .as_ref()
             .context("taxonomy not loaded")?;
-        let has_parent_child = taxonomy.domains.values().any(|domain| {
-            domain.members.values().any(|m| m.parent.is_some())
-        });
+        let has_parent_child = taxonomy
+            .domains
+            .values()
+            .any(|domain| domain.members.values().any(|m| m.parent.is_some()));
         if !has_parent_child {
             anyhow::bail!("no members have parent-child relationships defined");
         }
@@ -1635,7 +1648,13 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .taxonomy
             .as_ref()
             .context("taxonomy not loaded")?;
-        let valid_xsd = ["xs:string", "xs:decimal", "xs:date", "xs:boolean", "xs:integer"];
+        let valid_xsd = [
+            "xs:string",
+            "xs:decimal",
+            "xs:date",
+            "xs:boolean",
+            "xs:integer",
+        ];
         let all_valid = taxonomy.dimensions.values().all(|d| match d {
             Dimension::Typed { value_type, .. } => valid_xsd.contains(&value_type.as_str()),
             Dimension::Explicit { .. } => true,
@@ -1725,7 +1744,11 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
 
     // Dimension parsing Then steps (SCN-XK-DIM-005 through 008)
     if step.text == "the dimension should be marked as typed" {
-        let has_typed = world.dimension_context.parsed_dimensions.iter().any(|d| d.is_typed);
+        let has_typed = world
+            .dimension_context
+            .parsed_dimensions
+            .iter()
+            .any(|d| d.is_typed);
         if !has_typed {
             anyhow::bail!(
                 "expected at least one typed dimension but none found in parsed dimensions: {:?}",
@@ -1737,20 +1760,24 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
 
     if let Some(expected) = step.text.strip_prefix("the typed value should be \"") {
         let expected = expected.trim_end_matches('"');
-        let typed = world.dimension_context.parsed_dimensions.iter().find(|d| d.is_typed);
+        let typed = world
+            .dimension_context
+            .parsed_dimensions
+            .iter()
+            .find(|d| d.is_typed);
         match typed {
             Some(d) if d.member == expected => return Ok(()),
-            Some(d) => anyhow::bail!(
-                "expected typed value '{}' but got '{}'",
-                expected,
-                d.member
-            ),
+            Some(d) => anyhow::bail!("expected typed value '{}' but got '{}'", expected, d.member),
             None => anyhow::bail!("no typed dimension found in parsed dimensions"),
         }
     }
 
     if step.text == "the typed value should be empty" {
-        let typed = world.dimension_context.parsed_dimensions.iter().find(|d| d.is_typed);
+        let typed = world
+            .dimension_context
+            .parsed_dimensions
+            .iter()
+            .find(|d| d.is_typed);
         match typed {
             Some(d) if d.member.is_empty() => return Ok(()),
             Some(d) => anyhow::bail!("expected empty typed value but got '{}'", d.member),
@@ -1763,18 +1790,21 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         let dim = world.dimension_context.parsed_dimensions.first();
         match dim {
             Some(d) if d.member == expected => return Ok(()),
-            Some(d) => anyhow::bail!(
-                "expected member '{}' but got '{}'",
-                expected,
-                d.member
-            ),
+            Some(d) => anyhow::bail!("expected member '{}' but got '{}'", expected, d.member),
             None => anyhow::bail!("no dimensions parsed"),
         }
     }
 
-    if let Some(expected) = step.text.strip_prefix("the explicit dimension should have member \"") {
+    if let Some(expected) = step
+        .text
+        .strip_prefix("the explicit dimension should have member \"")
+    {
         let expected = expected.trim_end_matches('"');
-        let explicit = world.dimension_context.parsed_dimensions.iter().find(|d| !d.is_typed);
+        let explicit = world
+            .dimension_context
+            .parsed_dimensions
+            .iter()
+            .find(|d| !d.is_typed);
         match explicit {
             Some(d) if d.member == expected => return Ok(()),
             Some(d) => anyhow::bail!(
@@ -1786,16 +1816,19 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         }
     }
 
-    if let Some(expected) = step.text.strip_prefix("the typed dimension should have value \"") {
+    if let Some(expected) = step
+        .text
+        .strip_prefix("the typed dimension should have value \"")
+    {
         let expected = expected.trim_end_matches('"');
-        let typed = world.dimension_context.parsed_dimensions.iter().find(|d| d.is_typed);
+        let typed = world
+            .dimension_context
+            .parsed_dimensions
+            .iter()
+            .find(|d| d.is_typed);
         match typed {
             Some(d) if d.member == expected => return Ok(()),
-            Some(d) => anyhow::bail!(
-                "expected typed value '{}' but got '{}'",
-                expected,
-                d.member
-            ),
+            Some(d) => anyhow::bail!("expected typed value '{}' but got '{}'", expected, d.member),
             None => anyhow::bail!("no typed dimension found in parsed dimensions"),
         }
     }
