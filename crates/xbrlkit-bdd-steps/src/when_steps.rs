@@ -173,10 +173,7 @@ fn handle_dimension_pair_validation(world: &mut World, step: &crate::Step) -> bo
     true
 }
 
-fn handle_fact_dimensions_validation(
-    world: &mut World,
-    step: &crate::Step,
-) -> bool {
+fn handle_fact_dimensions_validation(world: &mut World, step: &crate::Step) -> bool {
     if step.text != "I validate the fact dimensions" {
         return false;
     }
@@ -198,10 +195,7 @@ fn handle_fact_dimensions_validation(
     true
 }
 
-fn handle_typed_dimension_value_validation(
-    world: &mut World,
-    step: &crate::Step,
-) -> bool {
+fn handle_typed_dimension_value_validation(world: &mut World, step: &crate::Step) -> bool {
     if step.text != "I validate the typed dimension value" {
         return false;
     }

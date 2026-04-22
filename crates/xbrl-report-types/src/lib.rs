@@ -87,27 +87,27 @@ impl ValidationFinding {
 
 /// Sanitize a concept/identifier for use in a rule ID.
 ///
-    /// Non-alphanumeric characters are replaced with `_`, and alphabetic
-    /// characters are uppercased.
-    ///
-    /// # Example
-    /// ```
-    /// use xbrl_report_types::sanitize_for_rule_id;
-    ///
-    /// assert_eq!(sanitize_for_rule_id("us-gaap:Revenue"), "US_GAAP_REVENUE");
-    /// ```
-    pub fn sanitize_for_rule_id(value: &str) -> String {
-        value
-            .chars()
-            .map(|ch| {
-                if ch.is_ascii_alphanumeric() {
-                    ch.to_ascii_uppercase()
-                } else {
-                    '_'
-                }
-            })
-            .collect()
-    }
+/// Non-alphanumeric characters are replaced with `_`, and alphabetic
+/// characters are uppercased.
+///
+/// # Example
+/// ```
+/// use xbrl_report_types::sanitize_for_rule_id;
+///
+/// assert_eq!(sanitize_for_rule_id("us-gaap:Revenue"), "US_GAAP_REVENUE");
+/// ```
+pub fn sanitize_for_rule_id(value: &str) -> String {
+    value
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() {
+                ch.to_ascii_uppercase()
+            } else {
+                '_'
+            }
+        })
+        .collect()
+}
 
 #[cfg(test)]
 mod tests {

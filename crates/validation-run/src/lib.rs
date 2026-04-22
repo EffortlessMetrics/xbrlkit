@@ -110,14 +110,16 @@ fn apply_duplicate_fact_findings(report: &mut CanonicalReport) {
     match classify(report) {
         DuplicateDisposition::None => {}
         DuplicateDisposition::Consistent => {
-            report.findings.push(
-                ValidationFinding::info("XBRL.DUPLICATE_FACT.CONSISTENT", "Consistent duplicate facts detected"),
-            );
+            report.findings.push(ValidationFinding::info(
+                "XBRL.DUPLICATE_FACT.CONSISTENT",
+                "Consistent duplicate facts detected",
+            ));
         }
         DuplicateDisposition::Inconsistent => {
-            report.findings.push(
-                ValidationFinding::error("XBRL.DUPLICATE_FACT.INCONSISTENT", "Inconsistent duplicate facts detected"),
-            );
+            report.findings.push(ValidationFinding::error(
+                "XBRL.DUPLICATE_FACT.INCONSISTENT",
+                "Inconsistent duplicate facts detected",
+            ));
         }
     }
 }
