@@ -153,8 +153,10 @@ fn execution(world: &World) -> anyhow::Result<&ScenarioExecution> {
         .context("scenario step requires a prior execution")
 }
 
-fn extract_all_quoted(step: &str) -> Vec<String> {
-    step.split('"')
+/// Extract quoted substrings from step text.
+/// Splits on `"` and takes odd-indexed segments (the content inside quotes).
+pub(crate) fn parse_quoted_strings(text: &str) -> Vec<String> {
+    text.split('"')
         .enumerate()
         .filter(|(i, _)| i % 2 == 1)
         .map(|(_, s)| s.to_string())
@@ -376,7 +378,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     if step.text.starts_with("an XBRL report with context ") {
         // Parse contexts from the step text
         // Format: "an XBRL report with context \"ctx-1\"" or "an XBRL report with contexts \"ctx-1\" and \"ctx-2\""
-        let contexts = extract_all_quoted(&step.text);
+        let contexts = parse_quoted_strings(&step.text);
 
         for ctx_id in contexts {
             let context = xbrl_contexts::Context {
@@ -396,31 +398,18 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text.starts_with("a fact referencing concept ") {
         // Parse: "a fact referencing concept \"us-gaap:Revenue\" with context \"ctx-1\""
-        let text = &step.text;
-        if let Some(concept_start) = text.find('\"') {
-            let concept_end = text[concept_start + 1..]
-                .find('\"')
-                .map(|i| concept_start + 1 + i);
-            if let Some(concept_end) = concept_end {
-                let concept = &text[concept_start + 1..concept_end];
-                if let Some(ctx_start) = text[concept_end + 1..].find('\"') {
-                    let ctx_start = concept_end + 1 + ctx_start;
-                    let ctx_end = text[ctx_start + 1..].find('\"').map(|i| ctx_start + 1 + i);
-                    if let Some(ctx_end) = ctx_end {
-                        let context_ref = &text[ctx_start + 1..ctx_end];
-                        let fact = xbrl_report_types::Fact {
-                            concept: concept.to_string(),
-                            context_ref: context_ref.to_string(),
-                            unit_ref: None,
-                            decimals: None,
-                            value: "1000".to_string(),
-                            member: String::new(),
-                        };
-                        world.context_completeness_context.facts.push(fact);
-                        return Ok(true);
-                    }
-                }
-            }
+        let quoted = parse_quoted_strings(&step.text);
+        if quoted.len() >= 2 {
+            let fact = xbrl_report_types::Fact {
+                concept: quoted[0].clone(),
+                context_ref: quoted[1].clone(),
+                unit_ref: None,
+                decimals: None,
+                value: "1000".to_string(),
+                member: String::new(),
+            };
+            world.context_completeness_context.facts.push(fact);
+            return Ok(true);
         }
         anyhow::bail!("invalid fact specification: {}", step.text);
     }
@@ -428,14 +417,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     if step.text.starts_with("facts referencing concepts ") {
         // Parse: "facts referencing concepts \"us-gaap:Revenue\" and \"us-gaap:Assets\" with contexts \"ctx-1\" and \"ctx-2\""
         // For simplicity, we'll create facts for each concept-context pair
-        // Parse all quoted strings
-        let quoted: Vec<String> = step
-            .text
-            .split('\"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let quoted = parse_quoted_strings(&step.text);
 
         if quoted.len() >= 2 {
             // First half are concepts, second half are contexts
@@ -470,7 +452,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world.context_completeness_context.findings.clear();
 
         // Parse: "a numeric fact with value "1234.56" and decimals "INF""
-        let quoted = extract_all_quoted(&step.text);
+        let quoted = parse_quoted_strings(&step.text);
 
         if quoted.len() >= 2 {
             let value = &quoted[0];
@@ -1625,36 +1607,36 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_extract_all_quoted_empty() {
-        assert!(extract_all_quoted("").is_empty());
+    fn test_parse_quoted_strings_empty() {
+        assert!(parse_quoted_strings("").is_empty());
     }
 
     #[test]
-    fn test_extract_all_quoted_single() {
+    fn test_parse_quoted_strings_single() {
         assert_eq!(
-            extract_all_quoted("hello \"world\""),
+            parse_quoted_strings("hello \"world\""),
             vec!["world".to_string()]
         );
     }
 
     #[test]
-    fn test_extract_all_quoted_multiple() {
+    fn test_parse_quoted_strings_multiple() {
         assert_eq!(
-            extract_all_quoted("contexts \"ctx-1\" and \"ctx-2\""),
+            parse_quoted_strings("contexts \"ctx-1\" and \"ctx-2\""),
             vec!["ctx-1".to_string(), "ctx-2".to_string()]
         );
     }
 
     #[test]
-    fn test_extract_all_quoted_no_quotes() {
-        assert!(extract_all_quoted("no quotes here").is_empty());
+    fn test_parse_quoted_strings_no_quotes() {
+        assert!(parse_quoted_strings("no quotes here").is_empty());
     }
 
     #[test]
-    fn test_extract_all_quoted_unbalanced() {
+    fn test_parse_quoted_strings_unbalanced() {
         // Odd number of quotes: last segment is outside quotes
         assert_eq!(
-            extract_all_quoted("start \"middle\" end"),
+            parse_quoted_strings("start \"middle\" end"),
             vec!["middle".to_string()]
         );
     }
