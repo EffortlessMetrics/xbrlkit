@@ -4,11 +4,6 @@ Feature: XBRL Dimensional Validation
   I want to validate dimensional aspects of facts
   So that I can ensure dimension-member pairs are valid according to taxonomy
 
-  Background:
-    Given the taxonomy has dimension definitions
-    And the taxonomy has domain hierarchies
-    And the taxonomy has hypercube definitions
-
   @alpha-active @SCN-XK-DIM-001 @AC-XK-DIM-001
   Scenario: Valid dimension-member pair passes validation
     Given a context with dimension "us-gaap:StatementScenarioAxis"
