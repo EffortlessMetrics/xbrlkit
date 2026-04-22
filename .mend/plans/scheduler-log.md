@@ -1,25 +1,45 @@
-:
-# Planning Scheduler Log
+# xbrlkit Planning Scheduler Run — 2026-04-23 07:04 CST
 
-## Run: 2026-03-30T02:40:00+08:00
+## Summary
 
-### Concurrency Check
-- Planning-in-progress issues: None ✅
+Cleaned up 6 stale `planning-in-progress` labels and spawned 11 agents across the planning pipeline.
 
-### Backoff Check
-- Service backoff: None ✅
+## Actions Taken
 
-### Issues Scanned
-| Issue | Labels | Action |
-|-------|--------|--------|
-| #100 | ready-for-review, building | In PR review phase — skipped |
-| #98 | autonomous, repo-aligned, building | **Builder spawned** |
+### Label Cleanup
+- Removed stale `planning-in-progress` from: #246, #244, #242, #241, #240, #239
+- These labels were stale (no active subagents found)
 
-### Agent Spawned
-- **Issue**: #98 (Set up autonomous workflow labels)
-- **Agent**: builder-implement
-- **Session**: agent:main:subagent:86ae2e6d-a625-45e4-a8fd-7a992a113250
-- **Run ID**: 6a2dde09-2613-4c36-9642-58a2cb4e8e9f
+### Agents Spawned (11 total, max 5 concurrent)
 
-### Next Run
-Scheduled: Next cron cycle
+**Completed (6):**
+1. ✅ reviewer-plan #242 — plan reviewed, labeled `plan-reviewed`
+2. ✅ reviewer-plan #244 — plan reviewed, labeled `plan-reviewed`
+3. ✅ reviewer-plan #246 — plan reviewed, labeled `plan-reviewed`
+4. ✅ reviewer-deep-plan #248 — deep review complete, labeled `deep-plan-reviewed`
+5. ✅ reviewer-deep-plan #249 — deep review complete, labeled `deep-plan-reviewed`
+6. ✅ reviewer-repo-alignment #252 — repo alignment complete, labeled `repo-aligned`
+
+**Running (5) — will complete in background:**
+7. 🔄 reviewer-repo-alignment #251
+8. 🔄 planner-initial #250 (replan after plan-needs-work)
+9. 🔄 planner-initial #241
+10. 🔄 planner-initial #240
+11. 🔄 planner-initial #239
+
+## Pipeline Status
+
+| Stage | Issues |
+|-------|--------|
+| needs-plan | 19 issues remaining (#235→#217) |
+| plan-draft | 5 issues in review (#250, #246, #244, #242 + new from planners) |
+| plan-reviewed | 2 issues ready for deep review (#249, #248) |
+| deep-plan-reviewed | 1 issue ready for repo alignment (#252 done, #251 pending) |
+| repo-aligned | 1 issue ready for implementation (#252) |
+
+## Deferred to Next Cycle
+- 19 issues with `needs-plan` label (#235 through #217)
+
+## Scheduler State
+- Concurrency limit: 5 active subagents max
+- Next cycle will pick up remaining `needs-plan` issues
