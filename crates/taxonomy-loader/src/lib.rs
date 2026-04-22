@@ -43,6 +43,8 @@ pub fn load_taxonomy(entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoad
 pub struct TaxonomyLoader {
     cache_dir: Option<std::path::PathBuf>,
     visited: std::cell::RefCell<HashSet<String>>,
+    pub cache_hits: std::cell::RefCell<HashSet<String>>,
+    pub loaded_schemas: std::cell::RefCell<Vec<String>>,
     http_client: Option<reqwest::blocking::Client>,
 }
 
@@ -59,6 +61,8 @@ impl TaxonomyLoader {
         Self {
             cache_dir: None,
             visited: std::cell::RefCell::new(HashSet::new()),
+            cache_hits: std::cell::RefCell::new(HashSet::new()),
+            loaded_schemas: std::cell::RefCell::new(Vec::new()),
             http_client: None,
         }
     }
@@ -71,6 +75,8 @@ impl TaxonomyLoader {
         Self {
             cache_dir,
             visited: std::cell::RefCell::new(HashSet::new()),
+            cache_hits: std::cell::RefCell::new(HashSet::new()),
+            loaded_schemas: std::cell::RefCell::new(Vec::new()),
             http_client,
         }
     }
@@ -82,6 +88,12 @@ impl TaxonomyLoader {
             .user_agent(concat!("xbrlkit/", env!("CARGO_PKG_VERSION")))
             .build()
             .ok()
+    }
+
+    /// Returns whether a cache directory is configured.
+    #[must_use]
+    pub fn has_cache(&self) -> bool {
+        self.cache_dir.is_some()
     }
 
     /// Loads a dimension taxonomy from an entrypoint.
@@ -127,6 +139,8 @@ impl TaxonomyLoader {
             self.load_schema_recursive(&import_ref, taxonomy)?;
         }
 
+        self.loaded_schemas.borrow_mut().push(path.to_string());
+
         Ok(())
     }
 
@@ -162,6 +176,7 @@ impl TaxonomyLoader {
         if let Some(ref cache_dir) = self.cache_dir {
             let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
             if cache_path.exists() {
+                self.cache_hits.borrow_mut().insert(url.to_string());
                 return std::fs::read_to_string(&cache_path).map_err(|e| {
                     TaxonomyLoaderError::Io(cache_path.to_string_lossy().to_string(), e)
                 });
@@ -267,5 +282,28 @@ mod tests {
             result.unwrap_err(),
             TaxonomyLoaderError::UnsupportedUrl(_)
         ));
+    }
+
+    #[test]
+    fn test_cache_hit_tracking() {
+        let loader = TaxonomyLoader::with_cache_dir("/tmp/test-cache");
+        loader
+            .cache_hits
+            .borrow_mut()
+            .insert("http://example.com/schema.xsd".to_string());
+        assert!(loader
+            .cache_hits
+            .borrow()
+            .contains("http://example.com/schema.xsd"));
+    }
+
+    #[test]
+    fn test_loaded_schema_tracking() {
+        let loader = TaxonomyLoader::new();
+        loader
+            .loaded_schemas
+            .borrow_mut()
+            .push("schema.xsd".to_string());
+        assert_eq!(loader.loaded_schemas.borrow().len(), 1);
     }
 }
