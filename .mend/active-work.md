@@ -15,16 +15,10 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 ### In Planning (Scheduler Active)
 | Issue | Description | Label | Next Agent |
 |-------|-------------|-------|------------|
-| #100 | Taxonomy Loader BDD | **needs-plan** | planner-initial |
-| #101 | Legacy PR Cleanup | **needs-plan** | planner-initial |
-| #102 | ADR: HTTP client architecture | **needs-plan** | planner-initial |
+| #248 | Friction: Complete TODO(#233) — cache hit and schema import tracking | **repo-aligned** | builder-implement |
 
 ### In Review (Code Phase)
-| PR | CI | Q | T | A | I | Ag | D | M | Status |
-|----|----|---|---|---|---|----|---|---|--------|
-| #97 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
-| #99 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
-| #103 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
+*No PRs currently in review. All tracked PRs have been merged.*
 
 **Legend:** Q=Quality, T=Tests, A=Arch, I=Integ, Ag=Agentic, D=Deep, M=Maintainer
 
@@ -80,16 +74,19 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 ## What Happens Now
 
 ### Planning Phase (Next 15 min)
-1. Planning scheduler picks up issues #100, #101, #102
-2. Spawns `planner-initial` agents
-3. Agents create `.mend/plans/ISSUE-{n}.md` documents
-4. Labels progress: needs-plan → plan-draft
+1. Planning scheduler monitors open issues with `needs-plan` label
+2. No issues currently in `needs-plan` state — scheduler idle
+3. When issues arrive, spawns `planner-initial` agents
+4. Agents create `.mend/plans/ISSUE-{n}.md` documents
+5. Labels progress: needs-plan → plan-draft
 
 ### Review Phase (Ongoing)
-1. Review scheduler checks PRs #97, #99, #103 every 15 min
+1. Review scheduler monitors open PRs every 15 min
 2. Spawns `reviewer-quality` agents (first gate)
 3. Labels progress through 8 review gates
 4. Final `merger-final` executes merge
+
+*Note: PRs #97, #99, #103 have all been merged and are no longer tracked here.*
 
 ## Monitoring
 - `.mend/plans/` — Watch for new plan documents
@@ -98,4 +95,4 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 - Issue labels — Planning phase progression
 
 ---
-*Status: BOTH SCHEDULERS ENABLED — Full agentic workflow operational*
+*Queue Status: No P0/P1 items in Queue. Phase 3 complete. PRs #97, #99, #103 merged and cleared from review tracking.*
