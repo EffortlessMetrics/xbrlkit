@@ -110,22 +110,16 @@ fn apply_duplicate_fact_findings(report: &mut CanonicalReport) {
     match classify(report) {
         DuplicateDisposition::None => {}
         DuplicateDisposition::Consistent => {
-            report.findings.push(ValidationFinding {
-                rule_id: "XBRL.DUPLICATE_FACT.CONSISTENT".to_string(),
-                severity: "info".to_string(),
-                message: "Consistent duplicate facts detected".to_string(),
-                member: None,
-                subject: None,
-            });
+            report.findings.push(ValidationFinding::info(
+                "XBRL.DUPLICATE_FACT.CONSISTENT",
+                "Consistent duplicate facts detected",
+            ));
         }
         DuplicateDisposition::Inconsistent => {
-            report.findings.push(ValidationFinding {
-                rule_id: "XBRL.DUPLICATE_FACT.INCONSISTENT".to_string(),
-                severity: "error".to_string(),
-                message: "Inconsistent duplicate facts detected".to_string(),
-                member: None,
-                subject: None,
-            });
+            report.findings.push(ValidationFinding::error(
+                "XBRL.DUPLICATE_FACT.INCONSISTENT",
+                "Inconsistent duplicate facts detected",
+            ));
         }
     }
 }
@@ -161,25 +155,25 @@ pub fn validate_contexts(xbrl_xml: &str) -> Result<(ContextSet, Vec<ValidationFi
     // Check for contexts without entity identifiers
     for context in context_set.iter() {
         if context.entity.value.is_empty() {
-            findings.push(ValidationFinding {
-                rule_id: "XBRL.CONTEXT.MISSING_ENTITY".to_string(),
-                severity: "error".to_string(),
-                message: format!("Context {} has no entity identifier", context.id),
-                member: None,
-                subject: Some(context.id.clone()),
-            });
+            findings.push(
+                ValidationFinding::error(
+                    "XBRL.CONTEXT.MISSING_ENTITY",
+                    format!("Context {} has no entity identifier", context.id),
+                )
+                .with_subject(&context.id),
+            );
         }
 
         // Check for contexts with dimensional information
         let dim_count = xbrl_contexts::get_dimensional_members(context).len();
         if dim_count > 0 {
-            findings.push(ValidationFinding {
-                rule_id: "XBRL.CONTEXT.HAS_DIMENSIONS".to_string(),
-                severity: "info".to_string(),
-                message: format!("Context {} has {dim_count} dimensional members", context.id),
-                member: None,
-                subject: Some(context.id.clone()),
-            });
+            findings.push(
+                ValidationFinding::info(
+                    "XBRL.CONTEXT.HAS_DIMENSIONS",
+                    format!("Context {} has {dim_count} dimensional members", context.id),
+                )
+                .with_subject(&context.id),
+            );
         }
     }
 
@@ -267,29 +261,26 @@ pub fn validate_context_completeness_streaming(
             // Check for facts referencing non-existent contexts
             for fact in &handler.facts {
                 if !handler.contexts.contains(&fact.context_ref) {
-                    findings.push(ValidationFinding {
-                        rule_id: "XBRL.CONTEXT.MISSING_REF".to_string(),
-                        severity: "error".to_string(),
-                        message: format!(
-                            "Fact '{}' references undefined context '{}'",
-                            fact.concept, fact.context_ref
-                        ),
-                        member: None,
-                        subject: Some(fact.context_ref.clone()),
-                    });
+                    findings.push(
+                        ValidationFinding::error(
+                            "XBRL.CONTEXT.MISSING_REF",
+                            format!(
+                                "Fact '{}' references undefined context '{}'",
+                                fact.concept, fact.context_ref
+                            ),
+                        )
+                        .with_subject(&fact.context_ref),
+                    );
                 }
             }
 
             findings
         }
         Err(e) => {
-            vec![ValidationFinding {
-                rule_id: "XBRL.STREAM_PARSE_ERROR".to_string(),
-                severity: "error".to_string(),
-                message: format!("Streaming parse failed: {e}"),
-                member: None,
-                subject: None,
-            }]
+            vec![ValidationFinding::error(
+                "XBRL.STREAM_PARSE_ERROR",
+                format!("Streaming parse failed: {e}"),
+            )]
         }
     }
 }

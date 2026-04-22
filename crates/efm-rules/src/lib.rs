@@ -3,7 +3,7 @@
 use ixhtml_scan::scan_inline_fragments;
 use sec_profile_types::ProfilePack;
 use taxonomy_dts::mixed_taxonomy_years;
-use xbrl_report_types::ValidationFinding;
+use xbrl_report_types::{ValidationFinding, sanitize_for_rule_id};
 
 #[must_use]
 pub fn validate_inline_restrictions(
@@ -20,16 +20,17 @@ pub fn validate_inline_restrictions(
             .iter()
             .any(|banned| banned == &fragment.element_name)
         {
-            findings.push(ValidationFinding {
-                rule_id: inline_element_rule_id(&fragment.element_name),
-                severity: "error".to_string(),
-                message: format!(
-                    "{} is not allowed in the selected SEC profile pack",
-                    fragment.element_name
-                ),
-                member: Some(member.to_string()),
-                subject: Some(fragment.element_name.clone()),
-            });
+            findings.push(
+                ValidationFinding::error(
+                    inline_element_rule_id(&fragment.element_name),
+                    format!(
+                        "{} is not allowed in the selected SEC profile pack",
+                        fragment.element_name
+                    ),
+                )
+                .with_member(member)
+                .with_subject(&fragment.element_name),
+            );
         }
         for attribute in fragment.attributes.keys() {
             if profile
@@ -38,13 +39,14 @@ pub fn validate_inline_restrictions(
                 .iter()
                 .any(|banned| banned == attribute)
             {
-                findings.push(ValidationFinding {
-                    rule_id: inline_attribute_rule_id(attribute),
-                    severity: "error".to_string(),
-                    message: format!("{attribute} is not allowed in the selected SEC profile pack"),
-                    member: Some(member.to_string()),
-                    subject: Some(attribute.clone()),
-                });
+                findings.push(
+                    ValidationFinding::error(
+                        inline_attribute_rule_id(attribute),
+                        format!("{attribute} is not allowed in the selected SEC profile pack"),
+                    )
+                    .with_member(member)
+                    .with_subject(attribute),
+                );
             }
         }
     }
@@ -58,14 +60,13 @@ pub fn validate_taxonomy_years(
 ) -> Vec<ValidationFinding> {
     let mut findings = Vec::new();
     if mixed_taxonomy_years(entry_points) {
-        findings.push(ValidationFinding {
-            rule_id: "SEC.TAXONOMY.SAME_YEAR".to_string(),
-            severity: "error".to_string(),
-            message: "Taxonomy entry points must resolve to a single accepted taxonomy year"
-                .to_string(),
-            member: None,
-            subject: Some(entry_points.join(", ")),
-        });
+        findings.push(
+            ValidationFinding::error(
+                "SEC.TAXONOMY.SAME_YEAR",
+                "Taxonomy entry points must resolve to a single accepted taxonomy year",
+            )
+            .with_subject(entry_points.join(", ")),
+        );
     }
     findings
 }
@@ -85,13 +86,13 @@ pub fn validate_required_facts(
     // Check each required fact
     for required in &profile.required_facts {
         if !present_concepts.contains(required) {
-            findings.push(ValidationFinding {
-                rule_id: format!("SEC.REQUIRED_FACT.{}", sanitize_for_rule_id(required)),
-                severity: "error".to_string(),
-                message: format!("Required fact '{required}' is missing"),
-                member: None,
-                subject: Some(required.clone()),
-            });
+            findings.push(
+                ValidationFinding::error(
+                    format!("SEC.REQUIRED_FACT.{}", sanitize_for_rule_id(required)),
+                    format!("Required fact '{required}' is missing"),
+                )
+                .with_subject(required),
+            );
         }
     }
 
@@ -118,19 +119,6 @@ fn inline_attribute_rule_id(attribute: &str) -> String {
             sanitize_for_rule_id(attribute)
         ),
     }
-}
-
-fn sanitize_for_rule_id(value: &str) -> String {
-    value
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() {
-                ch.to_ascii_uppercase()
-            } else {
-                '_'
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]
