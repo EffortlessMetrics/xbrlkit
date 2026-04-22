@@ -66,18 +66,21 @@ impl ValidationFinding {
     }
 
     /// Set the member field.
+    #[must_use]
     pub fn with_member(mut self, member: impl Into<String>) -> Self {
         self.member = Some(member.into());
         self
     }
 
     /// Set the subject field.
+    #[must_use]
     pub fn with_subject(mut self, subject: impl Into<String>) -> Self {
         self.subject = Some(subject.into());
         self
     }
 
     /// Derive member and subject from a Fact.
+    #[must_use]
     pub fn for_fact(mut self, fact: &Fact) -> Self {
         self.member = Some(fact.member.clone());
         self.subject = Some(fact.concept.clone());
@@ -96,6 +99,7 @@ impl ValidationFinding {
 ///
 /// assert_eq!(sanitize_for_rule_id("us-gaap:Revenue"), "US_GAAP_REVENUE");
 /// ```
+#[must_use]
 pub fn sanitize_for_rule_id(value: &str) -> String {
     value
         .chars()

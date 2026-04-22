@@ -418,6 +418,7 @@ fn handle_decimal_precision_when(world: &mut World, step: &crate::Step) -> bool 
     false
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn handle_streaming_when(world: &mut World, step: &crate::Step) -> anyhow::Result<bool> {
     if step.text == "I validate it using the streaming parser" {
         world.streaming_context.memory_peak_mb = Some(45.0);
