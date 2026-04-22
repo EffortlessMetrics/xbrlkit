@@ -1,3 +1,4 @@
+@REQ-XK-WORKFLOW
 @layer.workflow
 @suite.synthetic
 Feature: Cockpit pack
