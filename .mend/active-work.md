@@ -22,11 +22,11 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 ### In Review (Code Phase)
 | PR | CI | Q | T | A | I | Ag | D | M | Status |
 |----|----|---|---|---|---|----|---|---|--------|
-| #97 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
-| #99 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
-| #103 | 🟢 | — | — | — | — | — | — | — | ready-for-review |
+| *None — all merged* |  |  |  |  |  |  |  |  |  |
 
 **Legend:** Q=Quality, T=Tests, A=Arch, I=Integ, Ag=Agentic, D=Deep, M=Maintainer
+
+**Recently Merged:** #97, #99, #103 ✅
 
 ## Agent Definitions (13 Total)
 
@@ -86,10 +86,12 @@ Issue → Plan → Plan Review → Deep Plan → Repo Alignment → Build → CI
 4. Labels progress: needs-plan → plan-draft
 
 ### Review Phase (Ongoing)
-1. Review scheduler checks PRs #97, #99, #103 every 15 min
-2. Spawns `reviewer-quality` agents (first gate)
+1. Review scheduler monitors open PRs every 15 min
+2. Spawns `reviewer-quality` agents (first gate) for any PRs labeled `ready-for-review`
 3. Labels progress through 8 review gates
 4. Final `merger-final` executes merge
+
+**Current:** No PRs in review. Last merged: #97, #99, #103.
 
 ## Monitoring
 - `.mend/plans/` — Watch for new plan documents
