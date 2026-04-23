@@ -19,6 +19,7 @@ pub struct ScenarioExecution {
     pub taxonomy_resolution: Option<TaxonomyResolutionRun>,
     pub ixds_receipt: Option<Receipt>,
     pub export_receipt: Option<Receipt>,
+    pub sensor_receipt: Option<Receipt>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,7 +44,8 @@ pub fn execute_scenario(
         .map(|fixture| repo_root.join("fixtures").join(fixture))
         .collect::<Vec<_>>();
     if fixture_dirs.is_empty() {
-        anyhow::bail!("scenario {} has no fixtures", scenario.scenario_id);
+        // Scenarios without fixtures (e.g., bundle scenarios) are handled by BDD steps
+        return Ok(ScenarioExecution::default());
     }
 
     if fixture_dirs
@@ -101,6 +103,7 @@ pub fn execute_scenario(
         taxonomy_resolution: None,
         ixds_receipt,
         export_receipt,
+        sensor_receipt: None,
     })
 }
 
@@ -252,9 +255,16 @@ pub fn assert_scenario_outcome(
             Ok(())
         }
 
-        // Filing Manifest
-        Some("AC-XK-MANIFEST-001") => {
-            // BDD steps handle the assertions
+        // Filing Manifest and Bundle scenarios (BDD handles assertions)
+        Some("AC-XK-MANIFEST-001" | "AC-XK-WORKFLOW-002") => {
+            Ok(())
+        }
+
+        // Cockpit Pack (Sensor Report)
+        Some("AC-XK-WORKFLOW-003") => {
+            if execution.sensor_receipt.is_none() {
+                anyhow::bail!("sensor report receipt was not emitted");
+            }
             Ok(())
         }
 
