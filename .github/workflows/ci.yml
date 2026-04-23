@@ -12,6 +12,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.92.0
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
+      - run: cargo install cargo-machete --locked
+      - run: cargo machete
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo xtask alpha-check
       - run: cargo xtask package-check
