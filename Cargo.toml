@@ -35,7 +35,6 @@ members = [
   "crates/sec-http",
   "crates/corpus-fs",
   "crates/taxonomy-cache",
-  "crates/archive-zip",
   "crates/render-json",
   "crates/render-md",
   "crates/cockpit-export",
