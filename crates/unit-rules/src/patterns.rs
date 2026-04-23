@@ -2,6 +2,17 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
+
+/// Pre-compiled monetary regex patterns, initialized lazily on first access.
+/// Using `LazyLock` avoids recompilation on every call to `is_likely_monetary()`.
+static MONETARY_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
+    vec![
+        Regex::new(r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*").unwrap(),
+        Regex::new(r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*").unwrap(),
+        Regex::new(r"(?i).*(balance|amount|value|gain|proceed).*").unwrap(),
+    ]
+});
 
 /// Expected unit type for a concept
 #[derive(Debug, Clone, PartialEq)]
@@ -104,14 +115,8 @@ impl ConceptUnitPatterns {
     /// This is a heuristic based on common naming patterns.
     /// For more accuracy, use explicit configuration or taxonomy type info.
     pub fn is_likely_monetary(&self, concept: &str) -> bool {
-        let monetary_patterns = [
-            r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*",
-            r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*",
-            r"(?i).*(balance|amount|value|gain|proceed).*",
-        ];
-
-        for pattern in &monetary_patterns {
-            if Regex::new(pattern).unwrap().is_match(concept) {
+        for regex in MONETARY_PATTERNS.iter() {
+            if regex.is_match(concept) {
                 // But exclude share-related concepts
                 if !concept.to_lowercase().contains("share") {
                     return true;
@@ -166,5 +171,33 @@ mod tests {
         assert!(patterns.is_likely_monetary("us-gaap:Revenue"));
         assert!(patterns.is_likely_monetary("us-gaap:Assets"));
         assert!(!patterns.is_likely_monetary("us-gaap:CommonStockSharesOutstanding"));
+    }
+
+    /// Regression guard: verify `MONETARY_PATTERNS` static initializes safely
+    /// under concurrent access and repeated calls do not panic.
+    #[test]
+    fn test_monetary_patterns_concurrent_initialization() {
+        use std::thread;
+
+        let handles: Vec<_> = (0..20)
+            .map(|_| {
+                thread::spawn(|| {
+                    let patterns = ConceptUnitPatterns::new();
+                    for i in 0..100 {
+                        let concept = if i % 2 == 0 {
+                            "us-gaap:Revenue"
+                        } else {
+                            "us-gaap:CommonStockSharesOutstanding"
+                        };
+                        // Must not panic
+                        let _ = patterns.is_likely_monetary(concept);
+                    }
+                })
+            })
+            .collect();
+
+        for handle in handles {
+            handle.join().expect("thread should not panic");
+        }
     }
 }
