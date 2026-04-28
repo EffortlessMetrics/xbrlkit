@@ -335,7 +335,7 @@
     {
       "scenario_id": "SCN-XK-EXPORT-001",
       "ac_id": "AC-XK-EXPORT-001",
-      "req_id": null,
+      "req_id": "REQ-XK-EXPORT",
       "feature_file": "specs/features/export/oim_json.feature",
       "sidecar_file": "specs/features/export/oim_json.meta.yaml",
       "layer": "workflow",
@@ -1595,7 +1595,7 @@
     {
       "scenario_id": "SCN-XK-WORKFLOW-003",
       "ac_id": null,
-      "req_id": null,
+      "req_id": "REQ-XK-WORKFLOW",
       "feature_file": "specs/features/workflow/cockpit_pack.feature",
       "sidecar_file": "specs/features/workflow/cockpit_pack.meta.yaml",
       "layer": "workflow",
@@ -1709,3 +1709,4 @@
     }
   ]
 }
+
