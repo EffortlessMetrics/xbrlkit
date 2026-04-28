@@ -117,6 +117,7 @@ impl World {
 }
 
 /// Create a synthetic taxonomy for testing when fixture files don't exist.
+#[must_use] 
 pub fn create_synthetic_taxonomy() -> DimensionTaxonomy {
     let mut taxonomy = DimensionTaxonomy::new();
 
@@ -158,6 +159,7 @@ pub fn create_synthetic_taxonomy() -> DimensionTaxonomy {
 ///
 /// Example: `"the report contains 42 facts"` with prefix `"the report contains "`
 /// and noun stem `"fact"` returns `Some(42)`.
+#[must_use] 
 pub fn parse_count_suffix(step: &str, prefix: &str, noun_stem: &str) -> Option<usize> {
     let remainder = step.strip_prefix(prefix)?;
     let count = remainder.split_whitespace().next()?.parse::<usize>().ok()?;

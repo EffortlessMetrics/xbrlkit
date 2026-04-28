@@ -8,6 +8,7 @@ use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 use dimensional_rules::validate_context_dimensions;
 
+#[allow(clippy::too_many_lines)]
 pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
     if matches!(
         step.text.as_str(),

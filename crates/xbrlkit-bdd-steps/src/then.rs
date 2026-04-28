@@ -9,6 +9,7 @@ use scenario_runner::{
     ensure_taxonomy_resolution_succeeds,
 };
 
+#[allow(clippy::too_many_lines)]
 pub fn handle(world: &mut World, step: &Step) -> anyhow::Result<()> {
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
@@ -201,6 +202,7 @@ pub fn handle(world: &mut World, step: &Step) -> anyhow::Result<()> {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<()> {
     if let Some(rule_id) = step
         .text

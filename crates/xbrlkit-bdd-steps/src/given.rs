@@ -6,6 +6,7 @@ use scenario_contract::ScenarioRecord;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{EntityIdentifier, Period};
 
+#[allow(clippy::too_many_lines)]
 pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
     if let Some(profile_id) = step.text.strip_prefix("the profile pack \"") {
         let profile_id = profile_id.trim_end_matches('"').to_string();
@@ -168,12 +169,11 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
                 continue;
             }
 
-            if let Ok(content) = std::fs::read_to_string(path) {
-                if content.contains("@alpha-active") {
+            if let Ok(content) = std::fs::read_to_string(path)
+                && content.contains("@alpha-active") {
                     has_alpha_scenarios = true;
                     break;
                 }
-            }
         }
 
         if !has_alpha_scenarios {
