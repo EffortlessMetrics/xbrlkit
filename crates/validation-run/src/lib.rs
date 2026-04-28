@@ -217,22 +217,18 @@ pub fn validate_dimensions(
     findings
 }
 
-/// Validate context completeness using streaming parser for large files.
+/// Validate context completeness using streaming parser.
 ///
-/// For files >100MB, uses SAX-style streaming to avoid DOM memory overhead.
-/// Collects facts and validates context references in a single pass.
+/// Collects facts and validates context references in a single pass
+/// without materialising a full DOM.
 ///
 /// # Arguments
 /// * `xbrl_xml` - The XBRL XML content
-/// * `size_threshold_mb` - Use streaming if file exceeds this size (default: 100)
 ///
 /// # Returns
 /// Vector of validation findings for missing context references.
 #[must_use]
-pub fn validate_context_completeness_streaming(
-    xbrl_xml: &str,
-    _size_threshold_mb: usize,
-) -> Vec<ValidationFinding> {
+pub fn validate_context_completeness_streaming(xbrl_xml: &str) -> Vec<ValidationFinding> {
     use std::collections::HashSet;
     use xbrl_stream::{FactHandler, StreamingContext, StreamingFact, XbrlStreamReader};
 
@@ -294,11 +290,4 @@ pub fn validate_context_completeness_streaming(
     }
 }
 
-/// Returns whether streaming parser should be used for given content size.
-///
-/// Default threshold is 100MB to avoid excessive memory usage with DOM parsing.
-#[must_use]
-pub fn should_use_streaming(content_size_bytes: usize, threshold_mb: Option<usize>) -> bool {
-    let threshold = threshold_mb.unwrap_or(100);
-    content_size_bytes > threshold * 1024 * 1024
-}
+
