@@ -54,6 +54,7 @@ impl ScenarioRecord {
     /// - Bare `ac_id` (e.g. `AC-XK-WORKFLOW-002`)
     /// - `@`-prefixed `ac_id` (e.g. `@AC-XK-WORKFLOW-002`)
     /// - Bare `req_id` (e.g. `REQ-XK-WORKFLOW`)
+    #[must_use]
     pub fn matches_selector(&self, selector: &str) -> bool {
         self.scenario_id == selector
             || self.ac_id.as_deref() == Some(selector)
@@ -68,6 +69,7 @@ impl ScenarioRecord {
 
 impl FeatureGrid {
     /// Select all scenarios matching the given selector.
+    #[must_use]
     pub fn select_by_selector(&self, selector: &str) -> Vec<ScenarioRecord> {
         self.scenarios
             .iter()
