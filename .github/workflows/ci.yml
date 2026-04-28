@@ -15,3 +15,31 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo xtask alpha-check
       - run: cargo test --workspace --locked
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.92.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Run benchmark tests
+        run: cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml -- --test
+      - name: Save main baseline
+        if: github.ref == 'refs/heads/main'
+        run: cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml -- --save-baseline main --noplot
+      - name: Checkout main for comparison
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin main
+          git checkout origin/main
+      - name: Run main benchmarks
+        if: github.event_name == 'pull_request'
+        run: cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml -- --save-baseline main --noplot
+      - name: Checkout PR branch
+        if: github.event_name == 'pull_request'
+        run: git checkout -
+      - name: Run PR benchmarks
+        if: github.event_name == 'pull_request'
+        run: cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml -- --baseline main --noplot

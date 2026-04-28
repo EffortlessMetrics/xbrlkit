@@ -1,0 +1,43 @@
+[package]
+name = "xbrlkit-bench"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Criterion benchmarks for xbrlkit hot paths"
+publish = false
+
+[dependencies]
+taxonomy-loader = { path = "../taxonomy-loader" }
+taxonomy-dts = { path = "../taxonomy-dts" }
+validation-run = { path = "../validation-run" }
+sec-profile-types = { path = "../sec-profile-types" }
+taxonomy-types = { path = "../taxonomy-types" }
+taxonomy-dimensions = { path = "../taxonomy-dimensions" }
+xbrl-report-types = { path = "../xbrl-report-types" }
+ixds-assemble = { path = "../ixds-assemble" }
+efm-rules = { path = "../efm-rules" }
+xbrl-stream = { path = "../xbrl-stream" }
+xbrl-contexts = { path = "../xbrl-contexts" }
+dimensional-rules = { path = "../dimensional-rules" }
+duplicate-facts = { path = "../duplicate-facts" }
+numeric-rules = { path = "../numeric-rules" }
+anyhow.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "taxonomy_loader"
+harness = false
+
+[[bench]]
+name = "dts_resolution"
+harness = false
+
+[[bench]]
+name = "validation_pipeline"
+harness = false

@@ -42,6 +42,7 @@ members = [
   "crates/xbrlkit-conform",
   "crates/xbrlkit-core",
   "crates/xbrlkit-cli",
+  "crates/xbrlkit-bench",
   "xtask",
   "crates/taxonomy-dimensions",
   "crates/dimensional-rules",
@@ -64,6 +65,7 @@ repository = "https://github.com/EffortlessMetrics/xbrlkit"
 [workspace.dependencies]
 anyhow = "1.0.100"
 clap = { version = "4.5.38", features = ["derive"] }
+criterion = { version = "0.5", features = ["html_reports"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 serde_yaml = "0.9.34"
