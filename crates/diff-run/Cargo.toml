@@ -1,5 +1,5 @@
 [package]
-name = "diff-run"
+name = "xbrlkit-diff-run"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

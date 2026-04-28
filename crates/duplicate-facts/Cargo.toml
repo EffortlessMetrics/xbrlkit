@@ -1,5 +1,5 @@
 [package]
-name = "duplicate-facts"
+name = "xbrlkit-duplicate-facts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

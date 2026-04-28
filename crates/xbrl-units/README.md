@@ -1,4 +1,4 @@
-# xbrl-units
+# xbrlkit-xbrl-units
 
 XBRL unit definitions and validation.
 
@@ -6,7 +6,7 @@ XBRL unit definitions and validation.
 
 ```toml
 [dependencies]
-xbrl-units = "0.1.0-alpha.1"
+xbrlkit-xbrl-units = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

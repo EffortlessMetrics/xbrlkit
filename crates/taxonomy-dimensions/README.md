@@ -1,4 +1,4 @@
-# taxonomy-dimensions
+# xbrlkit-taxonomy-dimensions
 
 Taxonomy dimension definitions and validation.
 
@@ -6,7 +6,7 @@ Taxonomy dimension definitions and validation.
 
 ```toml
 [dependencies]
-taxonomy-dimensions = "0.1.0-alpha.1"
+xbrlkit-taxonomy-dimensions = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

@@ -1,4 +1,4 @@
-# xbrl-linkbases
+# xbrlkit-xbrl-linkbases
 
 XBRL linkbase parsing (premium, label, reference).
 
@@ -6,7 +6,7 @@ XBRL linkbase parsing (premium, label, reference).
 
 ```toml
 [dependencies]
-xbrl-linkbases = "0.1.0-alpha.1"
+xbrlkit-xbrl-linkbases = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

@@ -1,5 +1,5 @@
 [package]
-name = "xbrl-units"
+name = "xbrlkit-xbrl-units"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

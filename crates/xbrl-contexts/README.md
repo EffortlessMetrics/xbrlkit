@@ -1,4 +1,4 @@
-# xbrl-contexts
+# xbrlkit-xbrl-contexts
 
 XBRL context and entity parsing.
 
@@ -6,7 +6,7 @@ XBRL context and entity parsing.
 
 ```toml
 [dependencies]
-xbrl-contexts = "0.1.0-alpha.1"
+xbrlkit-xbrl-contexts = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

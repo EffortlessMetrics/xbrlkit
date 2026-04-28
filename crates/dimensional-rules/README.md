@@ -1,4 +1,4 @@
-# dimensional-rules
+# xbrlkit-dimensional-rules
 
 Dimensional validation rules for XBRL.
 
@@ -6,7 +6,7 @@ Dimensional validation rules for XBRL.
 
 ```toml
 [dependencies]
-dimensional-rules = "0.1.0-alpha.1"
+xbrlkit-dimensional-rules = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

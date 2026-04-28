@@ -1,5 +1,5 @@
 [package]
-name = "xbrl-report-types"
+name = "xbrlkit-xbrl-report-types"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

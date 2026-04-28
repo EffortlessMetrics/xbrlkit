@@ -1,4 +1,4 @@
-# efm-rules
+# xbrlkit-efm-rules
 
 EFM (Electronic Filing Manual) validation rules.
 
@@ -6,7 +6,7 @@ EFM (Electronic Filing Manual) validation rules.
 
 ```toml
 [dependencies]
-efm-rules = "0.1.0-alpha.1"
+xbrlkit-efm-rules = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

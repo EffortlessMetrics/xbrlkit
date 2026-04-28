@@ -1,4 +1,4 @@
-# diff-run
+# xbrlkit-diff-run
 
 XBRL receipt comparison and diffing.
 
@@ -6,7 +6,7 @@ XBRL receipt comparison and diffing.
 
 ```toml
 [dependencies]
-diff-run = "0.1.0-alpha.1"
+xbrlkit-diff-run = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

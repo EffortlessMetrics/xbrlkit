@@ -73,44 +73,44 @@ tokio = { version = "1.44", features = ["rt-multi-thread", "macros", "sync"] }
 walkdir = "2.5.0"
 archive-zip = { version = "0.1.0-alpha.1", path = "crates/archive-zip" }
 calc11 = { version = "0.1.0-alpha.1", path = "crates/calc11" }
-cockpit-export = { version = "0.1.0-alpha.1", path = "crates/cockpit-export" }
-context-completeness = { version = "0.1.0-alpha.1", path = "crates/context-completeness" }
+cockpit-export = { package = "xbrlkit-cockpit-export", version = "0.1.0-alpha.1", path = "crates/cockpit-export" }
+context-completeness = { package = "xbrlkit-context-completeness", version = "0.1.0-alpha.1", path = "crates/context-completeness" }
 corpus-fs = { version = "0.1.0-alpha.1", path = "crates/corpus-fs" }
-diff-run = { version = "0.1.0-alpha.1", path = "crates/diff-run" }
-dimensional-rules = { version = "0.1.0-alpha.1", path = "crates/dimensional-rules" }
-duplicate-facts = { version = "0.1.0-alpha.1", path = "crates/duplicate-facts" }
-edgar-attachments = { version = "0.1.0-alpha.1", path = "crates/edgar-attachments" }
+diff-run = { package = "xbrlkit-diff-run", version = "0.1.0-alpha.1", path = "crates/diff-run" }
+dimensional-rules = { package = "xbrlkit-dimensional-rules", version = "0.1.0-alpha.1", path = "crates/dimensional-rules" }
+duplicate-facts = { package = "xbrlkit-duplicate-facts", version = "0.1.0-alpha.1", path = "crates/duplicate-facts" }
+edgar-attachments = { package = "xbrlkit-edgar-attachments", version = "0.1.0-alpha.1", path = "crates/edgar-attachments" }
 edgar-identity = { version = "0.1.0-alpha.1", path = "crates/edgar-identity" }
-edgar-sgml = { version = "0.1.0-alpha.1", path = "crates/edgar-sgml" }
-efm-rules = { version = "0.1.0-alpha.1", path = "crates/efm-rules" }
-export-run = { version = "0.1.0-alpha.1", path = "crates/export-run" }
-filing-load = { version = "0.1.0-alpha.1", path = "crates/filing-load" }
-ixds-assemble = { version = "0.1.0-alpha.1", path = "crates/ixds-assemble" }
+edgar-sgml = { package = "xbrlkit-edgar-sgml", version = "0.1.0-alpha.1", path = "crates/edgar-sgml" }
+efm-rules = { package = "xbrlkit-efm-rules", version = "0.1.0-alpha.1", path = "crates/efm-rules" }
+export-run = { package = "xbrlkit-export-run", version = "0.1.0-alpha.1", path = "crates/export-run" }
+filing-load = { package = "xbrlkit-filing-load", version = "0.1.0-alpha.1", path = "crates/filing-load" }
+ixds-assemble = { package = "xbrlkit-ixds-assemble", version = "0.1.0-alpha.1", path = "crates/ixds-assemble" }
 ixhtml-scan = { version = "0.1.0-alpha.1", path = "crates/ixhtml-scan" }
-numeric-rules = { version = "0.1.0-alpha.1", path = "crates/numeric-rules" }
-oim-normalize = { version = "0.1.0-alpha.1", path = "crates/oim-normalize" }
-oracle-compare = { version = "0.1.0-alpha.1", path = "crates/oracle-compare" }
+numeric-rules = { package = "xbrlkit-numeric-rules", version = "0.1.0-alpha.1", path = "crates/numeric-rules" }
+oim-normalize = { package = "xbrlkit-oim-normalize", version = "0.1.0-alpha.1", path = "crates/oim-normalize" }
+oracle-compare = { package = "xbrlkit-oracle-compare", version = "0.1.0-alpha.1", path = "crates/oracle-compare" }
 receipt-types = { version = "0.1.0-alpha.1", path = "crates/receipt-types" }
-render-json = { version = "0.1.0-alpha.1", path = "crates/render-json" }
-render-md = { version = "0.1.0-alpha.1", path = "crates/render-md" }
-scenario-contract = { version = "0.1.0-alpha.1", path = "crates/scenario-contract" }
-scenario-runner = { version = "0.1.0-alpha.1", path = "crates/scenario-runner" }
-sec-http = { version = "0.1.0-alpha.1", path = "crates/sec-http" }
-sec-profile-types = { version = "0.1.0-alpha.1", path = "crates/sec-profile-types" }
-taxonomy-cache = { version = "0.1.0-alpha.1", path = "crates/taxonomy-cache" }
-taxonomy-dimensions = { version = "0.1.0-alpha.1", path = "crates/taxonomy-dimensions" }
-taxonomy-dts = { version = "0.1.0-alpha.1", path = "crates/taxonomy-dts" }
-taxonomy-loader = { version = "0.1.0-alpha.1", path = "crates/taxonomy-loader" }
-taxonomy-package = { version = "0.1.0-alpha.1", path = "crates/taxonomy-package" }
-taxonomy-types = { version = "0.1.0-alpha.1", path = "crates/taxonomy-types" }
-unit-rules = { version = "0.1.0-alpha.1", path = "crates/unit-rules" }
-validation-run = { version = "0.1.0-alpha.1", path = "crates/validation-run" }
-xbrl-contexts = { version = "0.1.0-alpha.1", path = "crates/xbrl-contexts" }
-xbrl-dimensions = { version = "0.1.0-alpha.1", path = "crates/xbrl-dimensions" }
-xbrl-linkbases = { version = "0.1.0-alpha.1", path = "crates/xbrl-linkbases" }
-xbrl-report-types = { version = "0.1.0-alpha.1", path = "crates/xbrl-report-types" }
-xbrl-stream = { version = "0.1.0-alpha.1", path = "crates/xbrl-stream" }
-xbrl-units = { version = "0.1.0-alpha.1", path = "crates/xbrl-units" }
+render-json = { package = "xbrlkit-render-json", version = "0.1.0-alpha.1", path = "crates/render-json" }
+render-md = { package = "xbrlkit-render-md", version = "0.1.0-alpha.1", path = "crates/render-md" }
+scenario-contract = { package = "xbrlkit-scenario-contract", version = "0.1.0-alpha.1", path = "crates/scenario-contract" }
+scenario-runner = { package = "xbrlkit-scenario-runner", version = "0.1.0-alpha.1", path = "crates/scenario-runner" }
+sec-http = { package = "xbrlkit-sec-http", version = "0.1.0-alpha.1", path = "crates/sec-http" }
+sec-profile-types = { package = "xbrlkit-sec-profile-types", version = "0.1.0-alpha.1", path = "crates/sec-profile-types" }
+taxonomy-cache = { package = "xbrlkit-taxonomy-cache", version = "0.1.0-alpha.1", path = "crates/taxonomy-cache" }
+taxonomy-dimensions = { package = "xbrlkit-taxonomy-dimensions", version = "0.1.0-alpha.1", path = "crates/taxonomy-dimensions" }
+taxonomy-dts = { package = "xbrlkit-taxonomy-dts", version = "0.1.0-alpha.1", path = "crates/taxonomy-dts" }
+taxonomy-loader = { package = "xbrlkit-taxonomy-loader", version = "0.1.0-alpha.1", path = "crates/taxonomy-loader" }
+taxonomy-package = { package = "xbrlkit-taxonomy-package", version = "0.1.0-alpha.1", path = "crates/taxonomy-package" }
+taxonomy-types = { package = "xbrlkit-taxonomy-types", version = "0.1.0-alpha.1", path = "crates/taxonomy-types" }
+unit-rules = { package = "xbrlkit-unit-rules", version = "0.1.0-alpha.1", path = "crates/unit-rules" }
+validation-run = { package = "xbrlkit-validation-run", version = "0.1.0-alpha.1", path = "crates/validation-run" }
+xbrl-contexts = { package = "xbrlkit-xbrl-contexts", version = "0.1.0-alpha.1", path = "crates/xbrl-contexts" }
+xbrl-dimensions = { package = "xbrlkit-xbrl-dimensions", version = "0.1.0-alpha.1", path = "crates/xbrl-dimensions" }
+xbrl-linkbases = { package = "xbrlkit-xbrl-linkbases", version = "0.1.0-alpha.1", path = "crates/xbrl-linkbases" }
+xbrl-report-types = { package = "xbrlkit-xbrl-report-types", version = "0.1.0-alpha.1", path = "crates/xbrl-report-types" }
+xbrl-stream = { package = "xbrlkit-xbrl-stream", version = "0.1.0-alpha.1", path = "crates/xbrl-stream" }
+xbrl-units = { package = "xbrlkit-xbrl-units", version = "0.1.0-alpha.1", path = "crates/xbrl-units" }
 xbrlkit-bdd = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-bdd" }
 xbrlkit-bdd-steps = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-bdd-steps" }
 xbrlkit-cli = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-cli" }
