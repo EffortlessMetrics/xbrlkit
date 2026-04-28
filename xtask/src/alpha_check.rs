@@ -10,7 +10,7 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-SEC-INLINE-002",
     "AC-XK-SEC-REQUIRED-001",
     "AC-XK-SEC-REQUIRED-002",
-    // AC-XK-SEC-DECIMAL-001/002 require BDD step handlers (tested via bdd @alpha-candidate)
+    // AC-XK-SEC-DECIMAL-001/002 require BDD step handlers (tested via bdd @alpha-active)
     "AC-XK-TAXONOMY-001",
     "AC-XK-TAXONOMY-002",
     "AC-XK-DUPLICATES-001",

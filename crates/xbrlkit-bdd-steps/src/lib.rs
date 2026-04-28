@@ -627,6 +627,9 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text == "a loaded taxonomy with dimension definitions" {
         // Simulate loading a taxonomy with dimensions
+        // NOTE: This builds the same explicit-dimension structure as
+        // `create_synthetic_taxonomy()` minus the typed dimension.
+        // TODO(ISSUE-NNN): DRY — refactor to share taxonomy construction.
         let mut taxonomy = DimensionTaxonomy::new();
 
         // Add a domain
@@ -699,6 +702,9 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         let member = world.dimension_context.member.as_deref().unwrap_or("");
 
         // Build minimal taxonomy with StatementScenarioAxis
+        // NOTE: This builds the same explicit-dimension structure as
+        // `create_synthetic_taxonomy()` minus the typed dimension.
+        // TODO(ISSUE-NNN): DRY — refactor to share taxonomy construction.
         let mut taxonomy = DimensionTaxonomy::new();
         let mut scenario_domain = Domain::new("us-gaap:ScenarioDomain");
         scenario_domain.add_member(DomainMember {
@@ -1492,18 +1498,22 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "members should maintain parent-child relationships" {
+        // TODO(ISSUE-NNN): Implement parent-child relationship validation
         return Ok(());
     }
 
     if step.text == "typed dimensions should have value types" {
+        // TODO(ISSUE-NNN): Implement typed dimension value type validation
         return Ok(());
     }
 
     if step.text == "the value types should be valid XSD types" {
+        // TODO(ISSUE-NNN): Implement XSD type validation for typed dimensions
         return Ok(());
     }
 
     if step.text == "hypercubes should contain their dimensions" {
+        // TODO(ISSUE-NNN): Implement hypercube dimension containment validation
         return Ok(());
     }
 
@@ -1532,10 +1542,12 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "subsequent loads should use the cache" {
+        // TODO(ISSUE-NNN): Implement cache hit validation (verify file mtime or checksum)
         return Ok(());
     }
 
     if step.text == "imported schemas should be loaded" {
+        // TODO(ISSUE-NNN): Implement imported schema loading validation
         return Ok(());
     }
 

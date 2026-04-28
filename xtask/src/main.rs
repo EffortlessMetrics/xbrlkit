@@ -152,7 +152,9 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
         anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
     }
 
-    // Filter out synthetic/BDD scenarios - they run via BDD @alpha-active
+    // Filter out synthetic/BDD scenarios - they run via BDD @alpha-active.
+    // Non-synthetic scenarios are expected to have fixtures; the empty-fixture
+    // guard is a safety net for metadata drift (see PR #180 discussion).
     let scenarios_with_fixtures: Vec<_> = scenarios
         .iter()
         .filter(|s| !s.fixtures.is_empty() && s.suite.as_deref() != Some("synthetic"))

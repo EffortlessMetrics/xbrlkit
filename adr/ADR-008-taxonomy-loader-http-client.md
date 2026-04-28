@@ -165,9 +165,11 @@ fn fetch_url(&self, url: &str) -> Result<String, TaxonomyLoaderError> {
 
 ```rust
 use taxonomy_loader::TaxonomyLoader;
+use std::path::PathBuf;
 
 // With caching (enables HTTP support)
-let loader = TaxonomyLoader::with_cache_dir("~/.cache/xbrlkit/taxonomy");
+let cache_dir = dirs::cache_dir().unwrap_or_else(|| PathBuf::from(".cache")).join("xbrlkit/taxonomy");
+let loader = TaxonomyLoader::with_cache_dir(&cache_dir);
 let taxonomy = loader.load("https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-2024.xsd")?;
 
 // Without caching (local files only)
