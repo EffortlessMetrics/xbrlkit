@@ -2,11 +2,11 @@
 
 use crate::world::{Step, World};
 use anyhow::Context;
+use dimensional_rules::validate_context_dimensions;
 use scenario_contract::ScenarioRecord;
 use scenario_runner::{execute_scenario, write_execution_receipts};
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
-use dimensional_rules::validate_context_dimensions;
 
 #[allow(clippy::too_many_lines)]
 pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
@@ -31,7 +31,8 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
 
     // Feature grid When steps
     if step.text == "I compile the feature grid" {
-        world.execution.compiled_grid = Some(xbrlkit_feature_grid::compile(&world.execution.repo_root)?);
+        world.execution.compiled_grid =
+            Some(xbrlkit_feature_grid::compile(&world.execution.repo_root)?);
         return Ok(true);
     }
 
@@ -96,7 +97,10 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
 
         let result = validate_context_dimensions(&context, "", &taxonomy);
         for finding in result.findings {
-            world.dimension.validation_findings.push(finding.rule_id.clone());
+            world
+                .dimension
+                .validation_findings
+                .push(finding.rule_id.clone());
         }
 
         return Ok(true);
@@ -112,7 +116,10 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
         if let Some(_req_dim) = required_dim
             && !has_dimension
         {
-            world.dimension.validation_findings.push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
+            world
+                .dimension
+                .validation_findings
+                .push("XBRL.DIMENSION.MISSING_REQUIRED".to_string());
         }
 
         return Ok(true);
@@ -123,7 +130,11 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
 
         let dimension = world.dimension.dimension.as_deref().unwrap_or("");
         let value = world.dimension.member.as_deref().unwrap_or("");
-        let value_type = world.dimension.typed_value_type.as_deref().unwrap_or("xs:string");
+        let value_type = world
+            .dimension
+            .typed_value_type
+            .as_deref()
+            .unwrap_or("xs:string");
 
         let mut taxonomy = DimensionTaxonomy::new();
         taxonomy.add_dimension(Dimension::Typed {
@@ -156,7 +167,10 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
 
         let result = validate_context_dimensions(&context, "", &taxonomy);
         for finding in result.findings {
-            world.dimension.validation_findings.push(finding.rule_id.clone());
+            world
+                .dimension
+                .validation_findings
+                .push(finding.rule_id.clone());
         }
 
         return Ok(true);
@@ -174,7 +188,11 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
     }
 
     if step.text == "I build the filing manifest" {
-        let fixture_dir = world.execution.fixture_dirs.first().context("no fixture loaded")?;
+        let fixture_dir = world
+            .execution
+            .fixture_dirs
+            .first()
+            .context("no fixture loaded")?;
         let submission_path = fixture_dir.join("submission.txt");
         let submission = std::fs::read_to_string(&submission_path).with_context(|| {
             format!(
@@ -206,7 +224,8 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
             .profile_id
             .as_ref()
             .context("profile must be configured")?;
-        let profile = sec_profile_types::load_profile_from_workspace(&world.execution.repo_root, profile_id)?;
+        let profile =
+            sec_profile_types::load_profile_from_workspace(&world.execution.repo_root, profile_id)?;
         let json_output =
             serde_json::to_string_pretty(&profile).context("serializing profile to JSON")?;
         world.output.cli_output = Some(json_output);
@@ -266,8 +285,7 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
 
     // Decimal precision When steps
     if step.text == "decimal precision validation is performed" {
-        let findings =
-            numeric_rules::validate_decimal_precision(&world.completeness.facts);
+        let findings = numeric_rules::validate_decimal_precision(&world.completeness.facts);
         world.completeness.findings = findings;
         return Ok(true);
     }

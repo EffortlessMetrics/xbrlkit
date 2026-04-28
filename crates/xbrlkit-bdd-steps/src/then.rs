@@ -41,7 +41,12 @@ pub fn handle(world: &mut World, step: &Step) -> anyhow::Result<()> {
 
     if let Some(finding) = step.text.strip_prefix("an \"") {
         let expected_finding = finding.trim_end_matches("\" finding should be reported");
-        if !world.dimension.validation_findings.iter().any(|f| f == expected_finding) {
+        if !world
+            .dimension
+            .validation_findings
+            .iter()
+            .any(|f| f == expected_finding)
+        {
             anyhow::bail!(
                 "expected finding {} but got {:?}",
                 expected_finding,
@@ -64,9 +69,11 @@ pub fn handle(world: &mut World, step: &Step) -> anyhow::Result<()> {
 
     if let Some(error_type) = step.text.strip_prefix("validation error \"") {
         let expected_error = error_type.trim_end_matches("\" is reported");
-        let has_error = world.completeness.findings.iter().any(|f| {
-            f.rule_id.contains(expected_error) || f.message.contains(expected_error)
-        });
+        let has_error = world
+            .completeness
+            .findings
+            .iter()
+            .any(|f| f.rule_id.contains(expected_error) || f.message.contains(expected_error));
         if !has_error {
             anyhow::bail!(
                 "expected validation error '{}' but got: {:?}",
@@ -172,7 +179,11 @@ pub fn handle(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 .cli_exit_code
                 .context("alpha readiness gate was not executed")?;
             if exit_code != 0 {
-                let output = world.output.cli_output.as_deref().unwrap_or("no output captured");
+                let output = world
+                    .output
+                    .cli_output
+                    .as_deref()
+                    .unwrap_or("no output captured");
                 anyhow::bail!(
                     "alpha readiness gate failed with exit code {exit_code}\noutput:\n{output}"
                 );
@@ -184,10 +195,7 @@ pub fn handle(world: &mut World, step: &Step) -> anyhow::Result<()> {
             if results.is_empty() {
                 anyhow::bail!("package readiness check was not executed");
             }
-            let failures: Vec<_> = results
-                .iter()
-                .filter(|(_, success, _)| !success)
-                .collect();
+            let failures: Vec<_> = results.iter().filter(|(_, success, _)| !success).collect();
             if !failures.is_empty() {
                 use std::fmt::Write;
                 let mut msg = String::from("package check failed for:\n");
@@ -226,9 +234,11 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         return ensure_report_does_not_contain_rule(validation_run, rule_id.trim_end_matches('"'));
     }
 
-    if let Some(member_count) =
-        crate::world::parse_count_suffix(&step.text, "the IXDS assembly receipt contains ", "member")
-    {
+    if let Some(member_count) = crate::world::parse_count_suffix(
+        &step.text,
+        "the IXDS assembly receipt contains ",
+        "member",
+    ) {
         return ensure_ixds_member_count(crate::execution(world)?, member_count);
     }
 
@@ -237,14 +247,15 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         "the taxonomy resolution resolves at least ",
         "namespace",
     ) {
-        return ensure_taxonomy_resolution_resolves_at_least(crate::execution(world)?, namespace_count);
+        return ensure_taxonomy_resolution_resolves_at_least(
+            crate::execution(world)?,
+            namespace_count,
+        );
     }
 
-    if let Some(fact_count) = crate::world::parse_count_suffix(
-        &step.text,
-        "the report contains ",
-        "fact",
-    ) {
+    if let Some(fact_count) =
+        crate::world::parse_count_suffix(&step.text, "the report contains ", "fact")
+    {
         return ensure_report_fact_count(crate::execution(world)?, fact_count);
     }
 
@@ -259,7 +270,11 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .bundle_manifest
             .as_ref()
             .context("bundle assertion requires a prior bundle operation")?;
-        if !manifest.scenarios.iter().any(|s| s.scenario_id == scenario_id) {
+        if !manifest
+            .scenarios
+            .iter()
+            .any(|s| s.scenario_id == scenario_id)
+        {
             anyhow::bail!(
                 "scenario {} not found in bundle manifest (contains {} scenario(s))",
                 scenario_id,
@@ -296,9 +311,11 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         .strip_prefix("a context-missing error is reported for context \"")
     {
         let context_ref = context_ref.trim_end_matches('"');
-        let found = world.completeness.findings.iter().any(|f| {
-            f.rule_id == "SEC-CONTEXT-001" && f.message.contains(context_ref)
-        });
+        let found = world
+            .completeness
+            .findings
+            .iter()
+            .any(|f| f.rule_id == "SEC-CONTEXT-001" && f.message.contains(context_ref));
         if !found {
             anyhow::bail!(
                 "expected context-missing error for '{}' but got findings: {:?}",
@@ -319,7 +336,10 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         return Ok(());
     }
 
-    if let Some(count_str) = step.text.strip_prefix("context-missing errors are reported") {
+    if let Some(count_str) = step
+        .text
+        .strip_prefix("context-missing errors are reported")
+    {
         let expected_count: usize = count_str
             .split_whitespace()
             .next()
@@ -344,7 +364,11 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
 
     if let Some(rule_id) = step.text.strip_prefix("the finding rule ID is \"") {
         let rule_id = rule_id.trim_end_matches('"');
-        let found = world.completeness.findings.iter().any(|f| f.rule_id == rule_id);
+        let found = world
+            .completeness
+            .findings
+            .iter()
+            .any(|f| f.rule_id == rule_id);
         if !found {
             anyhow::bail!(
                 "expected finding with rule ID '{}' but got: {:?}",
@@ -357,7 +381,11 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
 
     // Streaming parser Then steps
     if step.text == "memory usage should stay under 50MB peak" {
-        let peak = world.processing.streaming.memory_peak_mb.unwrap_or(f64::MAX);
+        let peak = world
+            .processing
+            .streaming
+            .memory_peak_mb
+            .unwrap_or(f64::MAX);
         if peak > 50.0 {
             anyhow::bail!("memory usage was {peak}MB, expected under 50MB");
         }
@@ -446,7 +474,9 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .as_ref()
             .context("taxonomy not loaded")?;
         let has_explicit_with_domain = taxonomy.dimensions.iter().any(|(_, d)| match d {
-            taxonomy_dimensions::Dimension::Explicit { default_domain, .. } => default_domain.is_some(),
+            taxonomy_dimensions::Dimension::Explicit { default_domain, .. } => {
+                default_domain.is_some()
+            }
             taxonomy_dimensions::Dimension::Typed { .. } => false,
         });
         if !has_explicit_with_domain && !taxonomy.dimensions.is_empty() {

@@ -81,8 +81,7 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
     }
 
     if let Some(dimension) = step.text.strip_prefix("the concept requires dimension \"") {
-        world.dimension.required_dimension =
-            Some(dimension.trim_end_matches('"').to_string());
+        world.dimension.required_dimension = Some(dimension.trim_end_matches('"').to_string());
         return Ok(true);
     }
 
@@ -170,10 +169,11 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
             }
 
             if let Ok(content) = std::fs::read_to_string(path)
-                && content.contains("@alpha-active") {
-                    has_alpha_scenarios = true;
-                    break;
-                }
+                && content.contains("@alpha-active")
+            {
+                has_alpha_scenarios = true;
+                break;
+            }
         }
 
         if !has_alpha_scenarios {

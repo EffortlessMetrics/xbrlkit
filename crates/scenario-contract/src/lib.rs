@@ -96,10 +96,7 @@ mod tests {
             fixtures: Vec::new(),
             profile_pack: None,
             receipts: vec!["bundle.manifest.v1".to_string()],
-            allowed_edit_roots: vec![
-                "specs/features/workflow".to_string(),
-                "xtask".to_string(),
-            ],
+            allowed_edit_roots: vec!["specs/features/workflow".to_string(), "xtask".to_string()],
             suite: Some("synthetic".to_string()),
             speed: Some("fast".to_string()),
         }
