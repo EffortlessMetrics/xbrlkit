@@ -5,6 +5,7 @@ use std::path::Path;
 use std::process::Command;
 use std::time::Instant;
 
+// Fixture-based ACs — these are tested via `test_ac` which requires fixtures
 const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-SEC-INLINE-001",
     "AC-XK-SEC-INLINE-002",
@@ -23,7 +24,10 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-STREAM-003",
     "AC-XK-STREAM-004",
     // AC-XK-CONTEXT-001..004 require BDD step handlers and proper fixtures (tracked separately)
-    // AC-XK-WORKFLOW-002/003 and AC-XK-MANIFEST-001 are tested via @alpha-active BDD tags
+    // BDD-only ACs (tested via @alpha-active, excluded from fixture-based test_ac)
+    "AC-XK-WORKFLOW-002",
+    "AC-XK-WORKFLOW-003",
+    "AC-XK-MANIFEST-001",
 ];
 
 /// Summary of a single alpha-check step.
