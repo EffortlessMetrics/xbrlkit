@@ -1,5 +1,4 @@
 //! CLI edge for xbrlkit.
-#![allow(clippy::too_many_lines)]
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
