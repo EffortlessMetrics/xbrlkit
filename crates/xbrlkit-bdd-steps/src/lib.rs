@@ -40,6 +40,7 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+    pub package_check_context: PackageCheckContext,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -80,6 +81,12 @@ pub struct TaxonomyLoaderContext {
     pub loaded: bool,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct PackageCheckContext {
+    pub publishable_crates: Vec<String>,
+    pub package_results: Vec<(String, bool, String)>, // (crate_name, success, stderr)
+}
+
 impl World {
     #[must_use]
     pub fn new(repo_root: PathBuf, grid: FeatureGrid) -> Self {
@@ -102,6 +109,7 @@ impl World {
             cli_output: None,
             cli_json_output: None,
             cli_exit_code: None,
+            package_check_context: PackageCheckContext::default(),
         }
     }
 }
@@ -151,6 +159,14 @@ fn execution(world: &World) -> anyhow::Result<&ScenarioExecution> {
         .execution
         .as_ref()
         .context("scenario step requires a prior execution")
+}
+
+fn extract_all_quoted(step: &str) -> Vec<String> {
+    step.split('"')
+        .enumerate()
+        .filter(|(i, _)| i % 2 == 1)
+        .map(|(_, s)| s.to_string())
+        .collect()
 }
 
 fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> anyhow::Result<()> {
@@ -364,17 +380,51 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    // Package check Given steps
+    if step.text == "the publishable workspace crates declare crates.io-compatible manifests" {
+        let output = std::process::Command::new("cargo")
+            .args(["metadata", "--format-version", "1", "--no-deps"])
+            .current_dir(&world.repo_root)
+            .output()
+            .context("running cargo metadata for package-check")?;
+        if !output.status.success() {
+            anyhow::bail!(
+                "cargo metadata failed\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+        let metadata: serde_json::Value =
+            serde_json::from_slice(&output.stdout).context("parsing cargo metadata output")?;
+        let packages = metadata
+            .get("packages")
+            .and_then(|p| p.as_array())
+            .context("missing packages array in cargo metadata")?;
+        let mut publishable = Vec::new();
+        for pkg in packages {
+            let name = pkg
+                .get("name")
+                .and_then(|n| n.as_str())
+                .context("missing package name")?;
+            let publish = pkg.get("publish").and_then(|p| p.as_array());
+            let is_publishable = publish.is_none_or(|registries| !registries.is_empty());
+            if is_publishable {
+                publishable.push(name.to_string());
+            }
+        }
+        publishable.sort();
+        if publishable.is_empty() {
+            anyhow::bail!("no publishable workspace crates found");
+        }
+        world.package_check_context.publishable_crates = publishable;
+        return Ok(true);
+    }
+
     // Context completeness Given steps
     if step.text.starts_with("an XBRL report with context ") {
         // Parse contexts from the step text
         // Format: "an XBRL report with context \"ctx-1\"" or "an XBRL report with contexts \"ctx-1\" and \"ctx-2\""
-        let text = &step.text;
-        let contexts: Vec<String> = text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let contexts = extract_all_quoted(&step.text);
 
         for ctx_id in contexts {
             let context = xbrl_contexts::Context {
@@ -468,13 +518,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world.context_completeness_context.findings.clear();
 
         // Parse: "a numeric fact with value "1234.56" and decimals "INF""
-        let quoted: Vec<String> = step
-            .text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let quoted = extract_all_quoted(&step.text);
 
         if quoted.len() >= 2 {
             let value = &quoted[0];
@@ -901,6 +945,35 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Package check When steps
+    if step.text == "I run the package readiness check" {
+        let crates = world.package_check_context.publishable_crates.clone();
+        if crates.is_empty() {
+            anyhow::bail!("no publishable crates declared; Given step must run first");
+        }
+        for package in &crates {
+            let output = std::process::Command::new("cargo")
+                .args([
+                    "package",
+                    "-p",
+                    package,
+                    "--allow-dirty",
+                    "--locked",
+                    "--list",
+                ])
+                .current_dir(&world.repo_root)
+                .output()
+                .with_context(|| format!("packaging {package}"))?;
+            let success = output.status.success();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            world
+                .package_check_context
+                .package_results
+                .push((package.clone(), success, stderr));
+        }
+        return Ok(true);
+    }
+
     // Context completeness When steps
     if step.text == "context completeness validation runs" {
         // Build ContextSet from contexts
@@ -1211,6 +1284,25 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 anyhow::bail!(
                     "alpha readiness gate failed with exit code {exit_code}\noutput:\n{output}"
                 );
+            }
+            Ok(())
+        }
+        "the publishable workspace crates package successfully" => {
+            let results = &world.package_check_context.package_results;
+            if results.is_empty() {
+                anyhow::bail!("package readiness check was not executed");
+            }
+            let failures: Vec<_> = results
+                .iter()
+                .filter(|(_, success, _)| !success)
+                .collect();
+            if !failures.is_empty() {
+                use std::fmt::Write;
+                let mut msg = String::from("package check failed for:\n");
+                for (name, _, stderr) in &failures {
+                    let _ = write!(msg, "  - {name}\n{stderr}\n");
+                }
+                anyhow::bail!(msg);
             }
             Ok(())
         }
@@ -1622,4 +1714,44 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_all_quoted_empty() {
+        assert!(extract_all_quoted("").is_empty());
+    }
+
+    #[test]
+    fn test_extract_all_quoted_single() {
+        assert_eq!(
+            extract_all_quoted("hello \"world\""),
+            vec!["world".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_extract_all_quoted_multiple() {
+        assert_eq!(
+            extract_all_quoted("contexts \"ctx-1\" and \"ctx-2\""),
+            vec!["ctx-1".to_string(), "ctx-2".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_extract_all_quoted_no_quotes() {
+        assert!(extract_all_quoted("no quotes here").is_empty());
+    }
+
+    #[test]
+    fn test_extract_all_quoted_unbalanced() {
+        // Odd number of quotes: last segment is outside quotes
+        assert_eq!(
+            extract_all_quoted("start \"middle\" end"),
+            vec!["middle".to_string()]
+        );
+    }
 }
