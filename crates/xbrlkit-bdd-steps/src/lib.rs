@@ -40,6 +40,7 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+    pub package_check_context: PackageCheckContext,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -80,6 +81,12 @@ pub struct TaxonomyLoaderContext {
     pub loaded: bool,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct PackageCheckContext {
+    pub publishable_crates: Vec<String>,
+    pub package_results: Vec<(String, bool, String)>, // (crate_name, success, stderr)
+}
+
 impl World {
     #[must_use]
     pub fn new(repo_root: PathBuf, grid: FeatureGrid) -> Self {
@@ -102,6 +109,7 @@ impl World {
             cli_output: None,
             cli_json_output: None,
             cli_exit_code: None,
+            package_check_context: PackageCheckContext::default(),
         }
     }
 }
@@ -361,6 +369,46 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         if !has_alpha_scenarios {
             anyhow::bail!("no scenarios with @alpha-active tag found in feature files");
         }
+        return Ok(true);
+    }
+
+    // Package check Given steps
+    if step.text == "the publishable workspace crates declare crates.io-compatible manifests" {
+        let output = std::process::Command::new("cargo")
+            .args(["metadata", "--format-version", "1", "--no-deps"])
+            .current_dir(&world.repo_root)
+            .output()
+            .context("running cargo metadata for package-check")?;
+        if !output.status.success() {
+            anyhow::bail!(
+                "cargo metadata failed\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+        let metadata: serde_json::Value =
+            serde_json::from_slice(&output.stdout).context("parsing cargo metadata output")?;
+        let packages = metadata
+            .get("packages")
+            .and_then(|p| p.as_array())
+            .context("missing packages array in cargo metadata")?;
+        let mut publishable = Vec::new();
+        for pkg in packages {
+            let name = pkg
+                .get("name")
+                .and_then(|n| n.as_str())
+                .context("missing package name")?;
+            let publish = pkg.get("publish").and_then(|p| p.as_array());
+            let is_publishable = publish.is_none_or(|registries| !registries.is_empty());
+            if is_publishable {
+                publishable.push(name.to_string());
+            }
+        }
+        publishable.sort();
+        if publishable.is_empty() {
+            anyhow::bail!("no publishable workspace crates found");
+        }
+        world.package_check_context.publishable_crates = publishable;
         return Ok(true);
     }
 
@@ -901,6 +949,35 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Package check When steps
+    if step.text == "I run the package readiness check" {
+        let crates = world.package_check_context.publishable_crates.clone();
+        if crates.is_empty() {
+            anyhow::bail!("no publishable crates declared; Given step must run first");
+        }
+        for package in &crates {
+            let output = std::process::Command::new("cargo")
+                .args([
+                    "package",
+                    "-p",
+                    package,
+                    "--allow-dirty",
+                    "--locked",
+                    "--list",
+                ])
+                .current_dir(&world.repo_root)
+                .output()
+                .with_context(|| format!("packaging {package}"))?;
+            let success = output.status.success();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            world
+                .package_check_context
+                .package_results
+                .push((package.clone(), success, stderr));
+        }
+        return Ok(true);
+    }
+
     // Context completeness When steps
     if step.text == "context completeness validation runs" {
         // Build ContextSet from contexts
@@ -1211,6 +1288,25 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 anyhow::bail!(
                     "alpha readiness gate failed with exit code {exit_code}\noutput:\n{output}"
                 );
+            }
+            Ok(())
+        }
+        "the publishable workspace crates package successfully" => {
+            let results = &world.package_check_context.package_results;
+            if results.is_empty() {
+                anyhow::bail!("package readiness check was not executed");
+            }
+            let failures: Vec<_> = results
+                .iter()
+                .filter(|(_, success, _)| !success)
+                .collect();
+            if !failures.is_empty() {
+                use std::fmt::Write;
+                let mut msg = String::from("package check failed for:\n");
+                for (name, _, stderr) in &failures {
+                    let _ = write!(msg, "  - {name}\n{stderr}\n");
+                }
+                anyhow::bail!(msg);
             }
             Ok(())
         }

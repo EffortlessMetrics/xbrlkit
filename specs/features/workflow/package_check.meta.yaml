@@ -5,7 +5,7 @@ scenarios:
   SCN-XK-WORKFLOW-006:
     ac_id: AC-XK-WORKFLOW-004
     req_id: REQ-XK-WORKFLOW
-    crates: [xtask, xbrlkit-core]
+    crates: [xbrlkit-core, xbrlkit-conform, taxonomy-types, taxonomy-package, taxonomy-dts, taxonomy-loader, xbrl-report-types, xbrl-contexts, xbrl-units, xbrl-dimensions, xbrl-linkbases, xbrl-stream, validation-run, filing-load, efm-rules, sec-http, sec-profile-types, edgar-identity, edgar-sgml, edgar-attachments, receipt-types, render-json, render-md, corpus-fs, cockpit-export, oim-normalize, export-run, diff-run, oracle-compare, calc11, duplicate-facts, context-completeness, dimensional-rules, numeric-rules, unit-rules, ixhtml-scan, ixds-assemble, archive-zip]
     fixtures: []
     receipts: [scenario.run.v1]
     suite: synthetic
