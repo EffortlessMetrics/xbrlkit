@@ -223,9 +223,11 @@ impl TaxonomyLoader {
     }
 
     fn url_to_cache_path(url: &str, cache_dir: &Path) -> std::path::PathBuf {
-        // Simple cache path generation based on URL
-        let filename = url.replace(['/', ':', '?', '&', '='], "_");
-        cache_dir.join(filename)
+        use sha2::{Digest, Sha256};
+        let mut hasher = Sha256::new();
+        hasher.update(url.as_bytes());
+        let hash = hex::encode(hasher.finalize());
+        cache_dir.join(hash)
     }
 }
 
@@ -250,11 +252,9 @@ mod tests {
         let cache_dir = Path::new("/tmp/cache");
         let url = "https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-2024.xsd";
         let path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
-        // URL chars / : are replaced with _, https:// becomes https___
-        assert_eq!(
-            path,
-            Path::new("/tmp/cache/https___xbrl.fasb.org_us-gaap_2024_entire_us-gaap-2024.xsd")
-        );
+        // SHA-256 digest of the URL produces a 64-character hex string
+        let expected_hash = "2989cb2a49e8937d05f00d00847a7f70b120b296b6e4a9de23c48b20ca218c3d";
+        assert_eq!(path, Path::new("/tmp/cache").join(expected_hash));
     }
 
     #[test]
