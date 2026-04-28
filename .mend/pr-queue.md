@@ -39,17 +39,15 @@
 
 ## Current State
 
-**Phase 2: COMPLETE ✅**
-- Wave 1 (Infrastructure): 3/3 ✅
-- Wave 2 (Technical Debt): 3/3 ✅  
-- Wave 3 (Documentation): 2/2 ✅
+**Phase 4 Wave 4: COMPLETE ✅**
+- Streaming parser merged via PR #95
 
 **Metrics:**
 - 21 @alpha-active scenarios passing
-- 60+ tests passing
+- 104 tests passing
 - CI: Green
 
-**Next:** Phase 3 planning
+**Next:** Phase 4 Waves 5+ (parallel validation, caching) or Phase 5 (IFRS/ESEF)
 
 ## Cron Schedule
 
@@ -92,18 +90,24 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Unit Consistency Validation | #82 | Validate unit references match fact types | #88 |
 | Context Completeness Validation | #83 | Ensure all facts reference valid contexts | #90 |
 | Decimal Precision Validation | #81 | EFM 6.5.37 implementation, 10 BDD scenarios | #93 |
+| Streaming Parser (Wave 4) | #95 | SAX-style streaming parser for large SEC filings | #95 |
 
-**Status:** ✅ **PHASE 3 WAVES 1-3 COMPLETE**
+**Status:** ✅ **PHASE 3 WAVES 1-3 COMPLETE + PHASE 4 WAVE 4 COMPLETE**
 - numeric-rules crate created
 - 21 BDD scenarios active
 - Golden file updated
 - All quality gates green
+- Streaming parser merged
 
 ### 🔄 Review (In Progress)
 
+<<<<<<< Updated upstream
 | Item | Issue | PR | Notes |
 |------|-------|-----|-------|
 | Streaming Parser (Wave 4) | — | #95 | `xbrl-stream` crate complete with tests, validation-run integration done, BDD scenarios added. Ready for alpha activation. |
+=======
+None — all in-progress items complete. Awaiting next prioritization.
+>>>>>>> Stashed changes
 
 ### 📋 Planned (Future)
 
@@ -112,9 +116,10 @@ See `.mend/roadmap-phase-3.md` for full roadmap.
 | Wave 4 | Performance Optimization | P2 | Streaming parser, parallel validation, caching |
 | Wave 5 | IFRS/ESEF Support | P2 | Extended taxonomy support |
 
-## Actions Completed This Run (2026-03-26 12:32 CST)
-- ✅ Verified PR #93 was merged (context completeness + decimal precision)
-- ✅ Confirmed issue #81 closed
-- ✅ Updated queue state: Phase 3 Waves 1-3 now complete
-- ✅ No 📋 Ready items remaining — all P0/P1 work complete
-- ✅ Queue now empty, awaiting Phase 4/5 prioritization or new issues
+## Actions Completed This Run (2026-04-28 11:53 CST)
+- ✅ Verified PR #95 was merged (streaming parser - Wave 4)
+- ✅ Updated active-work.md: Phase 4 Wave 4 now marked complete
+- ✅ Updated pr-queue.md: Streaming parser moved to Complete section
+- ✅ No 📋 Ready items with P0/P1 priority — all high-priority work complete
+- ✅ No new GitHub issues needed — all tracked work has issues
+- ✅ Queue awaiting next prioritization (Phase 4 Waves 5+ or Phase 5)

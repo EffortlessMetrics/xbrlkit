@@ -7,7 +7,7 @@
 | Item | Value |
 |------|-------|
 | **Phase** | Phase 3 Waves 1-3 Complete ✅ |
-| **Status** | Phase 4 Wave 4: Streaming Parser (In Progress) |
+| **Status** | Phase 4 Wave 4: Streaming Parser (Merged) |
 
 ## Phase 3: Feature Completeness — COMPLETE ✅
 
@@ -28,11 +28,11 @@
 - Taxonomy dimensions with domain hierarchies ✅ #23
 - SCN-XK-DIM-001 to 004 active
 
-## Phase 4: Performance Optimization — IN PROGRESS
+## Phase 4: Performance Optimization — COMPLETE (Wave 4 Merged)
 
 ### Wave 4: Streaming Parser
-- **Status:** Crate created, tests passing, integration done
-- **PR:** #95 (awaiting review)
+- **Status:** ✅ Merged
+- **PR:** #95 (merged)
 - **Components:**
   - `xbrl-stream` crate with SAX-style parsing
   - `validation-run` integration
@@ -45,4 +45,4 @@
 - Phase 3: 100% complete (all P0/P1 SEC rules)
 
 ---
-*Phase 3 complete. Phase 4 streaming parser foundation shipped.*
+*Phase 3 complete. Phase 4 streaming parser foundation merged.*
