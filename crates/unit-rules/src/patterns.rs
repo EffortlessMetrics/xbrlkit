@@ -2,6 +2,7 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Expected unit type for a concept
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +19,47 @@ pub enum ExpectedUnitType {
     Custom(String),
 }
 
+#[allow(clippy::unwrap_used)]
+static SHARES_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*shares.*").expect("statically verified regex pattern")
+});
+#[allow(clippy::unwrap_used)]
+static PER_SHARE_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*pershare.*").expect("statically verified regex pattern")
+});
+#[allow(clippy::unwrap_used)]
+static PER_SPACE_SHARE_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*per.*share.*").expect("statically verified regex pattern")
+});
+#[allow(clippy::unwrap_used)]
+static EMPLOYEES_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*employees.*").expect("statically verified regex pattern")
+});
+#[allow(clippy::unwrap_used)]
+static PERCENTAGE_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*percentage.*").expect("statically verified regex pattern")
+});
+#[allow(clippy::unwrap_used)]
+static RATIO_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*ratio.*").expect("statically verified regex pattern")
+});
+
+#[allow(clippy::unwrap_used)]
+static MONETARY_RE_1: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*")
+        .expect("statically verified regex pattern")
+});
+#[allow(clippy::unwrap_used)]
+static MONETARY_RE_2: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*")
+        .expect("statically verified regex pattern")
+});
+#[allow(clippy::unwrap_used)]
+static MONETARY_RE_3: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*(balance|amount|value|gain|proceed).*")
+        .expect("statically verified regex pattern")
+});
+
 /// Pattern-based concept matcher for unit type determination
 pub struct ConceptUnitPatterns {
     /// Explicit concept name → expected unit type
@@ -31,33 +73,15 @@ impl ConceptUnitPatterns {
     pub fn new() -> Self {
         let patterns = vec![
             // Share-related concepts → Shares unit
-            (
-                Regex::new(r"(?i).*shares.*").unwrap(),
-                ExpectedUnitType::Shares,
-            ),
+            ((*SHARES_RE).clone(), ExpectedUnitType::Shares),
             // Per-share concepts → PerShare unit
-            (
-                Regex::new(r"(?i).*pershare.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
-            (
-                Regex::new(r"(?i).*per.*share.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
+            ((*PER_SHARE_RE).clone(), ExpectedUnitType::PerShare),
+            ((*PER_SPACE_SHARE_RE).clone(), ExpectedUnitType::PerShare),
             // Employee-related → Pure unit
-            (
-                Regex::new(r"(?i).*employees.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
+            ((*EMPLOYEES_RE).clone(), ExpectedUnitType::Pure),
             // Percentage/ratio → Pure unit
-            (
-                Regex::new(r"(?i).*percentage.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-            (
-                Regex::new(r"(?i).*ratio.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
+            ((*PERCENTAGE_RE).clone(), ExpectedUnitType::Pure),
+            ((*RATIO_RE).clone(), ExpectedUnitType::Pure),
         ];
 
         Self {
@@ -104,14 +128,8 @@ impl ConceptUnitPatterns {
     /// This is a heuristic based on common naming patterns.
     /// For more accuracy, use explicit configuration or taxonomy type info.
     pub fn is_likely_monetary(&self, concept: &str) -> bool {
-        let monetary_patterns = [
-            r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*",
-            r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*",
-            r"(?i).*(balance|amount|value|gain|proceed).*",
-        ];
-
-        for pattern in &monetary_patterns {
-            if Regex::new(pattern).unwrap().is_match(concept) {
+        for regex in [&*MONETARY_RE_1, &*MONETARY_RE_2, &*MONETARY_RE_3] {
+            if regex.is_match(concept) {
                 // But exclude share-related concepts
                 if !concept.to_lowercase().contains("share") {
                     return true;
