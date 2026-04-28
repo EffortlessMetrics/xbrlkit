@@ -17,6 +17,10 @@ mod schema;
 
 pub use error::TaxonomyLoaderError;
 
+// Re-export internal parsing functions for benchmark access
+pub use linkbase::parse_definition_linkbase;
+pub use schema::parse_schema;
+
 // Re-export taxonomy_dimensions types for CLI and other consumers
 pub use taxonomy_dimensions::DimensionTaxonomy;
 pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};

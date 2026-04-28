@@ -1,0 +1,25 @@
+[package]
+name = "xbrlkit-benchmarks"
+version = "0.1.0-alpha.1"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+publish = false
+
+[dependencies]
+criterion = { workspace = true, features = ["html_reports"] }
+taxonomy-loader = { path = "../crates/taxonomy-loader" }
+taxonomy-dts = { path = "../crates/taxonomy-dts" }
+validation-run = { path = "../crates/validation-run" }
+sec-profile-types = { path = "../crates/sec-profile-types" }
+
+[[bench]]
+name = "taxonomy_loader"
+harness = false
+
+[[bench]]
+name = "dts_resolution"
+harness = false
+
+[[bench]]
+name = "validation_pipeline"
+harness = false

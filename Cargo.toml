@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+  "benches",
   "crates/receipt-types",
   "crates/scenario-contract",
   "crates/scenario-runner",
@@ -71,6 +72,7 @@ serde_yaml = "0.9.34"
 thiserror = "2.0.12"
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros", "sync"] }
 walkdir = "2.5.0"
+criterion = "0.5.1"
 archive-zip = { version = "0.1.0-alpha.1", path = "crates/archive-zip" }
 calc11 = { version = "0.1.0-alpha.1", path = "crates/calc11" }
 cockpit-export = { version = "0.1.0-alpha.1", path = "crates/cockpit-export" }

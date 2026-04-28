@@ -16,3 +16,4 @@ jobs:
       - run: cargo xtask alpha-check
       - run: cargo xtask package-check
       - run: cargo test --workspace --locked
+      - run: cargo bench --workspace --no-run
