@@ -48,7 +48,7 @@ pub struct ContextCompletenessContext {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct StreamingContext {
+pub struct StreamProcessingContext {
     pub file_size_mb: Option<f64>,
     pub fact_count: Option<usize>,
     pub memory_peak_mb: Option<f64>,
@@ -70,7 +70,7 @@ pub struct TaxonomyLoaderContext {
 
 #[derive(Debug, Clone, Default)]
 pub struct ProcessingContext {
-    pub streaming: StreamingContext,
+    pub streaming: StreamProcessingContext,
     pub taxonomy_loader: TaxonomyLoaderContext,
 }
 
@@ -108,7 +108,7 @@ impl World {
             dimension: DimensionContext::default(),
             completeness: ContextCompletenessContext::default(),
             processing: ProcessingContext {
-                streaming: StreamingContext::default(),
+                streaming: StreamProcessingContext::default(),
                 taxonomy_loader: TaxonomyLoaderContext::default(),
             },
             output: OutputContext::default(),
