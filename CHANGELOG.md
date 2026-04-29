@@ -5,6 +5,7 @@
 - Added `cargo xtask package-check` and CI coverage to keep publishable crates packaging cleanly for crates.io.
 - Switched internal workspace dependencies to inherited workspace entries so packaged manifests carry registry-compatible versions.
 - Marked workspace-only tooling crates, scenario crates, and the workspace-bound CLI as `publish = false`.
+- Removed unused `async-tokio` feature from `quick-xml` dependency in `xbrl-stream`, along with the unused `tokio` dev-dependency.
 
 ## 0.1.0-alpha.1 - 2026-03-17
 
