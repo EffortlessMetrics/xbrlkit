@@ -17,6 +17,10 @@ mod schema;
 
 pub use error::TaxonomyLoaderError;
 
+// Re-export internal parsing functions for benchmark access
+pub use linkbase::parse_definition_linkbase;
+pub use schema::parse_schema;
+
 // Re-export taxonomy_dimensions types for CLI and other consumers
 pub use taxonomy_dimensions::DimensionTaxonomy;
 pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};
@@ -113,7 +117,7 @@ impl TaxonomyLoader {
         let content = self.fetch_content(path)?;
 
         // Parse schema for dimension elements
-        schema::parse_schema(&content, taxonomy)?;
+        parse_schema(&content, taxonomy)?;
 
         // Find and load linked linkbases
         let linkbase_refs = linkbase::extract_linkbase_refs(&content, path)?;
@@ -136,7 +140,7 @@ impl TaxonomyLoader {
         taxonomy: &mut DimensionTaxonomy,
     ) -> Result<(), TaxonomyLoaderError> {
         let content = self.fetch_content(path)?;
-        linkbase::parse_definition_linkbase(&content, taxonomy)?;
+        parse_definition_linkbase(&content, taxonomy)?;
         Ok(())
     }
 

@@ -14,6 +14,35 @@ use std::path::PathBuf;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
+/// Default schema path for taxonomy loader tests.
+const DEFAULT_TAXONOMY_SCHEMA_PATH: &str =
+    "fixtures/synthetic/taxonomy/standard-location-01/schema.xsd";
+
+/// Ensures the taxonomy loader is initialized with optional cache directory and schema path.
+///
+/// This helper centralizes the taxonomy loader setup to avoid duplication across Given steps.
+fn ensure_taxonomy_loader(
+    world: &mut World,
+    cache_dir: Option<&PathBuf>,
+    schema_path: Option<&str>,
+) {
+    if world.taxonomy_loader_context.loader.is_none() {
+        if let Some(cache) = cache_dir {
+            world.taxonomy_loader_context.loader =
+                Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(cache));
+        } else {
+            world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        }
+    }
+    if world.taxonomy_loader_context.schema_path.is_none() {
+        world.taxonomy_loader_context.schema_path = Some(
+            schema_path
+                .unwrap_or(DEFAULT_TAXONOMY_SCHEMA_PATH)
+                .to_string(),
+        );
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Step {
     pub text: String,
@@ -568,36 +597,27 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     // Taxonomy loader Given steps
     if step.text == "the taxonomy loader is available" {
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        ensure_taxonomy_loader(world, None, None);
         return Ok(true);
     }
 
     if step.text == "a taxonomy schema with dimension elements" {
-        // Use a fixture path or create synthetic schema
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        ensure_taxonomy_loader(world, None, None);
         return Ok(true);
     }
 
     if step.text == "a taxonomy definition linkbase with domain members" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        ensure_taxonomy_loader(world, None, None);
         return Ok(true);
     }
 
     if step.text == "a taxonomy with typed dimensions" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        ensure_taxonomy_loader(world, None, None);
         return Ok(true);
     }
 
     if step.text == "a taxonomy with hypercube elements" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        ensure_taxonomy_loader(world, None, None);
         return Ok(true);
     }
 
@@ -612,16 +632,13 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         let cache_dir = std::env::temp_dir().join("xbrlkit_taxonomy_cache");
         // Create the cache directory so it exists for the Then step
         let _ = std::fs::create_dir_all(&cache_dir);
-        world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
-        world.taxonomy_loader_context.loader =
-            Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
+        ensure_taxonomy_loader(world, Some(&cache_dir), None);
+        world.taxonomy_loader_context.cache_dir = Some(cache_dir);
         return Ok(true);
     }
 
     if step.text == "a taxonomy schema that imports another schema" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        ensure_taxonomy_loader(world, None, None);
         return Ok(true);
     }
 
