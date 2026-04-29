@@ -10,7 +10,7 @@ description = "SAX-style streaming XBRL parser for large filings"
 path = "src/lib.rs"
 
 [dependencies]
-quick-xml = { version = "0.36", features = ["async-tokio"] }
+quick-xml = "0.36"
 thiserror = "1.0"
 anyhow = "1.0"
 xbrl-report-types.workspace = true
