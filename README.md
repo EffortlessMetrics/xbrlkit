@@ -23,6 +23,14 @@ This workspace is designed as a governed foundation for a validating processor a
 - `crates/` – engine crates, semantic leaves, use-case crates, adapters, facade, CLI
 - `xtask/` – repo-local developer automation for feature-grid, bundle, impact, schema-check, and focused AC runs
 
+## Removed placeholder crates
+
+The following stub crates were removed from the workspace in [#286](https://github.com/EffortlessMetrics/xbrlkit/issues/286). Their code is preserved in git history:
+
+- `archive-zip`, `calc11`, `oracle-compare`, `sec-http`, `taxonomy-cache`, `taxonomy-package`, `xbrl-dimensions`, `xbrl-linkbases`, `xbrl-units`
+
+These were empty or near-empty placeholders with no downstream consumers. Functionality they sketched (taxonomy loading, unit/dimension normalization, SEC HTTP, archive handling) will be built into real crates when the corresponding slices are planned and implemented.
+
 ## Supported surface
 
 Working today:

@@ -18,24 +18,15 @@ members = [
   "crates/ixhtml-scan",
   "crates/ixds-assemble",
   "crates/xbrl-contexts",
-  "crates/xbrl-units",
-  "crates/xbrl-dimensions",
-  "crates/xbrl-linkbases",
   "crates/duplicate-facts",
-  "crates/taxonomy-package",
   "crates/taxonomy-dts",
-  "crates/calc11",
   "crates/efm-rules",
   "crates/oim-normalize",
   "crates/filing-load",
   "crates/validation-run",
   "crates/export-run",
   "crates/diff-run",
-  "crates/oracle-compare",
-  "crates/sec-http",
   "crates/corpus-fs",
-  "crates/taxonomy-cache",
-  "crates/archive-zip",
   "crates/render-json",
   "crates/render-md",
   "crates/cockpit-export",
@@ -71,8 +62,6 @@ serde_yaml = "0.9.34"
 thiserror = "2.0.12"
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros", "sync"] }
 walkdir = "2.5.0"
-archive-zip = { version = "0.1.0-alpha.1", path = "crates/archive-zip" }
-calc11 = { version = "0.1.0-alpha.1", path = "crates/calc11" }
 cockpit-export = { version = "0.1.0-alpha.1", path = "crates/cockpit-export" }
 context-completeness = { version = "0.1.0-alpha.1", path = "crates/context-completeness" }
 corpus-fs = { version = "0.1.0-alpha.1", path = "crates/corpus-fs" }
@@ -89,28 +78,21 @@ ixds-assemble = { version = "0.1.0-alpha.1", path = "crates/ixds-assemble" }
 ixhtml-scan = { version = "0.1.0-alpha.1", path = "crates/ixhtml-scan" }
 numeric-rules = { version = "0.1.0-alpha.1", path = "crates/numeric-rules" }
 oim-normalize = { version = "0.1.0-alpha.1", path = "crates/oim-normalize" }
-oracle-compare = { version = "0.1.0-alpha.1", path = "crates/oracle-compare" }
 receipt-types = { version = "0.1.0-alpha.1", path = "crates/receipt-types" }
 render-json = { version = "0.1.0-alpha.1", path = "crates/render-json" }
 render-md = { version = "0.1.0-alpha.1", path = "crates/render-md" }
 scenario-contract = { version = "0.1.0-alpha.1", path = "crates/scenario-contract" }
 scenario-runner = { version = "0.1.0-alpha.1", path = "crates/scenario-runner" }
-sec-http = { version = "0.1.0-alpha.1", path = "crates/sec-http" }
 sec-profile-types = { version = "0.1.0-alpha.1", path = "crates/sec-profile-types" }
-taxonomy-cache = { version = "0.1.0-alpha.1", path = "crates/taxonomy-cache" }
 taxonomy-dimensions = { version = "0.1.0-alpha.1", path = "crates/taxonomy-dimensions" }
 taxonomy-dts = { version = "0.1.0-alpha.1", path = "crates/taxonomy-dts" }
 taxonomy-loader = { version = "0.1.0-alpha.1", path = "crates/taxonomy-loader" }
-taxonomy-package = { version = "0.1.0-alpha.1", path = "crates/taxonomy-package" }
 taxonomy-types = { version = "0.1.0-alpha.1", path = "crates/taxonomy-types" }
 unit-rules = { version = "0.1.0-alpha.1", path = "crates/unit-rules" }
 validation-run = { version = "0.1.0-alpha.1", path = "crates/validation-run" }
 xbrl-contexts = { version = "0.1.0-alpha.1", path = "crates/xbrl-contexts" }
-xbrl-dimensions = { version = "0.1.0-alpha.1", path = "crates/xbrl-dimensions" }
-xbrl-linkbases = { version = "0.1.0-alpha.1", path = "crates/xbrl-linkbases" }
 xbrl-report-types = { version = "0.1.0-alpha.1", path = "crates/xbrl-report-types" }
 xbrl-stream = { version = "0.1.0-alpha.1", path = "crates/xbrl-stream" }
-xbrl-units = { version = "0.1.0-alpha.1", path = "crates/xbrl-units" }
 xbrlkit-bdd = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-bdd" }
 xbrlkit-bdd-steps = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-bdd-steps" }
 xbrlkit-cli = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-cli" }

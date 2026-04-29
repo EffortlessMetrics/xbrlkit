@@ -14,9 +14,6 @@
 | `taxonomy-dimensions` crate | Types defined | `Dimension`, `Domain`, `DomainMember`, `Hypercube`, `DimensionTaxonomy` |
 | `dimensional-rules` crate | Validation logic | Validates dimension-member pairs |
 | BDD scenarios SCN-XK-DIM-001 to 004 | Passing | Uses synthetic/test data, not real taxonomies |
-| `xbrl-linkbases` crate | Stub | `has_linkbase_support()` returns `false` |
-| `taxonomy-cache` crate | Stub | Directory creation only |
-| `taxonomy-package` crate | Stub | Returns empty `DtsDescriptor` |
 
 ### The Gap 🎯
 **No actual XBRL taxonomy file parsing exists.**
@@ -39,7 +36,7 @@ Parse `.xsd` files to extract:
 - `<xsd:element>` with `substitutionGroup="xbrldt:hypercubeItem"` → Hypercubes
 - `<xsd:element>` with `substitutionGroup="xbrldt:dimensionItem"` → Dimensions
 
-### 2. Definition Linkbase Parser (extend `xbrl-linkbases`)
+### 2. Definition Linkbase Parser (extend `taxonomy-loader`)
 Parse `_def.xml` files to extract arc relationships:
 - `hypercube-dimension` → Which dimensions belong to which hypercube
 - `dimension-domain` → Which domain provides members for a dimension
@@ -123,17 +120,14 @@ Arc roles are URLs. Options:
 ```
 crates/
 ├── taxonomy-dimensions       # ✅ Types (Dimension, Domain, Hypercube)
-├── taxonomy-loader           # 🆕 NEW: Orchestrate loading
+├── taxonomy-loader           # 📝 Extend: Add schema/linkbase parsing
 │   ├── schema/               # XSD parsing
 │   └── linkbase/             # Definition linkbase parsing
-├── xbrl-linkbases            # 📝 Extend: Currently stub
-└── taxonomy-cache            # 📝 Extend: Currently stub
 ```
 
 **Alternative:** Extend existing crates instead of new ones.
-- Extend `xbrl-linkbases` → add definition linkbase parsing
-- Extend `taxonomy-package` → add schema resolution
-- New `taxonomy-loader` → orchestration layer
+- Extend `taxonomy-loader` → add definition linkbase parsing and schema resolution
+- New `taxonomy-loader` sub-modules → orchestration layer
 
 ---
 
