@@ -117,7 +117,7 @@ impl TaxonomyLoader {
         let content = self.fetch_content(path)?;
 
         // Parse schema for dimension elements
-        schema::parse_schema(&content, taxonomy)?;
+        parse_schema(&content, taxonomy)?;
 
         // Find and load linked linkbases
         let linkbase_refs = linkbase::extract_linkbase_refs(&content, path)?;
@@ -140,7 +140,7 @@ impl TaxonomyLoader {
         taxonomy: &mut DimensionTaxonomy,
     ) -> Result<(), TaxonomyLoaderError> {
         let content = self.fetch_content(path)?;
-        linkbase::parse_definition_linkbase(&content, taxonomy)?;
+        parse_definition_linkbase(&content, taxonomy)?;
         Ok(())
     }
 
