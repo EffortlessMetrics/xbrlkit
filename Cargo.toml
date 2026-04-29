@@ -35,7 +35,6 @@ members = [
   "crates/sec-http",
   "crates/corpus-fs",
   "crates/taxonomy-cache",
-  "crates/archive-zip",
   "crates/render-json",
   "crates/render-md",
   "crates/cockpit-export",
@@ -71,7 +70,6 @@ serde_yaml = "0.9.34"
 thiserror = "2.0.12"
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros", "sync"] }
 walkdir = "2.5.0"
-archive-zip = { version = "0.1.0-alpha.1", path = "crates/archive-zip" }
 calc11 = { version = "0.1.0-alpha.1", path = "crates/calc11" }
 cockpit-export = { version = "0.1.0-alpha.1", path = "crates/cockpit-export" }
 context-completeness = { version = "0.1.0-alpha.1", path = "crates/context-completeness" }
