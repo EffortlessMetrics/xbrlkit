@@ -40,6 +40,8 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+    pub package_check_publishable_crates: Vec<String>,
+    pub package_check_results: Vec<(String, bool, String)>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -102,6 +104,8 @@ impl World {
             cli_output: None,
             cli_json_output: None,
             cli_exit_code: None,
+            package_check_publishable_crates: Vec::new(),
+            package_check_results: Vec::new(),
         }
     }
 }
@@ -491,6 +495,35 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
             return Ok(true);
         }
         anyhow::bail!("invalid numeric fact specification: {}", step.text);
+    }
+
+    // Package check Given steps
+    if step.text == "the publishable workspace crates declare crates.io-compatible manifests" {
+        let output = std::process::Command::new("cargo")
+            .args(["metadata", "--format-version", "1", "--no-deps"])
+            .current_dir(&world.repo_root)
+            .output()
+            .with_context(|| "running cargo metadata for package check")?;
+        if !output.status.success() {
+            anyhow::bail!(
+                "package check: cargo metadata failed\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+        let metadata: CargoMetadata = serde_json::from_slice(&output.stdout)
+            .context("parsing cargo metadata output")?;
+        let packages: Vec<String> = metadata
+            .packages
+            .into_iter()
+            .filter(|p| p.publish.as_ref().is_none_or(|r| !r.is_empty()))
+            .map(|p| p.name)
+            .collect();
+        if packages.is_empty() {
+            anyhow::bail!("no publishable crates found in workspace");
+        }
+        world.package_check_publishable_crates = packages;
+        return Ok(true);
     }
 
     // Streaming parser Given steps
@@ -925,6 +958,30 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    // Package check When steps
+    if step.text == "I run the package readiness check" {
+        for package in &world.package_check_publishable_crates {
+            let output = std::process::Command::new("cargo")
+                .args(["package", "-p", package, "--allow-dirty", "--locked", "--list"])
+                .current_dir(&world.repo_root)
+                .output()
+                .with_context(|| format!("packaging {package}"))?;
+            let success = output.status.success();
+            let details = if success {
+                format!("packaged {} successfully", package)
+            } else {
+                format!(
+                    "cargo package failed for {}\nstdout:\n{}\nstderr:\n{}",
+                    package,
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                )
+            };
+            world.package_check_results.push((package.clone(), success, details));
+        }
+        return Ok(true);
+    }
+
     // Streaming parser When steps
     if step.text == "I validate it using the streaming parser" {
         // Simulate streaming validation - in real implementation this would
@@ -1210,6 +1267,27 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 let output = world.cli_output.as_deref().unwrap_or("no output captured");
                 anyhow::bail!(
                     "alpha readiness gate failed with exit code {exit_code}\noutput:\n{output}"
+                );
+            }
+            Ok(())
+        }
+        // Package check Then steps
+        "the publishable workspace crates package successfully" => {
+            let failures: Vec<&(String, bool, String)> = world
+                .package_check_results
+                .iter()
+                .filter(|(_, success, _)| !success)
+                .collect();
+            if !failures.is_empty() {
+                let details = failures
+                    .iter()
+                    .map(|(name, _, detail)| format!("  - {}: {}", name, detail))
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                anyhow::bail!(
+                    "package check failed for {} crate(s):\n{}",
+                    failures.len(),
+                    details
                 );
             }
             Ok(())
@@ -1601,6 +1679,17 @@ fn parse_count_suffix(step: &str, prefix: &str, noun_stem: &str) -> Option<usize
         .unwrap_or_default()
         .trim_end_matches('s');
     if noun == noun_stem { Some(count) } else { None }
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CargoMetadata {
+    packages: Vec<CargoMetadataPackage>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CargoMetadataPackage {
+    name: String,
+    publish: Option<Vec<String>>,
 }
 
 
