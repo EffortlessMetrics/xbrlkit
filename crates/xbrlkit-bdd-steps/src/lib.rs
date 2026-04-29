@@ -845,7 +845,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     // Bundle-related When steps
     if let Some(selector) = step.text.strip_prefix("I bundle the selector \"") {
         let selector = selector.trim_end_matches('"').to_string();
-        let scenarios = select_matching_scenarios(&world.grid, &selector);
+        let scenarios = world.grid.select_by_selector(&selector);
         world.bundle_manifest = Some(BundleManifest {
             selector,
             scenarios,
@@ -1603,23 +1603,4 @@ fn parse_count_suffix(step: &str, prefix: &str, noun_stem: &str) -> Option<usize
     if noun == noun_stem { Some(count) } else { None }
 }
 
-/// Select scenarios matching a selector (`scenario_id`, `ac_id`, `req_id`, or tag)
-fn select_matching_scenarios(grid: &FeatureGrid, selector: &str) -> Vec<ScenarioRecord> {
-    grid.scenarios
-        .iter()
-        .filter(|scenario| selector_matches(scenario, selector))
-        .cloned()
-        .collect()
-}
 
-/// Check if a scenario matches the given selector
-fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
-    scenario.scenario_id == selector
-        || scenario.ac_id.as_deref() == Some(selector)
-        || scenario.req_id.as_deref() == Some(selector)
-        || format!("@{}", scenario.scenario_id) == selector
-        || scenario
-            .ac_id
-            .as_ref()
-            .is_some_and(|ac| format!("@{ac}") == selector)
-}

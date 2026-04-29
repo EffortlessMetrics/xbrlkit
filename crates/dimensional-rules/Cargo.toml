@@ -10,8 +10,6 @@ description.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-serde = { workspace = true }
-thiserror = { workspace = true }
 xbrl-contexts.workspace = true
 taxonomy-dimensions.workspace = true
 xbrl-report-types.workspace = true
