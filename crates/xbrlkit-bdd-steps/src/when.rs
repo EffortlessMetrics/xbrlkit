@@ -234,8 +234,16 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
 
     // Alpha check When steps
     if step.text == "I run the alpha readiness gate" {
-        world.output.cli_output = Some("alpha scenarios verified".to_string());
-        world.output.cli_exit_code = Some(0);
+        let output = std::process::Command::new("cargo")
+            .args(["run", "--quiet", "-p", "xtask", "--", "alpha-check"])
+            .current_dir(&world.execution.repo_root)
+            .output()
+            .context("running alpha readiness gate")?;
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        let combined = format!("{stdout}\n{stderr}").trim().to_string();
+        world.output.cli_output = Some(combined);
+        world.output.cli_exit_code = output.status.code();
         return Ok(true);
     }
 
@@ -385,11 +393,13 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
             .clone()
             .context("schema path not set")?;
 
+        let resolved_path = world.execution.repo_root.join(&schema_path);
+
         let taxonomy =
-            if schema_path.contains("fixtures/") && !std::path::Path::new(&schema_path).exists() {
+            if schema_path.contains("fixtures/") && !resolved_path.exists() {
                 crate::world::create_synthetic_taxonomy()
             } else {
-                loader.load(&schema_path)?
+                loader.load(resolved_path.to_str().context("invalid schema path")?)?
             };
 
         world.processing.taxonomy_loader.taxonomy = Some(taxonomy);
