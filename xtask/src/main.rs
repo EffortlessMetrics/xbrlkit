@@ -112,7 +112,7 @@ fn doctor() -> anyhow::Result<()> {
 
 fn bundle(selector: &str) -> anyhow::Result<()> {
     let grid = load_grid()?;
-    let scenarios = select_matching_scenarios(&grid, selector);
+    let scenarios = grid.select_by_selector(selector);
     if scenarios.is_empty() {
         anyhow::bail!("bundle: selector matched no scenarios: {selector}");
     }
@@ -150,7 +150,7 @@ fn impact(changed: &[String]) -> anyhow::Result<()> {
 
 fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     let grid = load_grid()?;
-    let scenarios = select_matching_scenarios(&grid, ac_id);
+    let scenarios = grid.select_by_selector(ac_id);
     if scenarios.is_empty() {
         anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
     }
@@ -305,25 +305,6 @@ fn sanitize(input: &str) -> String {
         .collect()
 }
 
-fn select_matching_scenarios(grid: &FeatureGrid, selector: &str) -> Vec<ScenarioRecord> {
-    grid.scenarios
-        .iter()
-        .filter(|scenario| selector_matches(scenario, selector))
-        .cloned()
-        .collect()
-}
-
-fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
-    scenario.scenario_id == selector
-        || scenario.ac_id.as_deref() == Some(selector)
-        || scenario.req_id.as_deref() == Some(selector)
-        || format!("@{}", scenario.scenario_id) == selector
-        || scenario
-            .ac_id
-            .as_ref()
-            .is_some_and(|ac| format!("@{ac}") == selector)
-}
-
 fn normalize_repo_path(path: &str) -> String {
     path.replace('\\', "/").trim_start_matches("./").to_string()
 }
@@ -350,12 +331,11 @@ fn scenario_impacted(scenario: &ScenarioRecord, changed: &[String]) -> bool {
 mod tests {
     use super::{
         CargoMetadataPackage, normalize_repo_path, package_is_publishable, scenario_impacted,
-        select_matching_scenarios,
     };
-    use scenario_contract::{FeatureGrid, ScenarioRecord};
+    use scenario_contract::FeatureGrid;
 
-    fn scenario_record() -> ScenarioRecord {
-        ScenarioRecord {
+    fn scenario_record() -> scenario_contract::ScenarioRecord {
+        scenario_contract::ScenarioRecord {
             scenario_id: "SCN-XK-WORKFLOW-002".to_string(),
             ac_id: Some("AC-XK-WORKFLOW-002".to_string()),
             req_id: Some("REQ-XK-WORKFLOW".to_string()),
@@ -379,23 +359,11 @@ mod tests {
             scenarios: vec![scenario_record()],
         };
 
-        assert_eq!(
-            select_matching_scenarios(&grid, "AC-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "SCN-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "@AC-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "@SCN-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
+        assert_eq!(grid.select_by_selector("AC-XK-WORKFLOW-002").len(), 1);
+        assert_eq!(grid.select_by_selector("SCN-XK-WORKFLOW-002").len(), 1);
+        assert_eq!(grid.select_by_selector("@AC-XK-WORKFLOW-002").len(), 1);
+        assert_eq!(grid.select_by_selector("@SCN-XK-WORKFLOW-002").len(), 1);
+        assert!(grid.select_by_selector("AC-XK-DOES-NOT-EXIST").is_empty());
     }
 
     #[test]
