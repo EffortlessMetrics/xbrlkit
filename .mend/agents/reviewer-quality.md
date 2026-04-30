@@ -15,7 +15,7 @@ Review code for Rust idioms, error handling, documentation, and naming conventio
 **Crate Categories:**
 - **Semantic:** dimensional-rules, numeric-rules, unit-rules, duplicate-facts
 - **Pipeline:** filing-load, validation-run, export-run, ixds-assemble
-- **IO/Format:** archive-zip, ixhtml-scan, edgar-sgml, render-json
+- **IO/Format:** ~~archive-zip~~ (removed #286), ixhtml-scan, edgar-sgml, render-json
 - **Contracts:** scenario-contract, receipt-types, sec-profile-types
 
 ## Trigger

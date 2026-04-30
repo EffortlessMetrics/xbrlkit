@@ -14,9 +14,9 @@
 | `taxonomy-dimensions` crate | Types defined | `Dimension`, `Domain`, `DomainMember`, `Hypercube`, `DimensionTaxonomy` |
 | `dimensional-rules` crate | Validation logic | Validates dimension-member pairs |
 | BDD scenarios SCN-XK-DIM-001 to 004 | Passing | Uses synthetic/test data, not real taxonomies |
-| `xbrl-linkbases` crate | Stub | `has_linkbase_support()` returns `false` |
-| `taxonomy-cache` crate | Stub | Directory creation only |
-| `taxonomy-package` crate | Stub | Returns empty `DtsDescriptor` |
+| `xbrl-linkbases` crate | Stub | `has_linkbase_support()` returns `false` — **removed in #286** |
+| `taxonomy-cache` crate | Stub | Directory creation only — **removed in #286** |
+| `taxonomy-package` crate | Stub | Returns empty `DtsDescriptor` — **removed in #286** |
 
 ### The Gap 🎯
 **No actual XBRL taxonomy file parsing exists.**
@@ -39,7 +39,7 @@ Parse `.xsd` files to extract:
 - `<xsd:element>` with `substitutionGroup="xbrldt:hypercubeItem"` → Hypercubes
 - `<xsd:element>` with `substitutionGroup="xbrldt:dimensionItem"` → Dimensions
 
-### 2. Definition Linkbase Parser (extend `xbrl-linkbases`)
+### 2. Definition Linkbase Parser (extend `xbrl-linkbases` — **removed in #286**; functionality to be added to `taxonomy-loader`)
 Parse `_def.xml` files to extract arc relationships:
 - `hypercube-dimension` → Which dimensions belong to which hypercube
 - `dimension-domain` → Which domain provides members for a dimension
@@ -126,13 +126,13 @@ crates/
 ├── taxonomy-loader           # 🆕 NEW: Orchestrate loading
 │   ├── schema/               # XSD parsing
 │   └── linkbase/             # Definition linkbase parsing
-├── xbrl-linkbases            # 📝 Extend: Currently stub
-└── taxonomy-cache            # 📝 Extend: Currently stub
+├── xbrl-linkbases            # 📝 REMOVED in #286 — functionality merged to taxonomy-loader
+└── taxonomy-cache            # 📝 REMOVED in #286 — functionality merged to taxonomy-loader
 ```
 
 **Alternative:** Extend existing crates instead of new ones.
-- Extend `xbrl-linkbases` → add definition linkbase parsing
-- Extend `taxonomy-package` → add schema resolution
+- Extend `xbrl-linkbases` → **crate removed in #286**, use `taxonomy-loader` instead
+- Extend `taxonomy-package` → **crate removed in #286**, use `taxonomy-loader` instead
 - New `taxonomy-loader` → orchestration layer
 
 ---
