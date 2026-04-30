@@ -6,7 +6,7 @@ Agent: kimi-claw
 ## Current State
 
 ### Crate Structure (38 crates)
-- **Core:** xbrl-core, xbrl-types, xbrl-facts, xbrl-contexts, xbrl-dimensions
+- **Core:** xbrl-core, xbrl-types, xbrl-facts, xbrl-contexts, ~~xbrl-dimensions~~ (removed #286)
 - **SEC/EFM:** sec-profile-types, efm-rules
 - **Validation:** validation-run, validation-types
 - **Parsing:** ixbrl-parse, ixbrl-dom

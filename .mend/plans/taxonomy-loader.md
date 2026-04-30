@@ -15,8 +15,8 @@ After reviewing the codebase structure, I recommend creating a new `taxonomy-loa
 |-------|---------------|
 | `taxonomy-dimensions` | Type definitions (already exists ✅) |
 | `taxonomy-loader` | **Orchestrate loading from files** (NEW) |
-| `taxonomy-cache` | Local taxonomy package storage (extend later) |
-| `xbrl-linkbases` | Linkbase type definitions (extend later) |
+| `taxonomy-cache` | ~~Local taxonomy package storage (extend later)~~ — **removed in #286** |
+| `xbrl-linkbases` | ~~Linkbase type definitions (extend later)~~ — **removed in #286** |
 
 ---
 

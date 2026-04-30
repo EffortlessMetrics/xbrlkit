@@ -34,15 +34,16 @@ While the SEC EFM doesn't explicitly mandate specific unit consistency checks, d
 
 ### Existing Infrastructure
 
-1. **xbrl-units crate** - Currently only normalizes unit strings, needs validation logic
+1. **xbrl-units crate** - ~~Currently only normalizes unit strings~~ — **removed in #286**. Validation logic to be added to `unit-rules` crate.
 2. **xbrl-report-types::Fact** - Has `unit_ref: Option<String>` field
 3. **validation-run** - Shows pattern for wiring new validation rules
 4. **sec-profile-types** - Shows how to add rule configuration (see `NumericRules`)
 
 ### Proposed Architecture
 
-**Option A: Extend xbrl-units crate**
-- Add validation functions to existing crate
+**Option A: ~~Extend xbrl-units crate~~**
+- ~~Add validation functions to existing crate~~
+- xbrl-units was **removed in #286**. Use `unit-rules` crate instead.
 - Simple, centralized
 - May bloat unit utility crate
 
