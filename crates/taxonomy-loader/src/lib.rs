@@ -14,6 +14,7 @@
 mod error;
 mod linkbase;
 mod schema;
+mod xml_util;
 
 pub use error::TaxonomyLoaderError;
 

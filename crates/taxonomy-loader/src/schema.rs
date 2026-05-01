@@ -6,6 +6,7 @@
 //! - `xbrli:domainItemType` type elements → Domain members
 
 use crate::error::TaxonomyLoaderError;
+use crate::xml_util;
 use roxmltree::{Document, Node};
 use std::collections::HashMap;
 use taxonomy_dimensions::{Dimension, Hypercube};
@@ -18,7 +19,7 @@ pub fn parse_schema(
     let doc = Document::parse(content)?;
 
     // Extract namespace prefixes
-    let ns_map = extract_namespaces(&doc);
+    let ns_map = xml_util::extract_namespaces(&doc);
 
     // Find the target namespace
     let target_ns = doc
@@ -36,19 +37,7 @@ pub fn parse_schema(
     Ok(())
 }
 
-/// Extracts namespace mappings from the schema.
-fn extract_namespaces(doc: &Document<'_>) -> HashMap<String, String> {
-    let mut ns_map = HashMap::new();
 
-    for ns in doc.root_element().namespaces() {
-        let prefix = ns.name().unwrap_or("");
-        ns_map.insert(prefix.to_string(), ns.uri().to_string());
-    }
-
-    ns_map
-}
-
-/// Parses an individual element definition.
 fn parse_element(
     node: Node<'_, '_>,
     target_ns: &str,
@@ -150,17 +139,14 @@ pub fn extract_import_refs(
     let doc = Document::parse(content)?;
     let mut refs = Vec::new();
 
-    let base_dir = std::path::Path::new(base_path)
-        .parent()
-        .map(|p| p.to_string_lossy().to_string())
-        .unwrap_or_default();
+    let base_dir = xml_util::base_dir_from_path(base_path);
 
     for node in doc.root_element().children() {
         let tag = node.tag_name().name();
         if (tag == "import" || tag == "include")
             && let Some(schema_location) = node.attribute("schemaLocation")
         {
-            let resolved = resolve_path(&base_dir, schema_location);
+            let resolved = xml_util::resolve_path(&base_dir, schema_location);
             refs.push(resolved);
         }
     }
@@ -168,17 +154,7 @@ pub fn extract_import_refs(
     Ok(refs)
 }
 
-/// Resolves a relative path against a base directory.
-/// Resolves a relative path against a base directory.
-fn resolve_path(base_dir: &str, relative: &str) -> String {
-    if relative.starts_with("http://") || relative.starts_with("https://") || base_dir.is_empty() {
-        relative.to_string()
-    } else {
-        format!("{base_dir}/{relative}")
-    }
-}
 
-#[cfg(test)]
 mod tests {
     use super::*;
 
