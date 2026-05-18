@@ -120,10 +120,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 
 [[package]]
-name = "calc11"
-version = "0.1.0-alpha.1"
-
-[[package]]
 name = "cc"
 version = "1.2.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1077,10 +1073,6 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "render-json"
-version = "0.1.0-alpha.1"
-
-[[package]]
-name = "render-md"
 version = "0.1.0-alpha.1"
 
 [[package]]
@@ -2217,14 +2209,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "xbrl-dimensions"
-version = "0.1.0-alpha.1"
-
-[[package]]
-name = "xbrl-linkbases"
-version = "0.1.0-alpha.1"
-
-[[package]]
 name = "xbrl-report-types"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -2241,10 +2225,6 @@ dependencies = [
  "tokio",
  "xbrl-report-types",
 ]
-
-[[package]]
-name = "xbrl-units"
-version = "0.1.0-alpha.1"
 
 [[package]]
 name = "xbrlkit-bdd"
@@ -2291,7 +2271,6 @@ dependencies = [
  "corpus-fs",
  "export-run",
  "render-json",
- "render-md",
  "sec-profile-types",
  "serde_json",
  "serde_yaml",
