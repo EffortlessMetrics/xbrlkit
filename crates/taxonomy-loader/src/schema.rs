@@ -155,6 +155,7 @@ pub fn extract_import_refs(
 }
 
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

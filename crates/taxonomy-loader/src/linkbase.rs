@@ -301,6 +301,7 @@ pub fn extract_linkbase_refs(
 }
 
 
+#[cfg(test)]
 mod tests {
     use super::*;
 
