@@ -35,16 +35,15 @@ pub fn validate_negative_values(
             && is_negative
             && concept_prohibits_negative(&fact.concept, prohibited_concepts)
         {
-            findings.push(ValidationFinding {
-                rule_id: format!("SEC.NEGATIVE_VALUE.{}", sanitize_for_rule_id(&fact.concept)),
-                severity: "error".to_string(),
-                message: format!(
+            findings.push(ValidationFinding::for_fact(
+                format!("SEC.NEGATIVE_VALUE.{}", sanitize_for_rule_id(&fact.concept)),
+                "error",
+                fact,
+                format!(
                     "Concept '{}' has negative value '{}' but does not allow negative values",
                     fact.concept, fact.value
                 ),
-                member: Some(fact.member.clone()),
-                subject: Some(fact.concept.clone()),
-            });
+            ));
         }
     }
 
