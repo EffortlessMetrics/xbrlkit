@@ -228,13 +228,13 @@ fn add_domain_member(
 
     // For simplicity, we'll look for a domain that matches the parent
     // or create one if needed
-    let domain_qname = if taxonomy.domains.contains_key(parent_qname) {
-        parent_qname.to_string()
+    if taxonomy.domains.contains_key(parent_qname) {
+        // Domain already exists
     } else {
         // Try to find a domain that contains this parent as a member
         // For now, create a new domain
-        parent_qname.to_string()
-    };
+    }
+    let domain_qname = parent_qname.to_string();
 
     let domain = taxonomy
         .domains
