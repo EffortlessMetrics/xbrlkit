@@ -37,9 +37,9 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         let parsed = parsed_by_id
             .get(&scenario.scenario_id)
             .with_context(|| format!("missing parsed feature for {}", scenario.scenario_id))?;
-        world.profile_id = None;
-        world.fixture_dirs.clear();
-        world.execution = None;
+        world.execution.profile_id = None;
+        world.execution.fixture_dirs.clear();
+        world.execution.execution = None;
         run_scenario(&mut world, scenario, &parsed.steps)?;
         receipt
             .notes

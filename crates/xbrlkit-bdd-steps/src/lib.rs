@@ -12,7 +12,7 @@ pub use world::{Step, World};
 
 use anyhow::Context;
 use scenario_contract::ScenarioRecord;
-use scenario_runner::{assert_scenario_outcome, ScenarioExecution};
+use scenario_runner::{ScenarioExecution, assert_scenario_outcome};
 
 pub fn run_scenario(
     world: &mut World,
