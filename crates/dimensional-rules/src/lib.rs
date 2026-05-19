@@ -145,19 +145,14 @@ fn validate_dimension_member(
     dim_member: &DimensionMember,
     dim_taxonomy: &DimensionTaxonomy,
 ) -> Result<(), ValidationFinding> {
-    // Check if dimension exists
-    if !dim_taxonomy.dimensions.contains_key(&dim_member.dimension) {
-        return Err(ValidationFinding {
-            rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
-            severity: "error".to_string(),
-            message: format!("Unknown dimension: {}", dim_member.dimension),
-            member: Some(dim_member.dimension.clone()),
-            subject: Some(dim_member.member.clone()),
-        });
-    }
-
-    // Get the dimension definition
-    let dimension = dim_taxonomy.dimensions.get(&dim_member.dimension).unwrap();
+    // Get the dimension definition, or return an error if it doesn't exist
+    let dimension = dim_taxonomy.dimensions.get(&dim_member.dimension).ok_or_else(|| ValidationFinding {
+        rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
+        severity: "error".to_string(),
+        message: format!("Unknown dimension: {}", dim_member.dimension),
+        member: Some(dim_member.dimension.clone()),
+        subject: Some(dim_member.member.clone()),
+    })?;
 
     // If it's a typed dimension, validate the value against the expected type
     if dimension.is_typed() {
