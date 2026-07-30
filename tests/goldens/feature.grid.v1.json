@@ -296,6 +296,456 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-DIM-005",
+      "ac_id": "AC-XK-DIM-005",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/dimensions/typed-member-dimensions"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-006",
+      "ac_id": "AC-XK-DIM-006",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/dimensions/typed-member-dimensions"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-007",
+      "ac_id": "AC-XK-DIM-007",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/dimensions/typed-member-dimensions"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-008",
+      "ac_id": "AC-XK-DIM-008",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [
+        "synthetic/dimensions/typed-member-dimensions"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-009",
+      "ac_id": "AC-XK-DIM-009",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-010",
+      "ac_id": "AC-XK-DIM-010",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-011",
+      "ac_id": "AC-XK-DIM-011",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-012",
+      "ac_id": "AC-XK-DIM-012",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-013",
+      "ac_id": "AC-XK-DIM-013",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-014",
+      "ac_id": "AC-XK-DIM-014",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-015",
+      "ac_id": "AC-XK-DIM-015",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-016",
+      "ac_id": "AC-XK-DIM-016",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-DIM-017",
+      "ac_id": "AC-XK-DIM-017",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "taxonomy-dimensions",
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/taxonomy-dimensions",
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy",
+        "fixtures/synthetic/dimensions"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-DUPLICATES-001",
       "ac_id": "AC-XK-DUPLICATES-001",
       "req_id": "REQ-XK-DUPLICATES",
