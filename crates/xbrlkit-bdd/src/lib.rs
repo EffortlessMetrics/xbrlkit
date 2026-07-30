@@ -5,7 +5,7 @@ use receipt_types::{Receipt, RunResult};
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use std::collections::BTreeMap;
 use std::path::Path;
-use xbrlkit_bdd_steps::{Step, World, run_scenario};
+use xbrlkit_bdd_steps::{DimensionContext, Step, World, run_scenario};
 
 #[derive(Debug, Clone)]
 pub struct BddRun {
@@ -40,6 +40,7 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         world.profile_id = None;
         world.fixture_dirs.clear();
         world.execution = None;
+        world.dimension_context = DimensionContext::default();
         run_scenario(&mut world, scenario, &parsed.steps)?;
         receipt
             .notes

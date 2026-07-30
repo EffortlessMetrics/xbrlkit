@@ -795,7 +795,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         };
 
         // Add dimensional member if specified
-        if !dimension.is_empty() && !member.is_empty() {
+        if !dimension.is_empty() {
             context.scenario = Some(DimensionalContainer {
                 dimensions: vec![DimensionMember {
                     dimension: dimension.to_string(),
