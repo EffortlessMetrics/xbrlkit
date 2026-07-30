@@ -4,6 +4,7 @@ module: export-oim-json
 scenarios:
   SCN-XK-EXPORT-001:
     ac_id: AC-XK-EXPORT-001
+    req_id: REQ-XK-EXPORT
     crates: [oim-normalize, export-run, render-json]
     fixtures: [synthetic/inline/ixds-single-file-01]
     profile_pack: sec/efm-77/opco

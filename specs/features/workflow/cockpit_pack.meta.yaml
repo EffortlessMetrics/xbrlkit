@@ -3,6 +3,7 @@ layer: workflow
 module: cockpit-pack
 scenarios:
   SCN-XK-WORKFLOW-003:
+    req_id: REQ-XK-WORKFLOW
     crates: [cockpit-export, receipt-types, xtask]
     fixtures: []
     receipts: [sensor.report.v1, scenario.run.v1]
