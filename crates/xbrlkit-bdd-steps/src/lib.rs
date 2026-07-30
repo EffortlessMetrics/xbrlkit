@@ -276,9 +276,21 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a context without that dimension" {
-        // Ensure dimension is not set (or clear it)
-        world.dimension_context.dimension = None;
-        world.dimension_context.explicit_dimension = None;
+        // Keep the fact requirement, but clear all dimension-member state.
+        // This prevents a reused world from carrying a previous scenario's
+        // dimensional values into the missing-dimension assertion.
+        let context = &mut world.dimension_context;
+        context.dimension = None;
+        context.member = None;
+        context.explicit_dimension = None;
+        context.explicit_member = None;
+        context.typed_dimension = None;
+        context.typed_member = None;
+        context.segment_dimension = None;
+        context.segment_member = None;
+        context.typed_value_type = None;
+        context.validation_findings.clear();
+        context.parsed_dimensions.clear();
         return Ok(true);
     }
 
@@ -295,7 +307,9 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         }
         // Handle "dim:Axis" in segment format
         if let Some((dim_part, _)) = rest.split_once("\" in segment") {
-            world.dimension_context.segment_dimension = Some(dim_part.to_string());
+            let dim = dim_part.to_string();
+            world.dimension_context.dimension = Some(dim.clone());
+            world.dimension_context.segment_dimension = Some(dim);
             world.dimension_context.segment_member = world.dimension_context.member.clone();
             return Ok(true);
         }
