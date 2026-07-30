@@ -81,9 +81,303 @@ stories:
               - type: bdd
                 tag: "@AC-XK-WORKFLOW-003"
                 file: "specs/features/workflow/alpha_check.feature"
+              - type: bdd
+                tag: "@SCN-XK-WORKFLOW-003"
+                file: "specs/features/workflow/cockpit_pack.feature"
           - id: AC-XK-WORKFLOW-004
             title: Verify publishable crates package for crates.io
             tests:
               - type: bdd
                 tag: "@AC-XK-WORKFLOW-004"
                 file: "specs/features/workflow/package_check.feature"
+      - id: REQ-XK-CLI
+        title: Provide CLI commands for profile and report introspection
+        acceptance_criteria:
+          - id: AC-XK-CLI-001
+            title: Output profile as JSON
+            tests:
+              - type: bdd
+                tag: "@AC-XK-CLI-001"
+                file: "specs/features/cli/describe_profile.feature"
+      - id: REQ-XK-CONTEXT
+        title: Validate that all facts reference defined contexts
+        acceptance_criteria:
+          - id: AC-XK-CONTEXT-001
+            title: Fact references missing context
+            tests:
+              - type: bdd
+                tag: "@AC-XK-CONTEXT-001"
+                file: "specs/features/foundation/context_completeness.feature"
+          - id: AC-XK-CONTEXT-002
+            title: All facts reference valid contexts
+            tests:
+              - type: bdd
+                tag: "@AC-XK-CONTEXT-002"
+                file: "specs/features/foundation/context_completeness.feature"
+          - id: AC-XK-CONTEXT-003
+            title: Context ID matching is case-insensitive
+            tests:
+              - type: bdd
+                tag: "@AC-XK-CONTEXT-003"
+                file: "specs/features/foundation/context_completeness.feature"
+          - id: AC-XK-CONTEXT-004
+            title: Multiple facts with missing contexts
+            tests:
+              - type: bdd
+                tag: "@AC-XK-CONTEXT-004"
+                file: "specs/features/foundation/context_completeness.feature"
+      - id: REQ-XK-SEC-DECIMAL
+        title: Enforce decimal precision rules for numeric facts
+        acceptance_criteria:
+          - id: AC-XK-SEC-DECIMAL-001
+            title: Nonzero digits must not be truncated
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-DECIMAL-001"
+                file: "specs/features/sec/decimal_precision.feature"
+          - id: AC-XK-SEC-DECIMAL-002
+            title: Valid rounding with appropriate decimals is allowed
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-DECIMAL-002"
+                file: "specs/features/sec/decimal_precision.feature"
+      - id: REQ-XK-SEC-NEGATIVE
+        title: Reject negative values for semantically non-negative concepts
+        acceptance_criteria:
+          - id: AC-XK-SEC-NEGATIVE-001
+            title: Negative share count detected as error
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-NEGATIVE-001"
+                file: "specs/features/sec/negative_values.feature"
+          - id: AC-XK-SEC-NEGATIVE-002
+            title: Valid non-negative share count passes validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-NEGATIVE-002"
+                file: "specs/features/sec/negative_values.feature"
+          - id: AC-XK-SEC-NEGATIVE-003
+            title: Negative employee count detected
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-NEGATIVE-003"
+                file: "specs/features/sec/negative_values.feature"
+          - id: AC-XK-SEC-NEGATIVE-004
+            title: Accounting notation (parentheses) detected
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-NEGATIVE-004"
+                file: "specs/features/sec/negative_values.feature"
+          - id: AC-XK-SEC-NEGATIVE-005
+            title: Financial loss values can be negative
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-NEGATIVE-005"
+                file: "specs/features/sec/negative_values.feature"
+      - id: REQ-XK-SEC-REQUIRED
+        title: Verify presence of SEC-required DEI facts
+        acceptance_criteria:
+          - id: AC-XK-SEC-REQUIRED-001
+            title: Missing required fact detected and reported
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-REQUIRED-001"
+                file: "specs/features/sec/required_facts.feature"
+          - id: AC-XK-SEC-REQUIRED-002
+            title: All required facts present passes validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-REQUIRED-002"
+                file: "specs/features/sec/required_facts.feature"
+      - id: REQ-XK-TAXONOMY-LOADER
+        title: Load and cache taxonomy definitions for validation
+        acceptance_criteria:
+          - id: AC-XK-TAX-LOAD-001
+            title: Load dimension definitions from schema
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-001"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-002
+            title: Load domain hierarchies from definition linkbase
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-002"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-003
+            title: Load typed dimension definitions
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-003"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-004
+            title: Load hypercube definitions
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-004"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-005
+            title: Cache taxonomy files locally
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-005"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-006
+            title: Handle schema imports recursively
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-006"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-007
+            title: Validate dimension-member against loaded taxonomy
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-007"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-008
+            title: Reject invalid member against loaded taxonomy
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-008"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
+      - id: REQ-XK-PERFORMANCE
+        title: Stream-parse large XBRL filings with bounded memory
+        acceptance_criteria:
+          - id: AC-XK-STREAM-001
+            title: Stream parse a large XBRL file
+            tests:
+              - type: bdd
+                tag: "@AC-XK-STREAM-001"
+                file: "specs/features/performance/streaming_parser.feature"
+          - id: AC-XK-STREAM-002
+            title: Automatic fallback for small files
+            tests:
+              - type: bdd
+                tag: "@AC-XK-STREAM-002"
+                file: "specs/features/performance/streaming_parser.feature"
+          - id: AC-XK-STREAM-003
+            title: Context completeness via streaming
+            tests:
+              - type: bdd
+                tag: "@AC-XK-STREAM-003"
+                file: "specs/features/performance/streaming_parser.feature"
+          - id: AC-XK-STREAM-004
+            title: Custom fact handler
+            tests:
+              - type: bdd
+                tag: "@AC-XK-STREAM-004"
+                file: "specs/features/performance/streaming_parser.feature"
+      - id: REQ-XK-EXPORT
+        title: Emit canonical OIM JSON export with provenance
+        acceptance_criteria:
+          - id: AC-XK-EXPORT-001
+            title: Emit canonical JSON export with provenance
+            tests:
+              - type: bdd
+                tag: "@AC-XK-EXPORT-001"
+                file: "specs/features/export/oim_json.feature"
+      - id: REQ-XK-DIMENSIONS
+        title: Validate dimension-member pairs against taxonomy definitions
+        acceptance_criteria:
+          - id: AC-XK-DIM-001
+            title: Valid dimension-member pair passes validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-001"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-002
+            title: Invalid dimension-member pair fails validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-002"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-003
+            title: Missing required dimension is detected
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-003"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-004
+            title: Unknown dimension is rejected
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-004"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-005
+            title: Typed member dimension is parsed correctly
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-005"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-006
+            title: Mixed explicit and typed members in same context
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-006"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-007
+            title: Typed member in segment container
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-007"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-008
+            title: Empty typed member value is handled
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-008"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-009
+            title: Valid typed decimal value passes validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-009"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-010
+            title: Invalid typed decimal value fails validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-010"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-011
+            title: Valid typed date value passes validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-011"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-012
+            title: Invalid typed date value fails validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-012"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-013
+            title: Valid typed boolean value passes validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-013"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-014
+            title: Invalid typed boolean value fails validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-014"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-015
+            title: Empty typed value fails validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-015"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-016
+            title: Valid typed integer value passes validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-016"
+                file: "specs/features/taxonomy/dimensions.feature"
+          - id: AC-XK-DIM-017
+            title: Invalid typed integer value fails validation
+            tests:
+              - type: bdd
+                tag: "@AC-XK-DIM-017"
+                file: "specs/features/taxonomy/dimensions.feature"

@@ -1,4 +1,7 @@
 @alpha-active
+@REQ-XK-PERFORMANCE
+@layer.performance
+@suite.synthetic
 Feature: Streaming Parser for Large Files
   As an XBRL validator
   I want to validate large SEC filings without excessive memory usage

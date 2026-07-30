@@ -1,6 +1,14 @@
 # xbrlkit
 
+[![CI](https://github.com/EffortlessMetrics/xbrlkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/EffortlessMetrics/xbrlkit/actions/workflows/ci.yml)
+[![Coverage](https://github.com/EffortlessMetrics/xbrlkit/actions/workflows/coverage.yml/badge.svg?branch=main)](https://github.com/EffortlessMetrics/xbrlkit/actions/workflows/coverage.yml)
+[![Codecov](https://codecov.io/gh/EffortlessMetrics/xbrlkit/branch/main/graph/badge.svg)](https://codecov.io/gh/EffortlessMetrics/xbrlkit)
+[![MSRV](https://img.shields.io/badge/MSRV-1.92-blue.svg)](Cargo.toml)
+[![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+
 Alpha Rust workspace for XBRL / iXBRL + EDGAR processing, aimed first at SEC operating-company filings.
+
+Codecov is execution-surface telemetry only; see [Coverage](docs/ci/coverage.md) for what the badge does and does not claim.
 
 ## What this workspace is for
 
