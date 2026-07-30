@@ -1,5 +1,5 @@
 [package]
-name = "xbrl-linkbases"
+name = "xbrlkit-xbrl-linkbases"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -1,4 +1,4 @@
-# edgar-sgml
+# xbrlkit-edgar-sgml
 
 EDGAR SGML filing parser.
 
@@ -6,7 +6,7 @@ EDGAR SGML filing parser.
 
 ```toml
 [dependencies]
-edgar-sgml = "0.1.0-alpha.1"
+xbrlkit-edgar-sgml = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

@@ -5,7 +5,7 @@
 //!
 //! # Example
 //! ```
-//! use xbrl_stream::{XbrlStreamReader, StreamingFact, FactHandler};
+//! use xbrlkit_xbrl_stream::{XbrlStreamReader, StreamingFact, FactHandler};
 //! use std::io::Cursor;
 //!
 //! #[derive(Default)]

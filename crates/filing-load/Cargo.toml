@@ -1,5 +1,5 @@
 [package]
-name = "filing-load"
+name = "xbrlkit-filing-load"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

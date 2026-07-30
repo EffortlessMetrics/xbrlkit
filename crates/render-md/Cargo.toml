@@ -1,5 +1,5 @@
 [package]
-name = "render-md"
+name = "xbrlkit-render-md"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

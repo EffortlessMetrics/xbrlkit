@@ -1,5 +1,5 @@
 [package]
-name = "taxonomy-cache"
+name = "xbrlkit-taxonomy-cache"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

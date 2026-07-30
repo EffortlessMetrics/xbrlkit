@@ -1,4 +1,4 @@
-# xbrl-stream
+# xbrlkit-xbrl-stream
 
 SAX-style streaming XBRL parser for large filings.
 
@@ -6,7 +6,7 @@ SAX-style streaming XBRL parser for large filings.
 
 ```toml
 [dependencies]
-xbrl-stream = "0.1.0-alpha.1"
+xbrlkit-xbrl-stream = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

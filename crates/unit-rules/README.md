@@ -1,4 +1,4 @@
-# unit-rules
+# xbrlkit-unit-rules
 
 XBRL unit consistency validation rules.
 
@@ -6,7 +6,7 @@ XBRL unit consistency validation rules.
 
 ```toml
 [dependencies]
-unit-rules = "0.1.0-alpha.1"
+xbrlkit-unit-rules = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

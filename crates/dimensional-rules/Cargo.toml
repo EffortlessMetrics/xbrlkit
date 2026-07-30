@@ -1,5 +1,5 @@
 [package]
-name = "dimensional-rules"
+name = "xbrlkit-dimensional-rules"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

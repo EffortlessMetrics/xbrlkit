@@ -1,5 +1,5 @@
 [package]
-name = "oim-normalize"
+name = "xbrlkit-oim-normalize"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

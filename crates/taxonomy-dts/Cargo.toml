@@ -1,5 +1,5 @@
 [package]
-name = "taxonomy-dts"
+name = "xbrlkit-taxonomy-dts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

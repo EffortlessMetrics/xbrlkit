@@ -5,7 +5,7 @@
 //! # Example
 //!
 //! ```
-//! use taxonomy_loader::load_taxonomy;
+//! use xbrlkit_taxonomy_loader::load_taxonomy;
 //!
 //! // Load from an entrypoint URL or local path
 //! // let taxonomy = load_taxonomy("https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-2024.xsd")?;

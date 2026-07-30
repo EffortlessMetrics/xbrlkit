@@ -1,4 +1,4 @@
-# duplicate-facts
+# xbrlkit-duplicate-facts
 
 Duplicate fact detection for XBRL reports.
 
@@ -6,7 +6,7 @@ Duplicate fact detection for XBRL reports.
 
 ```toml
 [dependencies]
-duplicate-facts = "0.1.0-alpha.1"
+xbrlkit-duplicate-facts = "0.1.0-alpha.1"
 ```
 
 See [xbrlkit](https://github.com/EffortlessMetrics/xbrlkit) for more.

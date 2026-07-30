@@ -200,26 +200,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
-name = "cockpit-export"
-version = "0.1.0-alpha.1"
-dependencies = [
- "receipt-types",
- "serde_json",
-]
-
-[[package]]
 name = "colorchoice"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
-
-[[package]]
-name = "context-completeness"
-version = "0.1.0-alpha.1"
-dependencies = [
- "xbrl-contexts",
- "xbrl-report-types",
-]
 
 [[package]]
 name = "core-foundation-sys"
@@ -235,25 +219,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "diff-run"
-version = "0.1.0-alpha.1"
-dependencies = [
- "receipt-types",
- "xbrl-report-types",
-]
-
-[[package]]
-name = "dimensional-rules"
-version = "0.1.0-alpha.1"
-dependencies = [
- "serde",
- "taxonomy-dimensions",
- "thiserror 2.0.18",
- "xbrl-contexts",
- "xbrl-report-types",
-]
-
-[[package]]
 name = "displaydoc"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -265,42 +230,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "duplicate-facts"
-version = "0.1.0-alpha.1"
-dependencies = [
- "xbrl-report-types",
-]
-
-[[package]]
-name = "edgar-attachments"
-version = "0.1.0-alpha.1"
-dependencies = [
- "edgar-identity",
- "serde",
-]
-
-[[package]]
 name = "edgar-identity"
 version = "0.1.0-alpha.1"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "edgar-sgml"
-version = "0.1.0-alpha.1"
-dependencies = [
- "edgar-identity",
-]
-
-[[package]]
-name = "efm-rules"
-version = "0.1.0-alpha.1"
-dependencies = [
- "ixhtml-scan",
- "sec-profile-types",
- "taxonomy-dts",
- "xbrl-report-types",
 ]
 
 [[package]]
@@ -320,29 +253,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "export-run"
-version = "0.1.0-alpha.1"
-dependencies = [
- "oim-normalize",
- "receipt-types",
- "serde_json",
- "xbrl-report-types",
-]
-
-[[package]]
 name = "fastrand"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
-
-[[package]]
-name = "filing-load"
-version = "0.1.0-alpha.1"
-dependencies = [
- "edgar-attachments",
- "edgar-sgml",
- "receipt-types",
-]
 
 [[package]]
 name = "find-msvc-tools"
@@ -748,14 +662,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
 
 [[package]]
-name = "ixds-assemble"
-version = "0.1.0-alpha.1"
-dependencies = [
- "ixhtml-scan",
- "xbrl-report-types",
-]
-
-[[package]]
 name = "ixhtml-scan"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -835,21 +741,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "numeric-rules"
-version = "0.1.0-alpha.1"
-dependencies = [
- "xbrl-report-types",
-]
-
-[[package]]
-name = "oim-normalize"
-version = "0.1.0-alpha.1"
-dependencies = [
- "serde_json",
- "xbrl-report-types",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -860,13 +751,6 @@ name = "once_cell_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
-
-[[package]]
-name = "oracle-compare"
-version = "0.1.0-alpha.1"
-dependencies = [
- "receipt-types",
-]
 
 [[package]]
 name = "percent-encoding"
@@ -1076,14 +960,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
-name = "render-json"
-version = "0.1.0-alpha.1"
-
-[[package]]
-name = "render-md"
-version = "0.1.0-alpha.1"
-
-[[package]]
 name = "reqwest"
 version = "0.12.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1216,47 +1092,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "scenario-contract"
-version = "0.1.0-alpha.1"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "scenario-runner"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
- "export-run",
- "receipt-types",
- "scenario-contract",
- "sec-profile-types",
- "serde",
- "serde_json",
- "serde_yaml",
- "validation-run",
- "xbrl-report-types",
-]
-
-[[package]]
-name = "sec-http"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
-]
-
-[[package]]
-name = "sec-profile-types"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
- "serde",
- "serde_yaml",
- "taxonomy-types",
 ]
 
 [[package]]
@@ -1408,57 +1243,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "taxonomy-cache"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
-]
-
-[[package]]
-name = "taxonomy-dimensions"
-version = "0.1.0-alpha.1"
-dependencies = [
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "taxonomy-dts"
-version = "0.1.0-alpha.1"
-dependencies = [
- "sec-profile-types",
- "taxonomy-types",
-]
-
-[[package]]
-name = "taxonomy-loader"
-version = "0.1.0-alpha.1"
-dependencies = [
- "reqwest",
- "roxmltree",
- "serde_json",
- "taxonomy-dimensions",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "taxonomy-package"
-version = "0.1.0-alpha.1"
-dependencies = [
- "taxonomy-types",
-]
-
-[[package]]
-name = "taxonomy-types"
-version = "0.1.0-alpha.1"
-dependencies = [
- "serde",
 ]
 
 [[package]]
@@ -1658,16 +1442,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
-name = "unit-rules"
-version = "0.1.0-alpha.1"
-dependencies = [
- "regex",
- "sec-profile-types",
- "serde",
- "xbrl-report-types",
-]
-
-[[package]]
 name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1702,27 +1476,6 @@ name = "utf8parse"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
-
-[[package]]
-name = "validation-run"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
- "context-completeness",
- "dimensional-rules",
- "duplicate-facts",
- "efm-rules",
- "ixds-assemble",
- "numeric-rules",
- "receipt-types",
- "sec-profile-types",
- "taxonomy-dimensions",
- "taxonomy-dts",
- "taxonomy-types",
- "xbrl-contexts",
- "xbrl-report-types",
- "xbrl-stream",
-]
 
 [[package]]
 name = "walkdir"
@@ -2208,53 +1961,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9edde0db4769d2dc68579893f2306b26c6ecfbe0ef499b013d731b7b9247e0b9"
 
 [[package]]
-name = "xbrl-contexts"
-version = "0.1.0-alpha.1"
-dependencies = [
- "roxmltree",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "xbrl-dimensions"
-version = "0.1.0-alpha.1"
-
-[[package]]
-name = "xbrl-linkbases"
-version = "0.1.0-alpha.1"
-
-[[package]]
-name = "xbrl-report-types"
-version = "0.1.0-alpha.1"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "xbrl-stream"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
- "quick-xml",
- "thiserror 1.0.69",
- "tokio",
- "xbrl-report-types",
-]
-
-[[package]]
-name = "xbrl-units"
-version = "0.1.0-alpha.1"
-
-[[package]]
 name = "xbrlkit-bdd"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
  "receipt-types",
- "scenario-contract",
  "walkdir",
  "xbrlkit-bdd-steps",
+ "xbrlkit-scenario-contract",
 ]
 
 [[package]]
@@ -2262,24 +1976,24 @@ name = "xbrlkit-bdd-steps"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
- "cockpit-export",
- "context-completeness",
- "dimensional-rules",
- "edgar-attachments",
- "filing-load",
- "numeric-rules",
  "receipt-types",
- "scenario-contract",
- "scenario-runner",
- "sec-profile-types",
  "serde_json",
- "taxonomy-dimensions",
- "taxonomy-loader",
  "walkdir",
- "xbrl-contexts",
- "xbrl-report-types",
- "xbrl-stream",
+ "xbrlkit-cockpit-export",
+ "xbrlkit-context-completeness",
+ "xbrlkit-dimensional-rules",
+ "xbrlkit-edgar-attachments",
  "xbrlkit-feature-grid",
+ "xbrlkit-filing-load",
+ "xbrlkit-numeric-rules",
+ "xbrlkit-scenario-contract",
+ "xbrlkit-scenario-runner",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-taxonomy-dimensions",
+ "xbrlkit-taxonomy-loader",
+ "xbrlkit-xbrl-contexts",
+ "xbrlkit-xbrl-report-types",
+ "xbrlkit-xbrl-stream",
 ]
 
 [[package]]
@@ -2289,17 +2003,25 @@ dependencies = [
  "anyhow",
  "clap",
  "corpus-fs",
- "export-run",
- "render-json",
- "render-md",
- "sec-profile-types",
  "serde_json",
  "serde_yaml",
- "taxonomy-dimensions",
- "taxonomy-loader",
- "validation-run",
- "xbrl-contexts",
- "xbrl-report-types",
+ "xbrlkit-export-run",
+ "xbrlkit-render-json",
+ "xbrlkit-render-md",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-taxonomy-dimensions",
+ "xbrlkit-taxonomy-loader",
+ "xbrlkit-validation-run",
+ "xbrlkit-xbrl-contexts",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-cockpit-export"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "receipt-types",
+ "serde_json",
 ]
 
 [[package]]
@@ -2310,15 +2032,84 @@ dependencies = [
 ]
 
 [[package]]
+name = "xbrlkit-context-completeness"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "xbrlkit-xbrl-contexts",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
 name = "xbrlkit-core"
 version = "0.1.0-alpha.1"
 dependencies = [
- "diff-run",
- "export-run",
  "receipt-types",
- "sec-profile-types",
- "validation-run",
- "xbrl-report-types",
+ "xbrlkit-diff-run",
+ "xbrlkit-export-run",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-validation-run",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-diff-run"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "receipt-types",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-dimensional-rules"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
+ "xbrlkit-taxonomy-dimensions",
+ "xbrlkit-xbrl-contexts",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-duplicate-facts"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-edgar-attachments"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "edgar-identity",
+ "serde",
+]
+
+[[package]]
+name = "xbrlkit-edgar-sgml"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "edgar-identity",
+]
+
+[[package]]
+name = "xbrlkit-efm-rules"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "ixhtml-scan",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-taxonomy-dts",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-export-run"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "receipt-types",
+ "serde_json",
+ "xbrlkit-oim-normalize",
+ "xbrlkit-xbrl-report-types",
 ]
 
 [[package]]
@@ -2326,10 +2117,19 @@ name = "xbrlkit-feature-grid"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
- "scenario-contract",
  "serde",
  "serde_yaml",
  "walkdir",
+ "xbrlkit-scenario-contract",
+]
+
+[[package]]
+name = "xbrlkit-filing-load"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "receipt-types",
+ "xbrlkit-edgar-attachments",
+ "xbrlkit-edgar-sgml",
 ]
 
 [[package]]
@@ -2340,11 +2140,211 @@ dependencies = [
 ]
 
 [[package]]
+name = "xbrlkit-ixds-assemble"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "ixhtml-scan",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-numeric-rules"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-oim-normalize"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde_json",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-oracle-compare"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "receipt-types",
+]
+
+[[package]]
+name = "xbrlkit-render-json"
+version = "0.1.0-alpha.1"
+
+[[package]]
+name = "xbrlkit-render-md"
+version = "0.1.0-alpha.1"
+
+[[package]]
+name = "xbrlkit-scenario-contract"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "xbrlkit-scenario-runner"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "receipt-types",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "xbrlkit-export-run",
+ "xbrlkit-scenario-contract",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-validation-run",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-sec-http"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
+name = "xbrlkit-sec-profile-types"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_yaml",
+ "xbrlkit-taxonomy-types",
+]
+
+[[package]]
+name = "xbrlkit-taxonomy-cache"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
+name = "xbrlkit-taxonomy-dimensions"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "xbrlkit-taxonomy-dts"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-taxonomy-types",
+]
+
+[[package]]
+name = "xbrlkit-taxonomy-loader"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "reqwest",
+ "roxmltree",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "url",
+ "xbrlkit-taxonomy-dimensions",
+]
+
+[[package]]
+name = "xbrlkit-taxonomy-package"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "xbrlkit-taxonomy-types",
+]
+
+[[package]]
+name = "xbrlkit-taxonomy-types"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "xbrlkit-test-grid"
 version = "0.1.0-alpha.1"
 dependencies = [
- "scenario-contract",
+ "xbrlkit-scenario-contract",
 ]
+
+[[package]]
+name = "xbrlkit-unit-rules"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "regex",
+ "serde",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-validation-run"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "receipt-types",
+ "xbrlkit-context-completeness",
+ "xbrlkit-dimensional-rules",
+ "xbrlkit-duplicate-facts",
+ "xbrlkit-efm-rules",
+ "xbrlkit-ixds-assemble",
+ "xbrlkit-numeric-rules",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-taxonomy-dimensions",
+ "xbrlkit-taxonomy-dts",
+ "xbrlkit-taxonomy-types",
+ "xbrlkit-xbrl-contexts",
+ "xbrlkit-xbrl-report-types",
+ "xbrlkit-xbrl-stream",
+]
+
+[[package]]
+name = "xbrlkit-xbrl-contexts"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "roxmltree",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "xbrlkit-xbrl-dimensions"
+version = "0.1.0-alpha.1"
+
+[[package]]
+name = "xbrlkit-xbrl-linkbases"
+version = "0.1.0-alpha.1"
+
+[[package]]
+name = "xbrlkit-xbrl-report-types"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "xbrlkit-xbrl-stream"
+version = "0.1.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "quick-xml",
+ "thiserror 1.0.69",
+ "tokio",
+ "xbrlkit-xbrl-report-types",
+]
+
+[[package]]
+name = "xbrlkit-xbrl-units"
+version = "0.1.0-alpha.1"
 
 [[package]]
 name = "xtask"
@@ -2353,19 +2353,19 @@ dependencies = [
  "anyhow",
  "chrono",
  "clap",
- "cockpit-export",
  "receipt-types",
- "scenario-contract",
- "scenario-runner",
- "sec-profile-types",
  "serde",
  "serde_json",
  "serde_yaml",
- "validation-run",
  "walkdir",
- "xbrl-report-types",
  "xbrlkit-bdd",
+ "xbrlkit-cockpit-export",
  "xbrlkit-feature-grid",
+ "xbrlkit-scenario-contract",
+ "xbrlkit-scenario-runner",
+ "xbrlkit-sec-profile-types",
+ "xbrlkit-validation-run",
+ "xbrlkit-xbrl-report-types",
 ]
 
 [[package]]
