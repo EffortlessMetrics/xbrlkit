@@ -30,7 +30,7 @@ Dimensions are currently:
 
 ## What Needs to Be Built
 
-### 1. XBRL Schema Parser (`xbrl-schema` crate?)
+### 1. XBRL Schema Parsing (in `taxonomy-loader`)
 Parse `.xsd` files to extract:
 - `<xsd:element>` with `xbrli:itemType="xbrli:domainItemType"` → Domain members
 - `<xsd:element>` with `substitutionGroup="xbrldt:hypercubeItem"` → Hypercubes
@@ -43,7 +43,7 @@ Parse `_def.xml` files to extract arc relationships:
 - `domain-member` → Hierarchical member relationships
 - `all` / `notAll` → Closed vs open hypercubes
 
-### 3. Taxonomy Loader (`taxonomy-loader` crate?)
+### 3. Taxonomy Loader Integration
 Orchestrate loading:
 - Download/resolve taxonomy packages
 - Parse entry point → discover all linked schemas
@@ -125,13 +125,9 @@ crates/
 │   └── linkbase/             # Definition linkbase parsing
 ```
 
-**Alternative:** Extend existing crates instead of new ones.
-- Extend `taxonomy-loader` → add definition linkbase parsing and schema resolution
-- New `taxonomy-loader` sub-modules → orchestration layer
-
 ---
 
-## Acceptance Criteria (for Plan phase)
+## Acceptance Criteria (for Implementation phase)
 
 1. Can parse a minimal XSD with dimension elements
 2. Can parse a minimal definition linkbase with arcs
@@ -154,10 +150,9 @@ crates/
 
 ## Next Steps
 
-1. **Create plan issue** with crate structure decision
-2. **Spike:** Parse minimal SEC taxonomy entry point manually
-3. **Build:** `taxonomy-loader` crate skeleton
-4. **Integrate:** Wire into `validation-run`
+1. **Characterize:** Cover the existing `taxonomy-loader` seam with minimal fixtures
+2. **Implement:** Add the remaining schema and linkbase cases in `taxonomy-loader`
+3. **Integrate:** Wire completed taxonomy loading into `validation-run`
 
 ---
 
