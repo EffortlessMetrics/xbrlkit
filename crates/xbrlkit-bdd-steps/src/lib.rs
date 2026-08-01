@@ -368,13 +368,8 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     if step.text.starts_with("an XBRL report with context ") {
         // Parse contexts from the step text
         // Format: "an XBRL report with context \"ctx-1\"" or "an XBRL report with contexts \"ctx-1\" and \"ctx-2\""
-        let text = &step.text;
-        let contexts: Vec<String> = text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let contexts = parse_quoted_strings(&step.text)
+            .context("invalid context specification: unbalanced quotes")?;
 
         for ctx_id in contexts {
             let context = xbrl_contexts::Context {
@@ -394,31 +389,17 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text.starts_with("a fact referencing concept ") {
         // Parse: "a fact referencing concept \"us-gaap:Revenue\" with context \"ctx-1\""
-        let text = &step.text;
-        if let Some(concept_start) = text.find('\"') {
-            let concept_end = text[concept_start + 1..]
-                .find('\"')
-                .map(|i| concept_start + 1 + i);
-            if let Some(concept_end) = concept_end {
-                let concept = &text[concept_start + 1..concept_end];
-                if let Some(ctx_start) = text[concept_end + 1..].find('\"') {
-                    let ctx_start = concept_end + 1 + ctx_start;
-                    let ctx_end = text[ctx_start + 1..].find('\"').map(|i| ctx_start + 1 + i);
-                    if let Some(ctx_end) = ctx_end {
-                        let context_ref = &text[ctx_start + 1..ctx_end];
-                        let fact = xbrl_report_types::Fact {
-                            concept: concept.to_string(),
-                            context_ref: context_ref.to_string(),
-                            unit_ref: None,
-                            decimals: None,
-                            value: "1000".to_string(),
-                            member: String::new(),
-                        };
-                        world.context_completeness_context.facts.push(fact);
-                        return Ok(true);
-                    }
-                }
-            }
+        if let Some((concept, context_ref)) = parse_fact_concept_and_context(&step.text) {
+            let fact = xbrl_report_types::Fact {
+                concept,
+                context_ref,
+                unit_ref: None,
+                decimals: None,
+                value: "1000".to_string(),
+                member: String::new(),
+            };
+            world.context_completeness_context.facts.push(fact);
+            return Ok(true);
         }
         anyhow::bail!("invalid fact specification: {}", step.text);
     }
@@ -427,13 +408,8 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         // Parse: "facts referencing concepts \"us-gaap:Revenue\" and \"us-gaap:Assets\" with contexts \"ctx-1\" and \"ctx-2\""
         // For simplicity, we'll create facts for each concept-context pair
         // Parse all quoted strings
-        let quoted: Vec<String> = step
-            .text
-            .split('\"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let quoted = parse_quoted_strings(&step.text)
+            .context("invalid facts specification: unbalanced quotes")?;
 
         if quoted.len() >= 2 {
             // First half are concepts, second half are contexts
@@ -468,15 +444,10 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world.context_completeness_context.findings.clear();
 
         // Parse: "a numeric fact with value "1234.56" and decimals "INF""
-        let quoted: Vec<String> = step
-            .text
-            .split('"')
-            .enumerate()
-            .filter(|(i, _)| i % 2 == 1)
-            .map(|(_, s)| s.to_string())
-            .collect();
+        let quoted = parse_quoted_strings(&step.text)
+            .context("invalid numeric fact specification: unbalanced quotes")?;
 
-        if quoted.len() >= 2 {
+        if quoted.len() == 2 {
             let value = &quoted[0];
             let decimals = &quoted[1];
             let fact = xbrl_report_types::Fact {
@@ -1603,6 +1574,29 @@ fn parse_count_suffix(step: &str, prefix: &str, noun_stem: &str) -> Option<usize
     if noun == noun_stem { Some(count) } else { None }
 }
 
+fn parse_quoted_strings(text: &str) -> Option<Vec<String>> {
+    if text.chars().filter(|character| *character == '"').count() % 2 != 0 {
+        return None;
+    }
+
+    Some(
+        text.split('"')
+            .enumerate()
+            .filter(|(index, _)| index % 2 == 1)
+            .map(|(_, value)| value.to_string())
+            .collect(),
+    )
+}
+
+fn parse_fact_concept_and_context(text: &str) -> Option<(String, String)> {
+    if !text.contains("\" with context \"") {
+        return None;
+    }
+
+    let quoted = parse_quoted_strings(text)?;
+    (quoted.len() == 2).then(|| (quoted[0].clone(), quoted[1].clone()))
+}
+
 /// Select scenarios matching a selector (`scenario_id`, `ac_id`, `req_id`, or tag)
 fn select_matching_scenarios(grid: &FeatureGrid, selector: &str) -> Vec<ScenarioRecord> {
     grid.scenarios
@@ -1622,4 +1616,43 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_fact_concept_and_context, parse_quoted_strings};
+
+    #[test]
+    fn parse_quoted_strings_extracts_balanced_values() -> Result<(), String> {
+        let actual = parse_quoted_strings("concept \"Revenue\" with context \"ctx-1\"")
+            .ok_or_else(|| "balanced quotes were rejected".to_string())?;
+        let expected = vec!["Revenue".to_string(), "ctx-1".to_string()];
+        if actual != expected {
+            return Err(format!("expected {expected:?}, got {actual:?}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parse_quoted_strings_rejects_unbalanced_values() -> Result<(), String> {
+        if parse_quoted_strings("start \"middle").is_some() {
+            return Err("unbalanced quotes were accepted".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn parse_fact_concept_and_context_requires_exact_step_shape() -> Result<(), String> {
+        let valid = parse_fact_concept_and_context("concept \"Revenue\" with context \"ctx-1\"")
+            .ok_or_else(|| "valid fact shape was rejected".to_string())?;
+        if valid != ("Revenue".to_string(), "ctx-1".to_string()) {
+            return Err(format!("unexpected parsed fact: {valid:?}"));
+        }
+
+        let malformed = "concept \"Revenue\" with unit \"usd\" with context \"ctx-1\"";
+        if parse_fact_concept_and_context(malformed).is_some() {
+            return Err("fact shape with an extra quoted field was accepted".to_string());
+        }
+        Ok(())
+    }
 }
