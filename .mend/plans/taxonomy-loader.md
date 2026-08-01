@@ -9,14 +9,16 @@
 
 ## Decision: Create New `taxonomy-loader` Crate
 
-After reviewing the codebase structure, I recommend creating a new `taxonomy-loader` crate rather than extending existing stubs. This provides clear separation of concerns:
+The existing `taxonomy-loader` crate is the implementation boundary for taxonomy loading. Keep the separation of concerns explicit:
 
 | Crate | Responsibility |
 |-------|---------------|
 | `taxonomy-dimensions` | Type definitions (already exists ✅) |
-| `taxonomy-loader` | **Orchestrate loading from files** (NEW) |
-| `taxonomy-cache` | Local taxonomy package storage (extend later) |
-| `xbrl-linkbases` | Linkbase type definitions (extend later) |
+| `taxonomy-loader` | Orchestration, schema parsing, linkbase parsing, and future package resolution |
+
+The former `taxonomy-cache`, `taxonomy-package`, and `xbrl-linkbases` entries were
+placeholder crates and are no longer workspace members. Do not recreate them for
+this plan; add the required seams under `taxonomy-loader` when implementation begins.
 
 ---
 
