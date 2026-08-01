@@ -37,6 +37,7 @@ Parse `.xsd` files to extract:
 - `<xsd:element>` with `substitutionGroup="xbrldt:dimensionItem"` → Dimensions
 
 ### 2. Definition Linkbase Parser (extend `taxonomy-loader`)
+
 Parse `_def.xml` files to extract arc relationships:
 - `hypercube-dimension` → Which dimensions belong to which hypercube
 - `dimension-domain` → Which domain provides members for a dimension
