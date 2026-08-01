@@ -93,12 +93,17 @@ fn would_truncate_nonzero_digits(value: &str, decimals: i32) -> bool {
     // Remove any whitespace
     let value = value.trim();
 
-    // Handle scientific notation
-    if let Some(exp_pos) = value.to_lowercase().find('e') {
+    // Handle scientific notation: m * 10^e is rounded to 10^(-decimals).
+    // Rounding the mantissa to 10^(-decimals') yields the same result when
+    // decimals' = decimals + e (so 1.5e-2 with decimals=2 maps to 1.5 with decimals'=0).
+    if let Some(exp_pos) = value.find('e').or_else(|| value.find('E')) {
         let (mantissa, exp) = value.split_at(exp_pos);
-        let exp_val: i32 = exp[1..].parse().unwrap_or(0);
-        // Adjust decimals for scientific notation
-        return would_truncate_nonzero_digits(mantissa, decimals - exp_val);
+        if let Ok(exp_val) = exp[1..].parse::<i32>()
+            && let Some(adjusted_decimals) = decimals.checked_add(exp_val)
+        {
+            return would_truncate_nonzero_digits(mantissa, adjusted_decimals);
+        }
+        return false;
     }
 
     // Parse the numeric value
@@ -266,6 +271,53 @@ mod tests {
     fn valid_thousands_rounding() {
         // 1234000 with decimals="-3" is valid (rounds to thousands, 1234 is preserved)
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1234000", "-3")];
+        let findings = validate_decimal_precision(&facts);
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn invalid_truncation_with_negative_exponent() {
+        // 1.5e-2 = 0.015. decimals="2" rounds to 0.02 — truncates the '5'.
+        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.5e-2", "2")];
+        let findings = validate_decimal_precision(&facts);
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].rule_id, "fs-0637-Nonzero-Digits-Truncated");
+    }
+
+    #[test]
+    fn invalid_truncation_with_positive_exponent() {
+        // 1.5e3 = 1500. decimals="-3" rounds to thousands — truncates the '5' in hundreds place.
+        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.5e3", "-3")];
+        let findings = validate_decimal_precision(&facts);
+        assert_eq!(findings.len(), 1);
+    }
+
+    #[test]
+    fn valid_scientific_notation_no_truncation() {
+        // 1.5e-2 = 0.015. decimals="3" keeps all significant digits.
+        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.5e-2", "3")];
+        let findings = validate_decimal_precision(&facts);
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn valid_scientific_notation_uppercase_e() {
+        // 1.0E3 = 1000. decimals="-3" exactly rounds to thousands, no truncation.
+        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.0E3", "-3")];
+        let findings = validate_decimal_precision(&facts);
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn ignores_malformed_scientific_notation() {
+        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.567e-invalid", "2")];
+        let findings = validate_decimal_precision(&facts);
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn ignores_scientific_notation_exponent_overflow() {
+        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.5e2147483647", "1")];
         let findings = validate_decimal_precision(&facts);
         assert!(findings.is_empty());
     }
