@@ -79,17 +79,15 @@ fn parse_element(
     // Check for hypercubeItem
     if is_hypercube_item(substitution_group, ns_map) {
         let hypercube = Hypercube {
-            qname: qname.clone(),
+            qname,
             dimensions: std::collections::BTreeMap::new(),
             label: None,
         };
         taxonomy.add_hypercube(hypercube);
-    }
-
-    // Check for dimensionItem
-    if is_dimension_item(substitution_group, ns_map) {
+    } else if is_dimension_item(substitution_group, ns_map) {
+        // Check for dimensionItem
         let dimension = Dimension::Explicit {
-            qname: qname.clone(),
+            qname,
             default_domain: None,
             required: false,
         };
