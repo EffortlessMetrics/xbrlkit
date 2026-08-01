@@ -4,6 +4,7 @@ use ixhtml_scan::scan_inline_fragments;
 use sec_profile_types::ProfilePack;
 use taxonomy_dts::mixed_taxonomy_years;
 use xbrl_report_types::ValidationFinding;
+use xbrl_report_types::sanitize_rule_id_component;
 
 #[must_use]
 pub fn validate_inline_restrictions(
@@ -86,7 +87,7 @@ pub fn validate_required_facts(
     for required in &profile.required_facts {
         if !present_concepts.contains(required) {
             findings.push(ValidationFinding {
-                rule_id: format!("SEC.REQUIRED_FACT.{}", sanitize_for_rule_id(required)),
+                rule_id: format!("SEC.REQUIRED_FACT.{}", sanitize_rule_id_component(required)),
                 severity: "error".to_string(),
                 message: format!("Required fact '{required}' is missing"),
                 member: None,
@@ -104,7 +105,7 @@ fn inline_element_rule_id(element_name: &str) -> String {
         "ix:tuple" => "SEC.INLINE.NO_IX_TUPLE".to_string(),
         _ => format!(
             "SEC.INLINE.BANNED_ELEMENT.{}",
-            sanitize_for_rule_id(element_name)
+            sanitize_rule_id_component(element_name)
         ),
     }
 }
@@ -115,22 +116,9 @@ fn inline_attribute_rule_id(attribute: &str) -> String {
         "target" => "SEC.INLINE.NO_TARGET".to_string(),
         _ => format!(
             "SEC.INLINE.BANNED_ATTRIBUTE.{}",
-            sanitize_for_rule_id(attribute)
+            sanitize_rule_id_component(attribute)
         ),
     }
-}
-
-fn sanitize_for_rule_id(value: &str) -> String {
-    value
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() {
-                ch.to_ascii_uppercase()
-            } else {
-                '_'
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]
