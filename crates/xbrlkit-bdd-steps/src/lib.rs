@@ -227,25 +227,23 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
-    if let Some(dimension) = step.text.strip_prefix("a context with dimension \"") {
-        world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
-        return Ok(true);
-    }
-
     if let Some(dimension) = step
         .text
-        .strip_prefix("a context with unknown dimension \"")
+        .strip_prefix("a context with dimension \"")
+        .or_else(|| {
+            step.text
+                .strip_prefix("a context with unknown dimension \"")
+        })
     {
         world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
         return Ok(true);
     }
 
-    if let Some(member) = step.text.strip_prefix("the member \"") {
-        world.dimension_context.member = Some(member.trim_end_matches('"').to_string());
-        return Ok(true);
-    }
-
-    if let Some(member) = step.text.strip_prefix("an invalid member \"") {
+    if let Some(member) = step
+        .text
+        .strip_prefix("the member \"")
+        .or_else(|| step.text.strip_prefix("an invalid member \""))
+    {
         world.dimension_context.member = Some(member.trim_end_matches('"').to_string());
         return Ok(true);
     }
@@ -1622,4 +1620,55 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn run_given(world: &mut World, text: &str) -> anyhow::Result<()> {
+        let handled = handle_given(
+            world,
+            &ScenarioRecord::default(),
+            &Step {
+                text: text.to_string(),
+                table: Vec::new(),
+            },
+        )?;
+        if handled {
+            Ok(())
+        } else {
+            anyhow::bail!("step was not handled: {text}");
+        }
+    }
+
+    #[test]
+    fn dimension_and_member_prefix_variants_update_context() -> anyhow::Result<()> {
+        let mut world = World::new(PathBuf::from("."), FeatureGrid::default());
+
+        run_given(&mut world, "a context with dimension \"us-gaap:Axis\"")?;
+        if world.dimension_context.dimension.as_deref() != Some("us-gaap:Axis") {
+            anyhow::bail!("standard dimension prefix did not update the context");
+        }
+
+        run_given(
+            &mut world,
+            "a context with unknown dimension \"us-gaap:UnknownAxis\"",
+        )?;
+        if world.dimension_context.dimension.as_deref() != Some("us-gaap:UnknownAxis") {
+            anyhow::bail!("unknown dimension prefix did not update the context");
+        }
+
+        run_given(&mut world, "the member \"us-gaap:ActualMember\"")?;
+        if world.dimension_context.member.as_deref() != Some("us-gaap:ActualMember") {
+            anyhow::bail!("standard member prefix did not update the context");
+        }
+
+        run_given(&mut world, "an invalid member \"us-gaap:InvalidMember\"")?;
+        if world.dimension_context.member.as_deref() != Some("us-gaap:InvalidMember") {
+            anyhow::bail!("invalid member prefix did not update the context");
+        }
+
+        Ok(())
+    }
 }
