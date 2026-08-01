@@ -49,4 +49,19 @@ cargo xtask alpha-check
 cargo test --workspace
 ```
 
+### Test timeouts
+
+The repository uses cargo-nextest profiles from
+[`.config/nextest.toml`](./.config/nextest.toml) to bound slow or hung tests.
+Local runs use the more diagnostic `default` profile; CI uses the stricter
+`ci` profile with a single termination window and no retries:
+
+```bash
+cargo nextest run --workspace --locked
+cargo nextest run --workspace --locked --profile ci
+```
+
+The timeout policy detects test-runner hangs and unusually slow tests; it does
+not establish correctness or replace the workspace quality and scenario gates.
+
 For the current alpha surface, `cargo xtask test-ac` and `cargo xtask bdd --tags @alpha-active` both execute the same active slices through the shared scenario runner.
