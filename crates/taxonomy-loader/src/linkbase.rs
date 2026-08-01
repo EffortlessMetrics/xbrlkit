@@ -222,18 +222,8 @@ fn add_domain_member(
     member_qname: &str,
     order: i32,
 ) {
-    // Find the domain for this parent
-    // The parent is either a domain or another member
-    // We need to find which domain this belongs to
-
-    // For simplicity, we'll look for a domain that matches the parent
-    // or create one if needed
-    if taxonomy.domains.contains_key(parent_qname) {
-        // Domain already exists
-    } else {
-        // Try to find a domain that contains this parent as a member
-        // For now, create a new domain
-    }
+    // The parent is either a domain or another member. For now, create or
+    // reuse a domain keyed by the parent QName.
     let domain_qname = parent_qname.to_string();
 
     let domain = taxonomy
