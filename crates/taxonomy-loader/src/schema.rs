@@ -89,7 +89,7 @@ fn parse_element(
     // Check for dimensionItem
     if is_dimension_item(substitution_group, ns_map) {
         let dimension = Dimension::Explicit {
-            qname: qname.clone(),
+            qname,
             default_domain: None,
             required: false,
         };

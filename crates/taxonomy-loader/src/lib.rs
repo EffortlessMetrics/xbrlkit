@@ -145,7 +145,7 @@ impl TaxonomyLoader {
         if path.starts_with("http://") || path.starts_with("https://") {
             self.fetch_url(path)
         } else {
-            TaxonomyLoader::fetch_file(path)
+            Self::fetch_file(path)
         }
     }
 
@@ -160,7 +160,7 @@ impl TaxonomyLoader {
 
         // Check cache first
         if let Some(ref cache_dir) = self.cache_dir {
-            let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
+            let cache_path = Self::url_to_cache_path(url, cache_dir);
             if cache_path.exists() {
                 return std::fs::read_to_string(&cache_path).map_err(|e| {
                     TaxonomyLoaderError::Io(cache_path.to_string_lossy().to_string(), e)
@@ -200,7 +200,7 @@ impl TaxonomyLoader {
 
         // Write to cache if configured
         if let Some(ref cache_dir) = self.cache_dir {
-            let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
+            let cache_path = Self::url_to_cache_path(url, cache_dir);
             if let Err(e) = Self::write_to_cache(&content, &cache_path) {
                 // Cache write failure is non-fatal, just log it
                 eprintln!("Warning: Failed to write cache for {url}: {e}");
