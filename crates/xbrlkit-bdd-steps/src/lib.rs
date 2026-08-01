@@ -65,6 +65,9 @@ pub struct FindingConstructorContext {
     pub fact: Option<xbrl_report_types::Fact>,
     pub dimension: Option<String>,
     pub member: Option<String>,
+    pub baseline_finding: Option<serde_json::Value>,
+    pub context_finding: Option<serde_json::Value>,
+    pub builder_finding: Option<serde_json::Value>,
     pub fact_finding: Option<serde_json::Value>,
     pub dimension_finding: Option<serde_json::Value>,
 }
@@ -761,6 +764,30 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 "dimension finding",
             ),
         )?);
+        context.baseline_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::new(
+                "SCN.FINDING.BASELINE",
+                "info",
+                "baseline finding",
+            ),
+        )?);
+        context.context_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::for_context(
+                "SCN.FINDING.CONTEXT",
+                "warning",
+                "ctx-1",
+                "context finding",
+            ),
+        )?);
+        context.builder_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::new(
+                "SCN.FINDING.BUILDER",
+                "error",
+                "builder finding",
+            )
+            .with_member(dimension)
+            .with_subject(member),
+        )?);
         return Ok(true);
     }
 
@@ -1122,6 +1149,61 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 
 #[allow(clippy::too_many_lines)]
 fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
+    if step.text == "the baseline finding serializes with no member or subject" {
+        let finding = world
+            .finding_constructor_context
+            .baseline_finding
+            .as_ref()
+            .context("baseline finding was not constructed")?;
+        if finding.get("rule_id").and_then(serde_json::Value::as_str)
+            != Some("SCN.FINDING.BASELINE")
+            || finding.get("member") != Some(&serde_json::Value::Null)
+            || finding.get("subject") != Some(&serde_json::Value::Null)
+        {
+            anyhow::bail!("unexpected baseline finding: {finding}");
+        }
+        return Ok(());
+    }
+
+    if step.text == "the context finding serializes subject \"ctx-1\" with no member" {
+        let finding = world
+            .finding_constructor_context
+            .context_finding
+            .as_ref()
+            .context("context finding was not constructed")?;
+        if finding.get("subject").and_then(serde_json::Value::as_str) != Some("ctx-1")
+            || finding.get("member") != Some(&serde_json::Value::Null)
+        {
+            anyhow::bail!("unexpected context finding: {finding}");
+        }
+        return Ok(());
+    }
+
+    if let Some(rest) = step
+        .text
+        .strip_prefix("the builder finding serializes member \"")
+    {
+        let (expected_member, expected_subject) = rest
+            .split_once("\" and subject \"")
+            .context("invalid builder finding serialization assertion")?;
+        let expected_subject = expected_subject
+            .strip_suffix('"')
+            .context("missing expected builder finding subject")?;
+        let finding = world
+            .finding_constructor_context
+            .builder_finding
+            .as_ref()
+            .context("builder finding was not constructed")?;
+        if finding.get("member").and_then(serde_json::Value::as_str) != Some(expected_member)
+            || finding.get("subject").and_then(serde_json::Value::as_str) != Some(expected_subject)
+        {
+            anyhow::bail!(
+                "expected builder finding member/subject ({expected_member}, {expected_subject}), got {finding}"
+            );
+        }
+        return Ok(());
+    }
+
     if let Some(rest) = step
         .text
         .strip_prefix("the fact finding serializes member \"")
