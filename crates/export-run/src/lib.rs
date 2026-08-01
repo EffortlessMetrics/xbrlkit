@@ -84,8 +84,9 @@ mod tests {
 
     #[test]
     fn export_json_to_propagates_writer_failure() -> Result<(), String> {
-        let error = export_json_to(&CanonicalReport::default(), FailingWriter)
-            .expect_err("a failing writer should return an export error");
+        let Err(error) = export_json_to(&CanonicalReport::default(), FailingWriter) else {
+            return Err("a failing writer should return an export error".to_string());
+        };
 
         if !error.to_string().contains("test sink failed") {
             return Err(format!("unexpected export error: {error}"));

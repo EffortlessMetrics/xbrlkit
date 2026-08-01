@@ -707,8 +707,8 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 
         let report = xbrl_report_types::CanonicalReport::default();
         let error = export_run::export_json_to(&report, FailingWriter)
-            .map(|_| ())
-            .expect_err("a failing export writer should return an error");
+            .err()
+            .context("a failing export writer should return an error")?;
         world.export_error = Some(error.to_string());
         return Ok(true);
     }
