@@ -6,8 +6,8 @@
 
 | Item | Value |
 |------|-------|
-| **Phase** | Phase 3 Waves 1-3 Complete ✅ |
-| **Status** | Phase 4 Wave 4: Streaming Parser (In Progress) |
+| **Phase** | Phase 4 Performance Optimization ✅ |
+| **Status** | Wave 4 Streaming Parser complete; next focus is 19 `@alpha-candidate` scenarios |
 
 ## Phase 3: Feature Completeness — COMPLETE ✅
 
@@ -26,23 +26,31 @@
 ### Dimensional Validation (P1) ✅
 - `dimensional-rules` crate created
 - Taxonomy dimensions with domain hierarchies ✅ #23
-- SCN-XK-DIM-001 to 004 active
+- SCN-XK-DIM-001 to 017 active
 
-## Phase 4: Performance Optimization — IN PROGRESS
+## Phase 4: Performance Optimization — COMPLETE ✅
 
-### Wave 4: Streaming Parser
-- **Status:** Crate created, tests passing, integration done
-- **PR:** #95 (awaiting review)
+### Wave 4: Streaming Parser — COMPLETE ✅
+- **Status:** Crate created, tests passing, integration complete
+- **PR:** [#95](https://github.com/EffortlessMetrics/xbrlkit/pull/95) (merged 2026-03-27)
 - **Components:**
   - `xbrl-stream` crate with SAX-style parsing
   - `validation-run` integration
-  - 4 BDD scenarios (@alpha-future)
+  - 4 BDD scenarios (`@alpha-active`)
+
+### Next Activation Wave
+
+The next 19 `@alpha-candidate` scenarios are concentrated in three feature files:
+
+- `context_completeness.feature`: 4 scenarios
+- `decimal_precision.feature`: 10 scenarios
+- `negative_values.feature`: 5 scenarios
 
 ## Final Metrics
-- 21 @alpha-active scenarios passing
-- 104 tests passing
+- 33 @alpha-active scenarios passing
+- 100 workspace tests listed by `cargo nextest`
 - CI: Green
-- Phase 3: 100% complete (all P0/P1 SEC rules)
+- Phase 4: 100% complete (streaming parser foundation shipped)
 
 ---
-*Phase 3 complete. Phase 4 streaming parser foundation shipped.*
+*Phase 4 complete. Streaming parser foundation shipped; the next activation wave is listed above.*
