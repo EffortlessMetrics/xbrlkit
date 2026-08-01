@@ -2,6 +2,7 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Expected unit type for a concept
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +19,36 @@ pub enum ExpectedUnitType {
     Custom(String),
 }
 
+// ─── Pre-compiled regex patterns (compiled once, shared by all instances) ───
+
+static SHARES_PATTERN: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i).*shares.*").unwrap());
+
+static PERSHARE_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i).*pershare.*").unwrap());
+
+static PER_SHARE_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i).*per.*share.*").unwrap());
+
+static EMPLOYEES_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i).*employees.*").unwrap());
+
+static PERCENTAGE_PATTERN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i).*percentage.*").unwrap());
+
+static RATIO_PATTERN: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i).*ratio.*").unwrap());
+
+// Monetary heuristic patterns
+static MONETARY_REVENUE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*").unwrap()
+});
+
+static MONETARY_CASH: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*").unwrap()
+});
+
+static MONETARY_BALANCE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i).*(balance|amount|value|gain|proceed).*").unwrap());
+
 /// Pattern-based concept matcher for unit type determination
 pub struct ConceptUnitPatterns {
     /// Explicit concept name → expected unit type
@@ -31,33 +62,15 @@ impl ConceptUnitPatterns {
     pub fn new() -> Self {
         let patterns = vec![
             // Share-related concepts → Shares unit
-            (
-                Regex::new(r"(?i).*shares.*").unwrap(),
-                ExpectedUnitType::Shares,
-            ),
+            (SHARES_PATTERN.clone(), ExpectedUnitType::Shares),
             // Per-share concepts → PerShare unit
-            (
-                Regex::new(r"(?i).*pershare.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
-            (
-                Regex::new(r"(?i).*per.*share.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
+            (PERSHARE_PATTERN.clone(), ExpectedUnitType::PerShare),
+            (PER_SHARE_PATTERN.clone(), ExpectedUnitType::PerShare),
             // Employee-related → Pure unit
-            (
-                Regex::new(r"(?i).*employees.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
+            (EMPLOYEES_PATTERN.clone(), ExpectedUnitType::Pure),
             // Percentage/ratio → Pure unit
-            (
-                Regex::new(r"(?i).*percentage.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-            (
-                Regex::new(r"(?i).*ratio.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
+            (PERCENTAGE_PATTERN.clone(), ExpectedUnitType::Pure),
+            (RATIO_PATTERN.clone(), ExpectedUnitType::Pure),
         ];
 
         Self {
@@ -104,14 +117,10 @@ impl ConceptUnitPatterns {
     /// This is a heuristic based on common naming patterns.
     /// For more accuracy, use explicit configuration or taxonomy type info.
     pub fn is_likely_monetary(&self, concept: &str) -> bool {
-        let monetary_patterns = [
-            r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*",
-            r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*",
-            r"(?i).*(balance|amount|value|gain|proceed).*",
-        ];
+        let monetary_patterns = [&*MONETARY_REVENUE, &*MONETARY_CASH, &*MONETARY_BALANCE];
 
-        for pattern in &monetary_patterns {
-            if Regex::new(pattern).unwrap().is_match(concept) {
+        for regex in &monetary_patterns {
+            if regex.is_match(concept) {
                 // But exclude share-related concepts
                 if !concept.to_lowercase().contains("share") {
                     return true;
@@ -166,5 +175,21 @@ mod tests {
         assert!(patterns.is_likely_monetary("us-gaap:Revenue"));
         assert!(patterns.is_likely_monetary("us-gaap:Assets"));
         assert!(!patterns.is_likely_monetary("us-gaap:CommonStockSharesOutstanding"));
+    }
+
+    /// Eagerly access all LazyLock statics to verify regex validity.
+    /// This catches invalid pattern strings in CI before they reach production.
+    #[test]
+    fn test_all_lazy_regexes_compile() {
+        // Force compilation of every LazyLock static by dereferencing it.
+        let _ = &*SHARES_PATTERN;
+        let _ = &*PERSHARE_PATTERN;
+        let _ = &*PER_SHARE_PATTERN;
+        let _ = &*EMPLOYEES_PATTERN;
+        let _ = &*PERCENTAGE_PATTERN;
+        let _ = &*RATIO_PATTERN;
+        let _ = &*MONETARY_REVENUE;
+        let _ = &*MONETARY_CASH;
+        let _ = &*MONETARY_BALANCE;
     }
 }
