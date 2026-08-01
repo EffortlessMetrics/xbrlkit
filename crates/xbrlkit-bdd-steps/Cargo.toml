@@ -27,6 +27,7 @@ sec-profile-types.workspace = true
 context-completeness.workspace = true
 xbrl-report-types.workspace = true
 numeric-rules.workspace = true
+export-run.workspace = true
 xbrl-stream.workspace = true
 taxonomy-loader.workspace = true
 

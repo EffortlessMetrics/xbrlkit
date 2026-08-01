@@ -343,7 +343,10 @@
       "crates": [
         "oim-normalize",
         "export-run",
-        "render-json"
+        "render-json",
+        "scenario-runner",
+        "xbrlkit-cli",
+        "xbrlkit-bdd-steps"
       ],
       "fixtures": [
         "synthetic/inline/ixds-single-file-01"
@@ -357,6 +360,38 @@
         "crates/oim-normalize",
         "crates/export-run",
         "crates/render-json",
+        "crates/scenario-runner",
+        "crates/xbrlkit-cli",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/export"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-EXPORT-002",
+      "ac_id": "AC-XK-EXPORT-002",
+      "req_id": "REQ-XK-EXPORT",
+      "feature_file": "specs/features/export/oim_json.feature",
+      "sidecar_file": "specs/features/export/oim_json.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-EXPORT-OIM:export-oim-json",
+      "crates": [
+        "export-run",
+        "xbrl-report-types",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/inline/ixds-single-file-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/export-run",
+        "crates/xbrl-report-types",
+        "crates/xbrlkit-bdd-steps",
         "specs/features/export"
       ],
       "suite": "synthetic",
