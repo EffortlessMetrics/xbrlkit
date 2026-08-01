@@ -1,0 +1,16 @@
+feature_id: FEAT-XK-VALIDATION-FINDINGS
+layer: foundation
+module: validation-finding-construction
+scenarios:
+  SCN-XK-VALIDATION-FINDINGS-001:
+    ac_id: AC-XK-VALIDATION-FINDINGS-001
+    req_id: REQ-XK-VALIDATION-FINDINGS
+    crates: [xbrl-report-types, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps]
+    fixtures: []
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrl-report-types
+      - crates/xbrlkit-bdd-steps
+      - specs/features/foundation

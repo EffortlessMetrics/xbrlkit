@@ -126,6 +126,15 @@ stories:
               - type: bdd
                 tag: "@AC-XK-CONTEXT-004"
                 file: "specs/features/foundation/context_completeness.feature"
+      - id: REQ-XK-VALIDATION-FINDINGS
+        title: Preserve validation finding field mappings through shared constructors
+        acceptance_criteria:
+          - id: AC-XK-VALIDATION-FINDINGS-001
+            title: Shared constructors preserve finding field mappings
+            tests:
+              - type: bdd
+                tag: "@AC-XK-VALIDATION-FINDINGS-001"
+                file: "specs/features/foundation/validation_findings.feature"
       - id: REQ-XK-SEC-DECIMAL
         title: Enforce decimal precision rules for numeric facts
         acceptance_criteria:

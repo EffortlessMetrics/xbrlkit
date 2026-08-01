@@ -1539,6 +1539,33 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-VALIDATION-FINDINGS-001",
+      "ac_id": "AC-XK-VALIDATION-FINDINGS-001",
+      "req_id": "REQ-XK-VALIDATION-FINDINGS",
+      "feature_file": "specs/features/foundation/validation_findings.feature",
+      "sidecar_file": "specs/features/foundation/validation_findings.meta.yaml",
+      "layer": "foundation",
+      "module": "FEAT-XK-VALIDATION-FINDINGS:validation-finding-construction",
+      "crates": [
+        "xbrl-report-types",
+        "scenario-runner",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/xbrl-report-types",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/foundation"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-WORKFLOW-001",
       "ac_id": "AC-XK-WORKFLOW-001",
       "req_id": "REQ-XK-WORKFLOW",
