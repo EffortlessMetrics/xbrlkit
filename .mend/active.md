@@ -26,7 +26,8 @@
 ### Dimensional Validation (P1) ✅
 - `dimensional-rules` crate created
 - Taxonomy dimensions with domain hierarchies ✅ #23
-- SCN-XK-DIM-001 to 017 active
+- SCN-XK-DIM-001 to 004 active in the compiled feature grid
+- SCN-XK-DIM-005 to 017 remain feature-tagged but are not sidecar-registered and are not selected by active BDD runs
 
 ## Phase 4: Performance Optimization — COMPLETE ✅
 
