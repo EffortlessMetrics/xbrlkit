@@ -4,12 +4,18 @@ use oim_normalize::to_json_value;
 use receipt_types::{Receipt, RunResult};
 use xbrl_report_types::CanonicalReport;
 
+/// Errors that can occur while exporting a canonical report as JSON.
 #[derive(Debug, thiserror::Error)]
 pub enum ExportError {
     #[error("serializing canonical report: {0}")]
     Serialization(#[from] serde_json::Error),
 }
 
+/// Serializes a canonical report and returns its successful export receipt.
+///
+/// # Errors
+///
+/// Returns [`ExportError::Serialization`] when the report cannot be encoded as JSON.
 pub fn export_json(report: &CanonicalReport) -> Result<(String, Receipt), ExportError> {
     let json = serde_json::to_string_pretty(&to_json_value(report))?;
     let receipt = Receipt::new("export.report", "canonical-report", RunResult::Success);
