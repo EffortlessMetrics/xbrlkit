@@ -10,6 +10,7 @@ use scenario_contract::{BundleManifest, FeatureGrid, ImpactReport, ScenarioRecor
 use scenario_runner::{assert_scenario_outcome, execute_scenario, write_execution_receipts};
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
+use std::time::Instant;
 
 #[derive(Debug, Parser)]
 #[command(name = "xtask")]
@@ -156,14 +157,19 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     }
 
     let mut scenario_receipt = Receipt::new("scenario.run", ac_id, RunResult::Success);
+    let execution_start = Instant::now();
     for scenario in &scenarios {
+        let scenario_start = Instant::now();
         let execution = execute_scenario(&repo_root(), scenario)?;
         write_execution_receipts(&repo_root(), &execution)?;
         assert_scenario_outcome(scenario, &execution)?;
-        scenario_receipt
-            .notes
-            .push(format!("{} passed", scenario.scenario_id));
+        scenario_receipt.notes.push(format!(
+            "{} passed in {} ms",
+            scenario.scenario_id,
+            scenario_start.elapsed().as_millis()
+        ));
     }
+    scenario_receipt.set_execution_duration(execution_start.elapsed());
 
     let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
     write_json(&receipt_path, &scenario_receipt)?;
@@ -178,11 +184,13 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
 fn bdd(tag: &str) -> anyhow::Result<()> {
     let grid = load_grid()?;
     let path = repo_root().join("artifacts/runs/scenario.run.v1.json");
+    let execution_start = Instant::now();
     let run = match xbrlkit_bdd::run(&repo_root(), &grid, tag) {
         Ok(run) => run,
         Err(error) => {
             let mut receipt = Receipt::new("scenario.run", tag, RunResult::Error);
             receipt.notes.push(error.to_string());
+            receipt.set_execution_duration(execution_start.elapsed());
             write_json(&path, &receipt)?;
             return Err(error);
         }

@@ -5,6 +5,7 @@ use receipt_types::{Receipt, RunResult};
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::time::Instant;
 use xbrlkit_bdd_steps::{Step, World, run_scenario};
 
 #[derive(Debug, Clone)]
@@ -33,6 +34,7 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         .collect::<BTreeMap<_, _>>();
     let mut world = World::new(repo_root.to_path_buf(), grid.clone());
     let mut receipt = Receipt::new("scenario.run", tag, RunResult::Success);
+    let execution_start = Instant::now();
     for scenario in &selected {
         let parsed = parsed_by_id
             .get(&scenario.scenario_id)
@@ -40,11 +42,15 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         world.profile_id = None;
         world.fixture_dirs.clear();
         world.execution = None;
+        let scenario_start = Instant::now();
         run_scenario(&mut world, scenario, &parsed.steps)?;
-        receipt
-            .notes
-            .push(format!("{} passed", scenario.scenario_id));
+        receipt.notes.push(format!(
+            "{} passed in {} ms",
+            scenario.scenario_id,
+            scenario_start.elapsed().as_millis()
+        ));
     }
+    receipt.set_execution_duration(execution_start.elapsed());
 
     Ok(BddRun { selected, receipt })
 }
