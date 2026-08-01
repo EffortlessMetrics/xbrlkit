@@ -131,9 +131,10 @@ pub enum ContextError {
 ///
 /// # Errors
 ///
-/// Returns an error if the XML is malformed or a context is missing required
-/// entity or period data, has an empty entity identifier, or has an incomplete
-/// duration period.
+/// Returns an error if nonblank XML is malformed or a context is missing
+/// required entity or period data, has an empty entity identifier, or has an
+/// incomplete duration period. Blank or whitespace-only input returns an empty
+/// context set.
 pub fn parse_contexts(xml: &str) -> Result<ContextSet, ContextError> {
     let mut set = ContextSet::new();
 
