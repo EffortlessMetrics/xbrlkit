@@ -332,6 +332,14 @@ mod tests {
     }
 
     #[test]
+    fn oversized_streaming_threshold_is_safe() -> Result<(), String> {
+        if should_use_streaming(0, Some(usize::MAX)) {
+            return Err("an unrepresentable threshold must not recommend streaming".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
     fn streaming_validation_reports_missing_context_references() -> Result<(), String> {
         let xml = r#"<xbrl xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:us-gaap="http://fasb.org/us-gaap/2023">
             <xbrli:context id="ctx-1"></xbrli:context>
