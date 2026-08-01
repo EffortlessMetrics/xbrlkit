@@ -293,6 +293,11 @@ impl DimensionTaxonomy {
     }
 
     /// Validate a dimension-member pair.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dimension is unknown, has no domain, or the
+    /// member is not present in its explicit domain.
     pub fn validate_member(
         &self,
         dimension_qname: &str,

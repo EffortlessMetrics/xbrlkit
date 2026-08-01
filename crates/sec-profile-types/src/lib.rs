@@ -73,6 +73,12 @@ pub struct UnitRules {
     pub per_share_concepts: Vec<String>,
 }
 
+/// Load a profile pack and its supporting files from a workspace.
+///
+/// # Errors
+///
+/// Returns an error if the profile, inline-rules, accepted-taxonomies, or
+/// standard-taxonomy files cannot be read or parsed.
 pub fn load_profile_from_workspace(root: &Path, profile_id: &str) -> anyhow::Result<ProfilePack> {
     let profile_dir = profile_dir(root, profile_id);
     let profile_yaml = std::fs::read_to_string(profile_dir.join("profile.yaml"))
