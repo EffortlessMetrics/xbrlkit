@@ -117,3 +117,30 @@ Feature: Decimal Precision Validation (EFM 6.5.37)
     Given a numeric fact with value "1.5e-2" and decimals "3"
     When decimal precision validation is performed
     Then no validation errors are reported
+
+  @alpha-candidate
+  @AC-XK-SEC-DECIMAL-002
+  @SCN-XK-SEC-DECIMAL-013
+  @speed.fast
+  Scenario: Valid scientific notation with uppercase exponent
+    Given a numeric fact with value "1.0E3" and decimals "-3"
+    When decimal precision validation is performed
+    Then no validation errors are reported
+
+  @alpha-candidate
+  @AC-XK-SEC-DECIMAL-002
+  @SCN-XK-SEC-DECIMAL-014
+  @speed.fast
+  Scenario: Malformed scientific notation is ignored
+    Given a numeric fact with value "1.567e-invalid" and decimals "2"
+    When decimal precision validation is performed
+    Then no validation errors are reported
+
+  @alpha-candidate
+  @AC-XK-SEC-DECIMAL-002
+  @SCN-XK-SEC-DECIMAL-015
+  @speed.fast
+  Scenario: Out-of-range scientific notation is ignored
+    Given a numeric fact with value "1.5e2147483648" and decimals "1"
+    When decimal precision validation is performed
+    Then no validation errors are reported

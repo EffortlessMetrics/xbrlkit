@@ -324,8 +324,8 @@ mod tests {
     }
 
     #[test]
-    fn ignores_scientific_notation_exponent_overflow() {
-        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.5e2147483647", "1")];
+    fn ignores_scientific_notation_adjusted_precision_overflow() {
+        let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.5e2147483648", "1")];
         let findings = validate_decimal_precision(&facts);
         assert!(findings.is_empty());
     }

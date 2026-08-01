@@ -812,6 +812,90 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-SEC-DECIMAL-013",
+      "ac_id": "AC-XK-SEC-DECIMAL-002",
+      "req_id": "REQ-XK-SEC-DECIMAL",
+      "feature_file": "specs/features/sec/decimal_precision.feature",
+      "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "crates": [
+        "numeric-rules",
+        "xbrl-report-types",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/decimal-precision/decimal-scientific-uppercase-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/numeric-rules",
+        "specs/features/sec",
+        "fixtures/synthetic/decimal-precision"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-SEC-DECIMAL-014",
+      "ac_id": "AC-XK-SEC-DECIMAL-002",
+      "req_id": "REQ-XK-SEC-DECIMAL",
+      "feature_file": "specs/features/sec/decimal_precision.feature",
+      "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "crates": [
+        "numeric-rules",
+        "xbrl-report-types",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/decimal-precision/decimal-scientific-malformed-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/numeric-rules",
+        "specs/features/sec",
+        "fixtures/synthetic/decimal-precision"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-SEC-DECIMAL-015",
+      "ac_id": "AC-XK-SEC-DECIMAL-002",
+      "req_id": "REQ-XK-SEC-DECIMAL",
+      "feature_file": "specs/features/sec/decimal_precision.feature",
+      "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
+      "layer": "sec",
+      "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "crates": [
+        "numeric-rules",
+        "xbrl-report-types",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [
+        "synthetic/decimal-precision/decimal-scientific-overflow-01"
+      ],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/numeric-rules",
+        "specs/features/sec",
+        "fixtures/synthetic/decimal-precision"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-SEC-INLINE-001",
       "ac_id": "AC-XK-SEC-INLINE-001",
       "req_id": "REQ-XK-SEC-INLINE",
