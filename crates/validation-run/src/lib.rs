@@ -290,9 +290,46 @@ pub fn validate_context_completeness_streaming(xbrl_xml: &str) -> Vec<Validation
     }
 }
 
+/// Returns whether streaming parsing should be recommended for the given content size.
+///
+/// The default recommendation threshold is 100 MiB. This selector remains separate from
+/// [`validate_context_completeness_streaming`], which always uses the streaming parser once
+/// selected by its caller.
+#[must_use]
+pub fn should_use_streaming(content_size_bytes: usize, threshold_mb: Option<usize>) -> bool {
+    let threshold = threshold_mb.unwrap_or(100);
+    threshold
+        .checked_mul(1024 * 1024)
+        .is_some_and(|threshold_bytes| content_size_bytes > threshold_bytes)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::validate_context_completeness_streaming;
+    use super::{should_use_streaming, validate_context_completeness_streaming};
+
+    #[test]
+    fn recommends_streaming_only_above_default_threshold() -> Result<(), String> {
+        let threshold_bytes = 100 * 1024 * 1024;
+        if should_use_streaming(threshold_bytes, None) {
+            return Err("default threshold should include exactly 100 MiB".to_string());
+        }
+        if !should_use_streaming(threshold_bytes + 1, None) {
+            return Err("default threshold should recommend streaming above 100 MiB".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn honors_custom_streaming_threshold() -> Result<(), String> {
+        let threshold_bytes = 10 * 1024 * 1024;
+        if should_use_streaming(threshold_bytes, Some(10)) {
+            return Err("custom threshold should include exactly 10 MiB".to_string());
+        }
+        if !should_use_streaming(threshold_bytes + 1, Some(10)) {
+            return Err("custom threshold should recommend streaming above 10 MiB".to_string());
+        }
+        Ok(())
+    }
 
     #[test]
     fn streaming_validation_reports_missing_context_references() -> Result<(), String> {
