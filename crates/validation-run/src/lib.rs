@@ -224,15 +224,11 @@ pub fn validate_dimensions(
 ///
 /// # Arguments
 /// * `xbrl_xml` - The XBRL XML content
-/// * `size_threshold_mb` - Use streaming if file exceeds this size (default: 100)
 ///
 /// # Returns
 /// Vector of validation findings for missing context references.
 #[must_use]
-pub fn validate_context_completeness_streaming(
-    xbrl_xml: &str,
-    _size_threshold_mb: usize,
-) -> Vec<ValidationFinding> {
+pub fn validate_context_completeness_streaming(xbrl_xml: &str) -> Vec<ValidationFinding> {
     use std::collections::HashSet;
     use xbrl_stream::{FactHandler, StreamingContext, StreamingFact, XbrlStreamReader};
 
@@ -294,11 +290,33 @@ pub fn validate_context_completeness_streaming(
     }
 }
 
-/// Returns whether streaming parser should be used for given content size.
-///
-/// Default threshold is 100MB to avoid excessive memory usage with DOM parsing.
-#[must_use]
-pub fn should_use_streaming(content_size_bytes: usize, threshold_mb: Option<usize>) -> bool {
-    let threshold = threshold_mb.unwrap_or(100);
-    content_size_bytes > threshold * 1024 * 1024
+#[cfg(test)]
+mod tests {
+    use super::validate_context_completeness_streaming;
+
+    #[test]
+    fn streaming_validation_reports_missing_context_references() -> Result<(), String> {
+        let xml = r#"<xbrl xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:us-gaap="http://fasb.org/us-gaap/2023">
+            <xbrli:context id="ctx-1"></xbrli:context>
+            <us-gaap:Revenue contextRef="ctx-1" unitRef="usd">100</us-gaap:Revenue>
+            <us-gaap:Assets contextRef="missing" unitRef="usd">200</us-gaap:Assets>
+        </xbrl>"#;
+
+        let findings = validate_context_completeness_streaming(xml);
+        if findings.len() != 1 {
+            return Err(format!("expected one finding, got {}", findings.len()));
+        }
+
+        let finding = findings
+            .first()
+            .ok_or_else(|| "missing expected finding".to_string())?;
+        if finding.rule_id != "XBRL.CONTEXT.MISSING_REF" {
+            return Err(format!("unexpected rule id: {}", finding.rule_id));
+        }
+        if finding.subject.as_deref() != Some("missing") {
+            return Err(format!("unexpected subject: {:?}", finding.subject));
+        }
+
+        Ok(())
+    }
 }
