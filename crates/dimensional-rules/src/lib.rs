@@ -299,33 +299,8 @@ fn validate_integer(value: &str, dim_member: &DimensionMember) -> Result<(), Val
 
 /// Validate date format (ISO 8601: YYYY-MM-DD).
 fn validate_date(value: &str, dim_member: &DimensionMember) -> Result<(), ValidationFinding> {
-    let trimmed = value.trim();
-
-    // Basic pattern check for YYYY-MM-DD
-    if trimmed.len() == 10 {
-        let parts: Vec<&str> = trimmed.split('-').collect();
-        if parts.len() == 3 {
-            // Validate year, month, day are numeric
-            if parts[0].len() == 4
-                && parts[0].chars().all(|c| c.is_ascii_digit())
-                && parts[1].len() == 2
-                && parts[1].chars().all(|c| c.is_ascii_digit())
-                && parts[2].len() == 2
-                && parts[2].chars().all(|c| c.is_ascii_digit())
-            {
-                // Additional validation for valid date ranges
-                if let (Ok(_year), Ok(month), Ok(day)) = (
-                    parts[0].parse::<u32>(),
-                    parts[1].parse::<u32>(),
-                    parts[2].parse::<u32>(),
-                ) && (1..=12).contains(&month)
-                    && (1..=31).contains(&day)
-                {
-                    // Basic check passed (full calendar validation optional)
-                    return Ok(());
-                }
-            }
-        }
+    if is_valid_iso_date(value.trim()) {
+        return Ok(());
     }
 
     Err(ValidationFinding {
@@ -338,6 +313,47 @@ fn validate_date(value: &str, dim_member: &DimensionMember) -> Result<(), Valida
         member: Some(dim_member.dimension.clone()),
         subject: Some(value.to_string()),
     })
+}
+
+/// Whether `trimmed` matches YYYY-MM-DD with a real calendar day.
+fn is_valid_iso_date(trimmed: &str) -> bool {
+    if trimmed.len() != 10 {
+        return false;
+    }
+    let parts: Vec<&str> = trimmed.split('-').collect();
+    if parts.len() != 3
+        || parts[0].len() != 4
+        || parts[1].len() != 2
+        || parts[2].len() != 2
+        || !parts.iter().all(|p| p.chars().all(|c| c.is_ascii_digit()))
+    {
+        return false;
+    }
+    let (Ok(year), Ok(month), Ok(day)) = (
+        parts[0].parse::<u32>(),
+        parts[1].parse::<u32>(),
+        parts[2].parse::<u32>(),
+    ) else {
+        return false;
+    };
+    (1..=12).contains(&month) && day >= 1 && day <= days_in_month(year, month)
+}
+
+/// Days in the given month for a proleptic Gregorian year (1..=12 → 28..=31).
+/// Returns 0 for months outside 1..=12; callers must range-check month first.
+fn days_in_month(year: u32, month: u32) -> u32 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        _ => 0,
+    }
+}
+
+/// Gregorian leap-year rule: divisible by 4, but not 100 unless also by 400.
+fn is_leap_year(year: u32) -> bool {
+    (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
 }
 
 /// Validate datetime format (ISO 8601).
@@ -866,5 +882,69 @@ mod tests {
                 "Expected no findings for valid URI '{uri}'"
             );
         }
+    }
+
+    #[test]
+    fn test_validate_typed_date_rejects_impossible_day() {
+        // Dates like Feb 31st or Apr 31st match YYYY-MM-DD but are not real days.
+        let taxonomy = create_test_typed_taxonomy("xs:date");
+        for bad in [
+            "2024-02-30", // Feb 30 never exists
+            "2024-02-31", // Feb 31 never exists
+            "2023-02-29", // 2023 is not a leap year
+            "2024-04-31", // Apr has 30 days
+            "2024-06-31", // Jun has 30 days
+            "2024-09-31", // Sep has 30 days
+            "2024-11-31", // Nov has 30 days
+            "2024-01-00", // Day 0 is not valid
+        ] {
+            let context = create_test_context_with_typed_dim("ctx-1", bad);
+            let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+            assert!(
+                result
+                    .findings
+                    .iter()
+                    .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE"),
+                "Expected INVALID_TYPED_VALUE for impossible date {bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_validate_typed_date_accepts_leap_and_month_boundaries() {
+        // Real dates the previous naive check happened to accept must still pass.
+        let taxonomy = create_test_typed_taxonomy("xs:date");
+        for good in [
+            "2024-02-29", // 2024 is a leap year (÷4, not ÷100)
+            "2000-02-29", // 2000 is a leap year (÷400)
+            "2023-02-28", // Non-leap Feb last day
+            "2024-04-30", // Apr last day
+            "2024-12-31", // Dec last day
+            "2024-01-01", // Jan first day
+        ] {
+            let context = create_test_context_with_typed_dim("ctx-1", good);
+            let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+            assert!(
+                result.findings.is_empty(),
+                "Expected {good} to validate; got findings: {:?}",
+                result.findings
+            );
+        }
+    }
+
+    #[test]
+    fn test_days_in_month_and_leap_year_helpers() {
+        // Direct coverage of the helpers so leap-year edge cases are pinned down.
+        assert_eq!(days_in_month(2024, 2), 29);
+        assert_eq!(days_in_month(2023, 2), 28);
+        assert_eq!(days_in_month(2000, 2), 29); // divisible by 400
+        assert_eq!(days_in_month(1900, 2), 28); // divisible by 100 but not 400
+        assert_eq!(days_in_month(2024, 4), 30);
+        assert_eq!(days_in_month(2024, 12), 31);
+
+        assert!(is_leap_year(2024));
+        assert!(is_leap_year(2000));
+        assert!(!is_leap_year(1900));
+        assert!(!is_leap_year(2023));
     }
 }
