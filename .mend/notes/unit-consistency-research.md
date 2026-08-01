@@ -34,22 +34,17 @@ While the SEC EFM doesn't explicitly mandate specific unit consistency checks, d
 
 ### Existing Infrastructure
 
-1. **xbrl-units crate** - Currently only normalizes unit strings, needs validation logic
+1. **unit-rules crate** - Dedicated unit validation logic (real crate, not a stub)
 2. **xbrl-report-types::Fact** - Has `unit_ref: Option<String>` field
 3. **validation-run** - Shows pattern for wiring new validation rules
 4. **sec-profile-types** - Shows how to add rule configuration (see `NumericRules`)
 
 ### Proposed Architecture
 
-**Option A: Extend xbrl-units crate**
-- Add validation functions to existing crate
-- Simple, centralized
-- May bloat unit utility crate
-
-**Option B: Create unit-rules crate (Recommended)**
-- Follows pattern of `numeric-rules`
-- Separates validation logic from basic unit utilities
-- Allows profile-based configuration
+**Selected architecture: Extend `unit-rules`**
+- Add or refine validation functions in the existing crate
+- Keep unit-validation logic centralized in the established semantic leaf
+- Preserve the existing `validation-run` integration pattern
 
 ### Validation Logic Design
 
@@ -118,9 +113,9 @@ pub struct UnitRules {
 
 ## Implementation Tasks
 
-1. Create `unit-rules` crate with validation logic
+1. Extend the existing `unit-rules` crate with the required validation logic
 2. Add `UnitRules` to `sec-profile-types`
-3. Wire into `validation-run`
+3. Wire the existing crate into `validation-run`
 4. Create BDD scenarios
 5. Add profile configuration for EFM 77
 6. Run `cargo xtask alpha-check`
@@ -133,7 +128,7 @@ pub struct UnitRules {
 
 ## Recommendation
 
-Proceed with **Option B** (new `unit-rules` crate) following the established pattern from `numeric-rules`. Start with explicit configuration for known concepts, expand to pattern matching as needed.
+Proceed by extending the existing **`unit-rules`** crate following the established pattern from `numeric-rules`. Start with explicit configuration for known concepts, then expand to pattern matching as needed.
 
 ---
 **Next Step:** Move to 📐 Plan stage and create implementation plan.

@@ -7,36 +7,33 @@
 
 ---
 
-## Decision: Create New `taxonomy-loader` Crate
+## Decision: Extend Existing `taxonomy-loader` Crate
 
-After reviewing the codebase structure, I recommend creating a new `taxonomy-loader` crate rather than extending existing stubs. This provides clear separation of concerns:
+The existing `taxonomy-loader` crate is the implementation boundary for taxonomy loading. Keep the separation of concerns explicit:
 
 | Crate | Responsibility |
 |-------|---------------|
 | `taxonomy-dimensions` | Type definitions (already exists ✅) |
-| `taxonomy-loader` | **Orchestrate loading from files** (NEW) |
-| `taxonomy-cache` | Local taxonomy package storage (extend later) |
-| `xbrl-linkbases` | Linkbase type definitions (extend later) |
+| `taxonomy-loader` | Orchestration, schema parsing, linkbase parsing, and future package resolution |
+
+The former `taxonomy-cache`, `taxonomy-package`, and `xbrl-linkbases` entries were
+placeholder crates and are no longer workspace members. Do not recreate them for
+this plan; add the required seams under `taxonomy-loader` when implementation begins.
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Crate Skeleton
-```
-crates/taxonomy-loader/
-├── Cargo.toml
-├── src/
-│   ├── lib.rs          # Public API: load_taxonomy(entrypoint)
-│   ├── schema.rs       # XSD parsing module
-│   ├── linkbase.rs     # Definition linkbase parsing
-│   └── error.rs        # TaxonomyLoaderError enum
-```
+### Phase 1: Reconcile the Existing Loader Seam
 
-**Dependencies:**
-- `roxmltree` for XML parsing (check if already in tree)
-- `taxonomy-dimensions` for types
-- `thiserror` for error handling
+`crates/taxonomy-loader/` already contains the public loader API, schema and
+linkbase parser modules, error type, and the required workspace dependencies.
+Implementation work should extend those seams and add characterization coverage;
+it must not scaffold a second crate or duplicate the existing API.
+
+- Preserve `load_taxonomy` and `TaxonomyLoader` as the public entry points.
+- Extend `schema.rs` and `linkbase.rs` for the remaining taxonomy cases.
+- Keep package resolution and caching behind `taxonomy-loader` APIs.
 
 ### Phase 2: Schema Parsing
 Parse `.xsd` files to identify:
@@ -122,7 +119,7 @@ pub fn load_taxonomy(entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoad
 
 ## Acceptance Criteria
 
-- [ ] `taxonomy-loader` crate created with clean API
+- [ ] Existing `taxonomy-loader` API remains clean and covers the required loading seam
 - [ ] Can parse minimal synthetic XSD for dimension elements
 - [ ] Can parse minimal synthetic definition linkbase for arcs
 - [ ] Can build `DimensionTaxonomy` from parsed files
@@ -136,7 +133,7 @@ pub fn load_taxonomy(entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoad
 
 ```
 mend/issue-35-taxonomy-loader
-├── Commit 1: Crate skeleton + dependencies
+├── Commit 1: Characterization tests for the existing loader seam
 ├── Commit 2: Schema parsing implementation
 ├── Commit 3: Linkbase parsing implementation
 ├── Commit 4: Integration + CLI command

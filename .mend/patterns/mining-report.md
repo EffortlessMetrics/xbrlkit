@@ -3,6 +3,9 @@
 Generated: 2025-03-18
 Agent: kimi-claw
 
+> Historical snapshot. The crate inventory below reflects the workspace at the
+> time of generation and is not a current membership list.
+
 ## Current State
 
 ### Crate Structure (38 crates)
