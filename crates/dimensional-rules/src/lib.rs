@@ -146,13 +146,16 @@ fn validate_dimension_member(
     dim_taxonomy: &DimensionTaxonomy,
 ) -> Result<(), ValidationFinding> {
     // Get the dimension definition, or return an error if it doesn't exist
-    let dimension = dim_taxonomy.dimensions.get(&dim_member.dimension).ok_or_else(|| ValidationFinding {
-        rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
-        severity: "error".to_string(),
-        message: format!("Unknown dimension: {}", dim_member.dimension),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(dim_member.member.clone()),
-    })?;
+    let dimension = dim_taxonomy
+        .dimensions
+        .get(&dim_member.dimension)
+        .ok_or_else(|| ValidationFinding {
+            rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
+            severity: "error".to_string(),
+            message: format!("Unknown dimension: {}", dim_member.dimension),
+            member: Some(dim_member.dimension.clone()),
+            subject: Some(dim_member.member.clone()),
+        })?;
 
     // If it's a typed dimension, validate the value against the expected type
     if dimension.is_typed() {
@@ -595,6 +598,23 @@ mod tests {
             .iter()
             .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_MEMBER");
         assert!(has_invalid_member, "Expected INVALID_MEMBER finding");
+    }
+
+    #[test]
+    fn test_validate_context_with_unknown_dimension_reports_finding() {
+        let taxonomy = create_test_taxonomy();
+        let context =
+            create_test_context_with_dims("ctx-1", vec![("us-gaap:UnknownAxis", "us-gaap:Member")]);
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        assert!(
+            result
+                .findings
+                .iter()
+                .any(|finding| finding.rule_id == "XBRL.DIMENSION.UNKNOWN"),
+            "Expected UNKNOWN dimension finding"
+        );
     }
 
     #[test]
