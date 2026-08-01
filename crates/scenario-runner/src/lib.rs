@@ -1,12 +1,15 @@
 //! Shared scenario execution for repo-local developer flows.
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use receipt_types::{Receipt, RunResult};
 use scenario_contract::ScenarioRecord;
 use sec_profile_types::{ProfilePack, load_profile_from_workspace};
 use serde::Deserialize;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap, VecDeque};
+use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
+use std::time::SystemTime;
 use validation_run::{
     TaxonomyResolutionRun, ValidationRun, resolve_taxonomy_entry_points, validate_duplicate_report,
     validate_html_members, validate_taxonomy_entry_points,
@@ -31,6 +34,95 @@ struct EntryPointsFixture {
 struct ReportFixture {
     #[serde(default)]
     facts: Vec<Fact>,
+}
+
+const FIXTURE_CACHE_CAPACITY: usize = 64;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct FileFingerprint {
+    modified: SystemTime,
+    length: u64,
+}
+
+#[derive(Debug, Default)]
+struct FixtureCache {
+    entries: HashMap<PathBuf, (FileFingerprint, String)>,
+    lru: VecDeque<PathBuf>,
+}
+
+impl FixtureCache {
+    fn get(&mut self, path: &Path, fingerprint: FileFingerprint) -> Option<String> {
+        let cached = self
+            .entries
+            .get(path)
+            .and_then(|(cached_fingerprint, content)| {
+                (cached_fingerprint == &fingerprint).then(|| content.clone())
+            });
+        if cached.is_some() {
+            self.touch(path);
+        } else if self.entries.contains_key(path) {
+            self.remove(path);
+        }
+        cached
+    }
+
+    fn insert(&mut self, path: PathBuf, fingerprint: FileFingerprint, content: String) {
+        self.remove(&path);
+        self.entries.insert(path.clone(), (fingerprint, content));
+        self.lru.push_back(path);
+        while self.entries.len() > FIXTURE_CACHE_CAPACITY {
+            let Some(evicted) = self.lru.pop_front() else {
+                break;
+            };
+            self.entries.remove(&evicted);
+        }
+    }
+
+    fn touch(&mut self, path: &Path) {
+        self.lru.retain(|candidate| candidate != path);
+        self.lru.push_back(path.to_path_buf());
+    }
+
+    fn remove(&mut self, path: &Path) {
+        self.entries.remove(path);
+        self.lru.retain(|candidate| candidate != path);
+    }
+}
+
+static FIXTURE_CACHE: OnceLock<Mutex<FixtureCache>> = OnceLock::new();
+
+fn fixture_cache() -> &'static Mutex<FixtureCache> {
+    FIXTURE_CACHE.get_or_init(|| Mutex::new(FixtureCache::default()))
+}
+
+fn read_fixture_file(path: &Path) -> anyhow::Result<String> {
+    let fingerprint = file_fingerprint(path)?;
+    let cached = fixture_cache()
+        .lock()
+        .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
+        .get(path, fingerprint);
+    if let Some(content) = cached {
+        return Ok(content);
+    }
+
+    let content =
+        fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    fixture_cache()
+        .lock()
+        .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
+        .insert(path.to_path_buf(), fingerprint, content.clone());
+    Ok(content)
+}
+
+fn file_fingerprint(path: &Path) -> anyhow::Result<FileFingerprint> {
+    let metadata = fs::metadata(path).with_context(|| format!("reading {}", path.display()))?;
+    let modified = metadata
+        .modified()
+        .with_context(|| format!("reading metadata for {}", path.display()))?;
+    Ok(FileFingerprint {
+        modified,
+        length: metadata.len(),
+    })
 }
 
 pub fn execute_scenario(
@@ -108,8 +200,7 @@ pub fn load_fixture_facts(fixture_dirs: &[PathBuf]) -> anyhow::Result<CanonicalR
     let mut report = CanonicalReport::default();
     for fixture_dir in fixture_dirs {
         let path = fixture_dir.join("report.yaml");
-        let content = std::fs::read_to_string(&path)
-            .with_context(|| format!("reading {}", path.display()))?;
+        let content = read_fixture_file(&path)?;
         let fixture: ReportFixture = serde_yaml::from_str(&content)
             .with_context(|| format!("parsing {}", path.display()))?;
         report.members.push(fixture_dir.display().to_string());
@@ -121,7 +212,7 @@ pub fn load_fixture_facts(fixture_dirs: &[PathBuf]) -> anyhow::Result<CanonicalR
 pub fn load_html_members(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<(String, String)>> {
     let mut members = Vec::new();
     for fixture_dir in fixture_dirs {
-        let mut html_paths = std::fs::read_dir(fixture_dir)
+        let mut html_paths = fs::read_dir(fixture_dir)
             .with_context(|| format!("reading {}", fixture_dir.display()))?
             .filter_map(Result::ok)
             .map(|entry| entry.path())
@@ -132,8 +223,7 @@ pub fn load_html_members(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<(String
             .collect::<Vec<_>>();
         html_paths.sort();
         for path in html_paths {
-            let html = std::fs::read_to_string(&path)
-                .with_context(|| format!("reading {}", path.display()))?;
+            let html = read_fixture_file(&path)?;
             let member_name = path
                 .file_name()
                 .and_then(|name| name.to_str())
@@ -470,8 +560,7 @@ fn load_entry_points(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<String>> {
     let mut entry_points = Vec::new();
     for fixture_dir in fixture_dirs {
         let path = fixture_dir.join("entrypoints.yaml");
-        let content = std::fs::read_to_string(&path)
-            .with_context(|| format!("reading {}", path.display()))?;
+        let content = read_fixture_file(&path)?;
         let fixture: EntryPointsFixture = serde_yaml::from_str(&content)
             .with_context(|| format!("parsing {}", path.display()))?;
         entry_points.extend(fixture.entry_points);
@@ -481,10 +570,154 @@ fn load_entry_points(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<String>> {
 
 fn write_json(path: &Path, value: &impl serde::Serialize) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .with_context(|| format!("creating {}", parent.display()))?;
+        fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
     }
     let bytes = serde_json::to_vec_pretty(value).context("serializing json")?;
-    std::fs::write(path, bytes).with_context(|| format!("writing {}", path.display()))?;
+    fs::write(path, bytes).with_context(|| format!("writing {}", path.display()))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FIXTURE_CACHE_CAPACITY, FileFingerprint, FixtureCache, load_fixture_facts};
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::{Duration, SystemTime};
+
+    static NEXT_TEMP_DIR: AtomicU64 = AtomicU64::new(0);
+
+    struct TempFixtureDir(PathBuf);
+
+    impl Drop for TempFixtureDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn temp_fixture_dir() -> Result<TempFixtureDir, String> {
+        let id = NEXT_TEMP_DIR.fetch_add(1, Ordering::Relaxed);
+        let path = std::env::temp_dir().join(format!(
+            "xbrlkit-scenario-runner-{}-{id}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&path).map_err(|error| error.to_string())?;
+        Ok(TempFixtureDir(path))
+    }
+
+    fn fingerprint(seed: u64) -> FileFingerprint {
+        FileFingerprint {
+            modified: SystemTime::UNIX_EPOCH + Duration::from_secs(seed),
+            length: seed,
+        }
+    }
+
+    #[test]
+    fn cache_returns_content_for_matching_fingerprint() -> Result<(), String> {
+        let mut cache = FixtureCache::default();
+        let path = PathBuf::from("fixture.yaml");
+        let file_fingerprint = fingerprint(1);
+        cache.insert(path.clone(), file_fingerprint, "cached".to_string());
+
+        if cache.get(&path, file_fingerprint).as_deref() != Some("cached") {
+            return Err("matching fixture should be served from cache".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn cache_invalidates_changed_fingerprint() -> Result<(), String> {
+        let mut cache = FixtureCache::default();
+        let path = PathBuf::from("fixture.yaml");
+        cache.insert(path.clone(), fingerprint(1), "stale".to_string());
+
+        if cache.get(&path, fingerprint(2)).is_some() {
+            return Err("changed fixture metadata must invalidate the cache".to_string());
+        }
+        if cache.entries.contains_key(&path) {
+            return Err("invalidated fixture must be removed from the cache".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn cache_evicts_least_recently_used_entry() -> Result<(), String> {
+        let mut cache = FixtureCache::default();
+        for index in 0..FIXTURE_CACHE_CAPACITY {
+            let path = PathBuf::from(format!("fixture-{index}.yaml"));
+            cache.insert(path, fingerprint(index as u64), index.to_string());
+        }
+        let oldest_path = Path::new("fixture-0.yaml");
+        if cache.get(oldest_path, fingerprint(0)).is_none() {
+            return Err("fixture 0 should be present before eviction".to_string());
+        }
+        cache.insert(
+            PathBuf::from("fixture-new.yaml"),
+            fingerprint(100),
+            "new".to_string(),
+        );
+
+        if cache.get(oldest_path, fingerprint(0)).is_none() {
+            return Err("recently used fixture should not be evicted".to_string());
+        }
+        if cache
+            .get(Path::new("fixture-1.yaml"), fingerprint(1))
+            .is_some()
+        {
+            return Err("least-recently-used fixture should be evicted".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn loader_rereads_fixture_when_file_length_changes() -> Result<(), String> {
+        let fixture_dir = temp_fixture_dir()?;
+        let report_path = fixture_dir.0.join("report.yaml");
+        fs::write(&report_path, "facts: []\n").map_err(|error| error.to_string())?;
+        let first = load_fixture_facts(std::slice::from_ref(&fixture_dir.0))
+            .map_err(|error| error.to_string())?;
+        if !first.facts.is_empty() {
+            return Err("initial fixture should contain no facts".to_string());
+        }
+
+        fs::write(
+            &report_path,
+            "facts:\n  - concept: test:Fact\n    context: c1\n    value: \"1\"\n",
+        )
+        .map_err(|error| error.to_string())?;
+        let second = load_fixture_facts(std::slice::from_ref(&fixture_dir.0))
+            .map_err(|error| error.to_string())?;
+        if second.facts.len() != 1 {
+            return Err("changed fixture should be reread instead of cached".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn missing_fixture_keeps_read_error_context() -> Result<(), String> {
+        let fixture_dir = temp_fixture_dir()?;
+        let error = match load_fixture_facts(std::slice::from_ref(&fixture_dir.0)) {
+            Ok(_) => return Err("missing fixture should fail".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("report.yaml") || !error.contains("reading") {
+            return Err(format!("missing-fixture context was lost: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_fixture_keeps_parse_error_context() -> Result<(), String> {
+        let fixture_dir = temp_fixture_dir()?;
+        let report_path = fixture_dir.0.join("report.yaml");
+        fs::write(&report_path, "facts: [").map_err(|error| error.to_string())?;
+        let error = match load_fixture_facts(std::slice::from_ref(&fixture_dir.0)) {
+            Ok(_) => return Err("malformed fixture should fail".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("report.yaml") || !error.contains("parsing") {
+            return Err(format!("malformed-fixture context was lost: {error}"));
+        }
+        Ok(())
+    }
 }
