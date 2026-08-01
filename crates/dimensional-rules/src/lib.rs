@@ -601,20 +601,22 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_context_with_unknown_dimension_reports_finding() {
+    fn test_validate_context_with_unknown_dimension_reports_finding() -> Result<(), String> {
         let taxonomy = create_test_taxonomy();
         let context =
             create_test_context_with_dims("ctx-1", vec![("us-gaap:UnknownAxis", "us-gaap:Member")]);
 
         let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
 
-        assert!(
-            result
-                .findings
-                .iter()
-                .any(|finding| finding.rule_id == "XBRL.DIMENSION.UNKNOWN"),
-            "Expected UNKNOWN dimension finding"
-        );
+        if result
+            .findings
+            .iter()
+            .any(|finding| finding.rule_id == "XBRL.DIMENSION.UNKNOWN")
+        {
+            Ok(())
+        } else {
+            Err("expected UNKNOWN dimension finding".to_string())
+        }
     }
 
     #[test]
