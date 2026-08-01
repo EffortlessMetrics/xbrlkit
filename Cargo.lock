@@ -2291,7 +2291,6 @@ dependencies = [
  "corpus-fs",
  "export-run",
  "render-json",
- "render-md",
  "sec-profile-types",
  "serde_json",
  "serde_yaml",
