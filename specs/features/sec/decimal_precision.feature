@@ -99,3 +99,21 @@ Feature: Decimal Precision Validation (EFM 6.5.37)
     Given a numeric fact with value "-2345.67" and decimals "0"
     When decimal precision validation is performed
     Then validation error "NonzeroDigitsTruncated" is reported
+
+  @alpha-candidate
+  @AC-XK-SEC-DECIMAL-001
+  @SCN-XK-SEC-DECIMAL-011
+  @speed.fast
+  Scenario: Invalid scientific notation truncation
+    Given a numeric fact with value "1.5e-2" and decimals "2"
+    When decimal precision validation is performed
+    Then validation error "fs-0637-Nonzero-Digits-Truncated" is reported
+
+  @alpha-candidate
+  @AC-XK-SEC-DECIMAL-002
+  @SCN-XK-SEC-DECIMAL-012
+  @speed.fast
+  Scenario: Valid scientific notation with sufficient precision
+    Given a numeric fact with value "1.5e-2" and decimals "3"
+    When decimal precision validation is performed
+    Then no validation errors are reported

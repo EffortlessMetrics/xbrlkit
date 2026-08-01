@@ -137,7 +137,15 @@ fn would_truncate_nonzero_digits(value: &str, decimals: i32) -> bool {
         // e.g., decimals="-2" means round to hundreds (keep only digits at position 2 and above)
         // decimals="-3" means round to thousands (keep only digits at position 3 and above)
         // The number of digits to drop from the right is: -decimals
-        let digits_to_drop = (-decimals) as usize;
+        let Some(digits_to_drop) = decimals
+            .checked_neg()
+            .and_then(|value| usize::try_from(value).ok())
+        else {
+            // i32::MIN cannot be negated. No practical finite value can have
+            // more than i32::MAX integer digits to inspect, so it cannot
+            // expose a non-zero digit beyond this precision boundary.
+            return false;
+        };
 
         // Check if we have enough digits that would be rounded away
         if int_digits.len() > digits_to_drop {
@@ -318,6 +326,19 @@ mod tests {
     #[test]
     fn ignores_scientific_notation_exponent_overflow() {
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1.5e2147483647", "1")];
+        let findings = validate_decimal_precision(&facts);
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn ignores_adjusted_precision_i32_min_without_panicking() {
+        // 1.5e-1 with decimals=-2147483647 adjusts the mantissa precision to
+        // i32::MIN. The validator must remain fallible at that boundary.
+        let facts = vec![fact_with_decimals(
+            "us-gaap:Revenue",
+            "1.5e-1",
+            "-2147483647",
+        )];
         let findings = validate_decimal_precision(&facts);
         assert!(findings.is_empty());
     }
