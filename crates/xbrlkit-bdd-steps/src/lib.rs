@@ -11,6 +11,7 @@ use scenario_runner::{
     execute_scenario, write_execution_receipts,
 };
 use std::path::PathBuf;
+use std::time::Duration;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -33,6 +34,7 @@ pub struct World {
     pub taxonomy_loader_context: TaxonomyLoaderContext,
     pub bundle_manifest: Option<BundleManifest>,
     pub validation_receipt: Option<receipt_types::Receipt>,
+    pub scenario_receipt: Option<receipt_types::Receipt>,
     pub sensor_report: Option<serde_json::Value>,
     pub filing_manifest: Option<edgar_attachments::FilingManifest>,
     pub filing_receipt: Option<receipt_types::Receipt>,
@@ -95,6 +97,7 @@ impl World {
             taxonomy_loader_context: TaxonomyLoaderContext::default(),
             bundle_manifest: None,
             validation_receipt: None,
+            scenario_receipt: None,
             sensor_report: None,
             filing_manifest: None,
             filing_receipt: None,
@@ -320,6 +323,15 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world.validation_receipt = Some(receipt_types::Receipt::new(
             "validation.report",
             "synthetic-subject",
+            receipt_types::RunResult::Success,
+        ));
+        return Ok(true);
+    }
+
+    if step.text == "a fresh scenario run receipt" {
+        world.scenario_receipt = Some(receipt_types::Receipt::new(
+            "scenario.run",
+            "timing-contract",
             receipt_types::RunResult::Success,
         ));
         return Ok(true);
@@ -878,6 +890,20 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if let Some(milliseconds) = step
+        .text
+        .strip_prefix("I record ")
+        .and_then(|value| value.strip_suffix(" milliseconds of execution"))
+        .and_then(|value| value.parse::<u64>().ok())
+    {
+        let receipt = world
+            .scenario_receipt
+            .as_mut()
+            .context("timing recording requires a scenario run receipt")?;
+        receipt.set_execution_duration(Duration::from_millis(milliseconds));
+        return Ok(true);
+    }
+
     // CLI When steps
     if step.text == "I run describe-profile --json" {
         let profile_id = world
@@ -1168,6 +1194,36 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                     "expected receipt kind 'filing.manifest', got '{}'",
                     receipt.kind
                 );
+            }
+            Ok(())
+        }
+        _ if step.text.starts_with("the scenario run receipt reports ")
+            && step.text.ends_with(" milliseconds") =>
+        {
+            let expected = step
+                .text
+                .strip_prefix("the scenario run receipt reports ")
+                .and_then(|value| value.strip_suffix(" milliseconds"))
+                .and_then(|value| value.parse::<u64>().ok())
+                .context("scenario receipt timing assertion must contain milliseconds")?;
+            let receipt = world
+                .scenario_receipt
+                .as_ref()
+                .context("scenario run receipt was not created")?;
+            if receipt.execution_duration_ms != Some(expected) {
+                anyhow::bail!(
+                    "expected scenario duration {expected} ms, got {:?}",
+                    receipt.execution_duration_ms
+                );
+            }
+            let serialized = serde_json::to_value(receipt)
+                .context("serializing scenario run receipt for timing assertion")?;
+            if serialized
+                .get("execution_duration_ms")
+                .and_then(serde_json::Value::as_u64)
+                != Some(expected)
+            {
+                anyhow::bail!("serialized scenario receipt did not preserve execution duration");
             }
             Ok(())
         }
