@@ -236,15 +236,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_loader_new() {
+    fn test_loader_new() -> Result<(), Box<dyn std::error::Error>> {
         let loader = TaxonomyLoader::new();
-        assert!(loader.cache_dir.is_none());
+        if loader.cache_dir.is_some() {
+            return Err(
+                std::io::Error::other("new loader unexpectedly has a cache directory").into(),
+            );
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_loader_with_cache() {
+    fn test_loader_with_cache() -> Result<(), Box<dyn std::error::Error>> {
         let loader = TaxonomyLoader::with_cache_dir("/tmp/cache");
-        assert!(loader.cache_dir.is_some());
+        if loader.cache_dir.is_none() {
+            return Err(
+                std::io::Error::other("cached loader is missing its cache directory").into(),
+            );
+        }
+        Ok(())
     }
 
     #[test]
@@ -289,14 +299,20 @@ mod tests {
     }
 
     #[test]
-    fn test_fetch_url_invalid_scheme() {
+    fn test_fetch_url_invalid_scheme() -> Result<(), Box<dyn std::error::Error>> {
         let loader = TaxonomyLoader::new();
-        let result = loader.fetch_url("ftp://example.com/test.xsd");
+        let error = loader
+            .fetch_url("ftp://example.com/test.xsd")
+            .err()
+            .ok_or_else(|| {
+                std::io::Error::other("unsupported URL scheme unexpectedly succeeded")
+            })?;
 
-        assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            TaxonomyLoaderError::UnsupportedUrl(_)
-        ));
+        if !matches!(error, TaxonomyLoaderError::UnsupportedUrl(_)) {
+            return Err(
+                std::io::Error::other("unsupported URL scheme returned the wrong error").into(),
+            );
+        }
+        Ok(())
     }
 }
