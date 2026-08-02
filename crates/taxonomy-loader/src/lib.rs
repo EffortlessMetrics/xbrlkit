@@ -263,57 +263,78 @@ impl TaxonomyLoader {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_loader_new() {
-        let loader = TaxonomyLoader::new();
-        #[cfg(feature = "http")]
-        assert!(loader.cache_dir.is_none());
-        #[cfg(not(feature = "http"))]
-        let _ = loader;
-    }
-
-    #[test]
     #[cfg(feature = "http")]
-    fn test_loader_with_cache() {
-        let loader = TaxonomyLoader::with_cache_dir("/tmp/cache");
-        assert!(loader.cache_dir.is_some());
-    }
-
     #[test]
-    #[cfg(feature = "http")]
-    fn test_url_to_cache_path() {
-        let cache_dir = Path::new("/tmp/cache");
-        let url = "https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-2024.xsd";
-        let path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
-        // URL chars / : are replaced with _, https:// becomes https___
-        assert_eq!(
-            path,
-            Path::new("/tmp/cache/https___xbrl.fasb.org_us-gaap_2024_entire_us-gaap-2024.xsd")
-        );
-    }
-
-    #[test]
-    #[cfg(feature = "http")]
-    fn test_fetch_url_invalid_scheme() {
-        let loader = TaxonomyLoader::new();
-        let result = loader.fetch_url("ftp://example.com/test.xsd");
-
-        assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            TaxonomyLoaderError::UnsupportedUrl(_)
-        ));
+    fn test_loader_new() -> Result<(), String> {
+        let loader = std::hint::black_box(TaxonomyLoader::new());
+        if std::hint::black_box(loader.cache_dir.is_some()) {
+            return Err("new loader should not have a cache directory".to_string());
+        }
+        Ok(())
     }
 
     #[cfg(not(feature = "http"))]
     #[test]
-    fn test_http_url_requires_http_feature() {
+    fn test_loader_new() {
+        let _loader = TaxonomyLoader::new();
+    }
+
+    #[test]
+    #[cfg(feature = "http")]
+    fn test_loader_with_cache() -> Result<(), String> {
+        let loader = TaxonomyLoader::with_cache_dir("/tmp/cache");
+        if loader.cache_dir.is_none() {
+            return Err("cache-configured loader should retain its cache directory".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "http")]
+    fn test_url_to_cache_path() -> Result<(), String> {
+        let cache_dir = Path::new("/tmp/cache");
+        let url = "https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-2024.xsd";
+        let path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
+        // URL chars / : are replaced with _, https:// becomes https___
+        let expected =
+            Path::new("/tmp/cache/https___xbrl.fasb.org_us-gaap_2024_entire_us-gaap-2024.xsd");
+        if path != expected {
+            return Err(format!(
+                "unexpected cache path: got {}, expected {}",
+                path.display(),
+                expected.display()
+            ));
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "http")]
+    fn test_fetch_url_invalid_scheme() -> Result<(), String> {
+        let loader = TaxonomyLoader::new();
+        let result = loader.fetch_url("ftp://example.com/test.xsd");
+
+        match result {
+            Err(TaxonomyLoaderError::UnsupportedUrl(_)) => Ok(()),
+            Ok(_) => Err("unsupported URL scheme unexpectedly succeeded".to_string()),
+            Err(error) => Err(format!("unexpected error for unsupported scheme: {error}")),
+        }
+    }
+
+    #[cfg(not(feature = "http"))]
+    #[test]
+    fn test_http_url_requires_http_feature() -> Result<(), String> {
         let loader = TaxonomyLoader::new();
         let result = loader.fetch_content("https://example.com/test.xsd");
 
-        assert!(matches!(
-            result,
-            Err(TaxonomyLoaderError::UnsupportedUrl(url)) if url == "https://example.com/test.xsd"
-        ));
+        match result {
+            Err(TaxonomyLoaderError::UnsupportedUrl(url))
+                if url == "https://example.com/test.xsd" =>
+            {
+                Ok(())
+            }
+            Ok(_) => Err("HTTP URL unexpectedly succeeded without the http feature".to_string()),
+            Err(error) => Err(format!("unexpected error for HTTP URL: {error}")),
+        }
     }
 }
