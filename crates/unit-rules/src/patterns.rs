@@ -2,6 +2,7 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Expected unit type for a concept
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +19,39 @@ pub enum ExpectedUnitType {
     Custom(String),
 }
 
+static DEFAULT_PATTERNS: LazyLock<Vec<(Regex, ExpectedUnitType)>> = LazyLock::new(|| {
+    vec![
+        // Share-related concepts → Shares unit
+        (
+            Regex::new(r"(?i).*shares.*").expect("built-in shares regex is valid"),
+            ExpectedUnitType::Shares,
+        ),
+        // Per-share concepts → PerShare unit
+        (
+            Regex::new(r"(?i).*pershare.*").expect("built-in pershare regex is valid"),
+            ExpectedUnitType::PerShare,
+        ),
+        (
+            Regex::new(r"(?i).*per.*share.*").expect("built-in per-share regex is valid"),
+            ExpectedUnitType::PerShare,
+        ),
+        // Employee-related → Pure unit
+        (
+            Regex::new(r"(?i).*employees.*").expect("built-in employees regex is valid"),
+            ExpectedUnitType::Pure,
+        ),
+        // Percentage/ratio → Pure unit
+        (
+            Regex::new(r"(?i).*percentage.*").expect("built-in percentage regex is valid"),
+            ExpectedUnitType::Pure,
+        ),
+        (
+            Regex::new(r"(?i).*ratio.*").expect("built-in ratio regex is valid"),
+            ExpectedUnitType::Pure,
+        ),
+    ]
+});
+
 /// Pattern-based concept matcher for unit type determination
 pub struct ConceptUnitPatterns {
     /// Explicit concept name → expected unit type
@@ -29,40 +63,9 @@ pub struct ConceptUnitPatterns {
 impl ConceptUnitPatterns {
     /// Create a new pattern matcher with default patterns
     pub fn new() -> Self {
-        let patterns = vec![
-            // Share-related concepts → Shares unit
-            (
-                Regex::new(r"(?i).*shares.*").unwrap(),
-                ExpectedUnitType::Shares,
-            ),
-            // Per-share concepts → PerShare unit
-            (
-                Regex::new(r"(?i).*pershare.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
-            (
-                Regex::new(r"(?i).*per.*share.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
-            // Employee-related → Pure unit
-            (
-                Regex::new(r"(?i).*employees.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-            // Percentage/ratio → Pure unit
-            (
-                Regex::new(r"(?i).*percentage.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-            (
-                Regex::new(r"(?i).*ratio.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-        ];
-
         Self {
             explicit: HashMap::new(),
-            patterns,
+            patterns: DEFAULT_PATTERNS.clone(),
         }
     }
 
@@ -156,6 +159,19 @@ mod tests {
         let patterns = ConceptUnitPatterns::new();
         assert_eq!(
             patterns.expected_type("us-gaap:NumberOfEmployees"),
+            Some(ExpectedUnitType::Pure)
+        );
+    }
+
+    #[test]
+    fn test_percentage_and_ratio_patterns() {
+        let patterns = ConceptUnitPatterns::new();
+        assert_eq!(
+            patterns.expected_type("us-gaap:GrossMarginPercentage"),
+            Some(ExpectedUnitType::Pure)
+        );
+        assert_eq!(
+            patterns.expected_type("us-gaap:DebtToEquityRatio"),
             Some(ExpectedUnitType::Pure)
         );
     }
