@@ -10,7 +10,7 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
-use std::path::PathBuf;
+use std::path::{Component, PathBuf};
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -173,6 +173,16 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
                         fixture_root.display()
                     )
                 })?;
+                if relative
+                    .components()
+                    .any(|component| component == Component::ParentDir)
+                {
+                    anyhow::bail!(
+                        "fixture path {} contains parent-directory traversal outside repository fixture root {}",
+                        path.display(),
+                        fixture_root.display()
+                    );
+                }
                 Ok(relative.to_string_lossy().replace('\\', "/"))
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
@@ -671,6 +681,15 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
 #[allow(clippy::too_many_lines)]
 fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
+    if step.text == "I validate the declared fixture paths" {
+        let error = match assert_declared_inputs_match(world, scenario) {
+            Ok(()) => anyhow::bail!("expected fixture path validation to reject traversal"),
+            Err(error) => error.to_string(),
+        };
+        world.cli_output = Some(error);
+        return Ok(true);
+    }
+
     if matches!(
         step.text.as_str(),
         "I validate the filing" | "I validate duplicate facts" | "I resolve the DTS"
@@ -1048,6 +1067,17 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 
 #[allow(clippy::too_many_lines)]
 fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
+    if step.text == "the fixture path is rejected outside the repository root" {
+        let output = world
+            .cli_output
+            .as_deref()
+            .context("fixture path validation did not capture an error")?;
+        if !output.contains("outside repository fixture root") {
+            anyhow::bail!("unexpected fixture path rejection: {output}");
+        }
+        return Ok(());
+    }
+
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
         if !world.dimension_context.validation_findings.is_empty() {
@@ -1645,6 +1675,27 @@ mod tests {
         };
         if !error.contains("outside repository fixture root") {
             return Err(format!("unexpected fixture-root error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn fixture_path_parent_directory_traversal_returns_error() -> Result<(), String> {
+        let mut world = World::new(PathBuf::from("repo"), FeatureGrid::default());
+        world
+            .fixture_dirs
+            .push(PathBuf::from("repo/fixtures/../outside"));
+        let scenario = ScenarioRecord {
+            fixtures: vec!["../outside".to_string()],
+            ..ScenarioRecord::default()
+        };
+
+        let error = match assert_declared_inputs_match(&world, &scenario) {
+            Ok(()) => return Err("parent-directory traversal should be rejected".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("parent-directory traversal") {
+            return Err(format!("unexpected traversal error: {error}"));
         }
         Ok(())
     }

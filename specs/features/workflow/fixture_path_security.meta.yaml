@@ -1,0 +1,16 @@
+feature_id: FEAT-XK-WORKFLOW-FIXTURE-SECURITY
+layer: workflow
+module: fixture-path-security
+scenarios:
+  SCN-XK-WORKFLOW-007:
+    ac_id: AC-XK-WORKFLOW-007
+    req_id: REQ-XK-WORKFLOW
+    crates: [xbrlkit-bdd-steps, xbrlkit-bdd]
+    fixtures: ["../outside"]
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrlkit-bdd-steps
+      - crates/xbrlkit-bdd
+      - specs/features/workflow
