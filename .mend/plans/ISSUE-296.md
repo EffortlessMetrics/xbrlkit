@@ -16,8 +16,10 @@ The cache stores raw file text by `PathBuf` and uses file modification time and
 length as its read-avoidance fingerprint. The cache uses one `Mutex` for
 consistent lock ordering and evicts least-recently-used entries at a fixed
 capacity of 64 files. A cache miss still uses the existing contextual read and
-parse errors. Same-size rewrites that preserve coarse timestamps remain a
-documented residual freshness risk for this metadata-only cache.
+parse errors. Fixture trees are immutable during a runner process; in-process
+fixture writers must call `scenario_runner::invalidate_fixture_cache` before
+loading rewritten content, including same-size rewrites that preserve the
+metadata fingerprint.
 
 ## Acceptance criteria
 
@@ -48,8 +50,9 @@ documented residual freshness risk for this metadata-only cache.
 - No cross-process or persistent cache.
 - No scenario-result cache, taxonomy/profile cache, or API/schema change.
 - No CI performance threshold or benchmark claim in this slice. The cache
-  avoids repeated content reads when the metadata fingerprint is unchanged but
-  does not provide stronger invalidation for timestamp-preserving rewrites.
+  avoids repeated content reads when the metadata fingerprint is unchanged;
+  timestamp-preserving rewrites are supported only through the explicit
+  invalidation boundary documented above.
 
 ## Rollback
 

@@ -87,6 +87,11 @@ impl FixtureCache {
         self.entries.remove(path);
         self.lru.retain(|candidate| candidate != path);
     }
+
+    fn clear(&mut self) {
+        self.entries.clear();
+        self.lru.clear();
+    }
 }
 
 static FIXTURE_CACHE: OnceLock<Mutex<FixtureCache>> = OnceLock::new();
@@ -96,6 +101,24 @@ static FIXTURE_FILE_READ_COUNTS: OnceLock<Mutex<HashMap<PathBuf, usize>>> = Once
 
 fn fixture_cache() -> &'static Mutex<FixtureCache> {
     FIXTURE_CACHE.get_or_init(|| Mutex::new(FixtureCache::default()))
+}
+
+/// Invalidate cached fixture content after an in-process fixture write.
+///
+/// The cache uses metadata to avoid repeated content reads. Callers that
+/// mutate a fixture and then load it again in the same process must call this
+/// function before the next load, including for same-size rewrites that may
+/// preserve the metadata fingerprint.
+///
+/// # Errors
+///
+/// Returns an error if the process-local cache mutex is poisoned.
+pub fn invalidate_fixture_cache() -> anyhow::Result<()> {
+    fixture_cache()
+        .lock()
+        .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
+        .clear();
+    Ok(())
 }
 
 fn read_fixture_file(path: &Path) -> anyhow::Result<String> {
@@ -604,15 +627,24 @@ fn write_json(path: &Path, value: &impl serde::Serialize) -> anyhow::Result<()> 
 #[cfg(test)]
 mod tests {
     use super::{
-        FIXTURE_CACHE_CAPACITY, FileFingerprint, FixtureCache, fixture_file_read_count,
-        load_fixture_facts,
+        FIXTURE_CACHE_CAPACITY, FileFingerprint, FixtureCache, fixture_cache,
+        fixture_file_read_count, invalidate_fixture_cache, load_fixture_facts,
     };
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::{Mutex, MutexGuard, OnceLock};
     use std::time::{Duration, SystemTime};
 
     static NEXT_TEMP_DIR: AtomicU64 = AtomicU64::new(0);
+    static FIXTURE_CACHE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    fn lock_fixture_cache() -> Result<MutexGuard<'static, ()>, String> {
+        FIXTURE_CACHE_TEST_LOCK
+            .get_or_init(|| Mutex::new(()))
+            .lock()
+            .map_err(|_| "fixture cache test mutex poisoned".to_string())
+    }
 
     struct TempFixtureDir(PathBuf);
 
@@ -698,6 +730,7 @@ mod tests {
 
     #[test]
     fn loader_rereads_fixture_when_file_length_changes() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let report_path = fixture_dir.0.join("report.yaml");
         fs::write(&report_path, "facts: []\n").map_err(|error| error.to_string())?;
@@ -722,6 +755,7 @@ mod tests {
 
     #[test]
     fn loader_reads_unchanged_fixture_once() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let report_path = fixture_dir.0.join("report.yaml");
         fs::write(&report_path, "facts: []\n").map_err(|error| error.to_string())?;
@@ -743,7 +777,66 @@ mod tests {
     }
 
     #[test]
+    fn loader_rereads_fixture_after_explicit_invalidation() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
+        let fixture_dir = temp_fixture_dir()?;
+        let report_path = fixture_dir.0.join("report.yaml");
+        fs::write(
+            &report_path,
+            "facts:\n  - concept: test:Fact\n    context: c1\n    value: \"1\"\n",
+        )
+        .map_err(|error| error.to_string())?;
+
+        let first = load_fixture_facts(std::slice::from_ref(&fixture_dir.0))
+            .map_err(|error| error.to_string())?;
+        if first.facts.first().map(|fact| fact.value.as_str()) != Some("1") {
+            return Err("initial fixture should contain value 1".to_string());
+        }
+
+        fs::write(
+            &report_path,
+            "facts:\n  - concept: test:Fact\n    context: c1\n    value: \"2\"\n",
+        )
+        .map_err(|error| error.to_string())?;
+        invalidate_fixture_cache().map_err(|error| error.to_string())?;
+
+        let second = load_fixture_facts(std::slice::from_ref(&fixture_dir.0))
+            .map_err(|error| error.to_string())?;
+        if second.facts.first().map(|fact| fact.value.as_str()) != Some("2") {
+            return Err("explicit invalidation should expose rewritten fixture".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn explicit_invalidation_discards_matching_metadata_entry() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
+        let path = PathBuf::from(format!(
+            "same-fingerprint-{}-{}.yaml",
+            std::process::id(),
+            NEXT_TEMP_DIR.fetch_add(1, Ordering::Relaxed)
+        ));
+        let file_fingerprint = fingerprint(17);
+        fixture_cache()
+            .lock()
+            .map_err(|_| "fixture cache mutex poisoned".to_string())?
+            .insert(path.clone(), file_fingerprint, "stale".to_string());
+
+        invalidate_fixture_cache().map_err(|error| error.to_string())?;
+
+        let cached = fixture_cache()
+            .lock()
+            .map_err(|_| "fixture cache mutex poisoned".to_string())?
+            .get(&path, file_fingerprint);
+        if cached.is_some() {
+            return Err("explicit invalidation must discard matching metadata entries".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
     fn missing_fixture_keeps_read_error_context() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let error = match load_fixture_facts(std::slice::from_ref(&fixture_dir.0)) {
             Ok(_) => return Err("missing fixture should fail".to_string()),
@@ -757,6 +850,7 @@ mod tests {
 
     #[test]
     fn malformed_fixture_keeps_parse_error_context() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let report_path = fixture_dir.0.join("report.yaml");
         fs::write(&report_path, "facts: [").map_err(|error| error.to_string())?;
