@@ -51,20 +51,12 @@ struct FixtureCache {
 }
 
 impl FixtureCache {
-    fn get(
-        &mut self,
-        path: &Path,
-        fingerprint: FileFingerprint,
-        current_content: &str,
-    ) -> Option<String> {
-        // Metadata can remain unchanged when a same-size rewrite preserves the
-        // file timestamp, so content equality is required before serving a hit.
+    fn get(&mut self, path: &Path, fingerprint: FileFingerprint) -> Option<String> {
         let cached = self
             .entries
             .get(path)
             .and_then(|(cached_fingerprint, content)| {
-                (cached_fingerprint == &fingerprint && content == current_content)
-                    .then(|| content.clone())
+                (cached_fingerprint == &fingerprint).then(|| content.clone())
             });
         if cached.is_some() {
             self.touch(path);
@@ -99,27 +91,51 @@ impl FixtureCache {
 
 static FIXTURE_CACHE: OnceLock<Mutex<FixtureCache>> = OnceLock::new();
 
+#[cfg(test)]
+static FIXTURE_FILE_READ_COUNTS: OnceLock<Mutex<HashMap<PathBuf, usize>>> = OnceLock::new();
+
 fn fixture_cache() -> &'static Mutex<FixtureCache> {
     FIXTURE_CACHE.get_or_init(|| Mutex::new(FixtureCache::default()))
 }
 
 fn read_fixture_file(path: &Path) -> anyhow::Result<String> {
     let fingerprint = file_fingerprint(path)?;
-    let current_content =
-        fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
-    let cached = fixture_cache()
+    if let Some(content) = fixture_cache()
         .lock()
         .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
-        .get(path, fingerprint, &current_content);
-    if let Some(content) = cached {
+        .get(path, fingerprint)
+    {
         return Ok(content);
     }
 
+    #[cfg(test)]
+    record_fixture_file_read(path)?;
+    let content =
+        fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     fixture_cache()
         .lock()
         .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
-        .insert(path.to_path_buf(), fingerprint, current_content.clone());
-    Ok(current_content)
+        .insert(path.to_path_buf(), fingerprint, content.clone());
+    Ok(content)
+}
+
+#[cfg(test)]
+fn record_fixture_file_read(path: &Path) -> anyhow::Result<()> {
+    let mut counts = FIXTURE_FILE_READ_COUNTS
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .map_err(|_| anyhow!("fixture read-count mutex poisoned"))?;
+    *counts.entry(path.to_path_buf()).or_default() += 1;
+    Ok(())
+}
+
+#[cfg(test)]
+fn fixture_file_read_count(path: &Path) -> anyhow::Result<usize> {
+    let counts = FIXTURE_FILE_READ_COUNTS
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .map_err(|_| anyhow!("fixture read-count mutex poisoned"))?;
+    Ok(counts.get(path).copied().unwrap_or_default())
 }
 
 fn file_fingerprint(path: &Path) -> anyhow::Result<FileFingerprint> {
@@ -587,7 +603,10 @@ fn write_json(path: &Path, value: &impl serde::Serialize) -> anyhow::Result<()> 
 
 #[cfg(test)]
 mod tests {
-    use super::{FIXTURE_CACHE_CAPACITY, FileFingerprint, FixtureCache, load_fixture_facts};
+    use super::{
+        FIXTURE_CACHE_CAPACITY, FileFingerprint, FixtureCache, fixture_file_read_count,
+        load_fixture_facts,
+    };
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -627,7 +646,7 @@ mod tests {
         let file_fingerprint = fingerprint(1);
         cache.insert(path.clone(), file_fingerprint, "cached".to_string());
 
-        if cache.get(&path, file_fingerprint, "cached").as_deref() != Some("cached") {
+        if cache.get(&path, file_fingerprint).as_deref() != Some("cached") {
             return Err("matching fixture should be served from cache".to_string());
         }
         Ok(())
@@ -639,27 +658,11 @@ mod tests {
         let path = PathBuf::from("fixture.yaml");
         cache.insert(path.clone(), fingerprint(1), "stale".to_string());
 
-        if cache.get(&path, fingerprint(2), "stale").is_some() {
+        if cache.get(&path, fingerprint(2)).is_some() {
             return Err("changed fixture metadata must invalidate the cache".to_string());
         }
         if cache.entries.contains_key(&path) {
             return Err("invalidated fixture must be removed from the cache".to_string());
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn cache_invalidates_same_fingerprint_when_content_changes() -> Result<(), String> {
-        let mut cache = FixtureCache::default();
-        let path = PathBuf::from("fixture.yaml");
-        let file_fingerprint = fingerprint(1);
-        cache.insert(path.clone(), file_fingerprint, "old".to_string());
-
-        if cache.get(&path, file_fingerprint, "new").is_some() {
-            return Err("same metadata must not hide rewritten fixture content".to_string());
-        }
-        if cache.entries.contains_key(&path) {
-            return Err("stale content must be removed from the cache".to_string());
         }
         Ok(())
     }
@@ -672,7 +675,7 @@ mod tests {
             cache.insert(path, fingerprint(index as u64), index.to_string());
         }
         let oldest_path = Path::new("fixture-0.yaml");
-        if cache.get(oldest_path, fingerprint(0), "0").is_none() {
+        if cache.get(oldest_path, fingerprint(0)).is_none() {
             return Err("fixture 0 should be present before eviction".to_string());
         }
         cache.insert(
@@ -681,11 +684,11 @@ mod tests {
             "new".to_string(),
         );
 
-        if cache.get(oldest_path, fingerprint(0), "0").is_none() {
+        if cache.get(oldest_path, fingerprint(0)).is_none() {
             return Err("recently used fixture should not be evicted".to_string());
         }
         if cache
-            .get(Path::new("fixture-1.yaml"), fingerprint(1), "1")
+            .get(Path::new("fixture-1.yaml"), fingerprint(1))
             .is_some()
         {
             return Err("least-recently-used fixture should be evicted".to_string());
@@ -713,6 +716,28 @@ mod tests {
             .map_err(|error| error.to_string())?;
         if second.facts.len() != 1 {
             return Err("changed fixture should be reread instead of cached".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn loader_reads_unchanged_fixture_once() -> Result<(), String> {
+        let fixture_dir = temp_fixture_dir()?;
+        let report_path = fixture_dir.0.join("report.yaml");
+        fs::write(&report_path, "facts: []\n").map_err(|error| error.to_string())?;
+        let before = fixture_file_read_count(&report_path).map_err(|error| error.to_string())?;
+
+        load_fixture_facts(std::slice::from_ref(&fixture_dir.0))
+            .map_err(|error| error.to_string())?;
+        load_fixture_facts(std::slice::from_ref(&fixture_dir.0))
+            .map_err(|error| error.to_string())?;
+
+        let after = fixture_file_read_count(&report_path).map_err(|error| error.to_string())?;
+        if after - before != 1 {
+            return Err(format!(
+                "unchanged fixture should be read once, observed {} reads",
+                after - before
+            ));
         }
         Ok(())
     }
