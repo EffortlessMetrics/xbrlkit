@@ -1618,3 +1618,24 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{FeatureGrid, PathBuf, World};
+
+    #[test]
+    fn load_fixture_schema_initializes_the_shared_taxonomy_context() -> Result<(), String> {
+        let mut world = World::new(PathBuf::from("."), FeatureGrid::default());
+        world.load_fixture_schema();
+
+        if world.taxonomy_loader_context.schema_path.as_deref()
+            != Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd")
+        {
+            return Err("shared fixture schema path was not initialized".to_string());
+        }
+        if world.taxonomy_loader_context.loader.is_none() {
+            return Err("shared taxonomy loader was not initialized".to_string());
+        }
+        Ok(())
+    }
+}
