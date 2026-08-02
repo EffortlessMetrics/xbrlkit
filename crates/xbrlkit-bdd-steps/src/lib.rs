@@ -2140,6 +2140,36 @@ mod tests {
     }
 
     #[test]
+    fn segment_dimension_given_sets_the_primary_dimension() -> Result<(), String> {
+        let mut world = World::new(PathBuf::new(), FeatureGrid::default());
+        let scenario = ScenarioRecord::default();
+        let step = Step {
+            text: "a context with typed dimension \"dim:SegmentAxis\" in segment".to_string(),
+            table: Vec::new(),
+        };
+
+        if !handle_given(&mut world, &scenario, &step)
+            .map_err(|error| format!("segment dimension Given failed: {error}"))?
+        {
+            return Err("segment dimension Given was not handled".to_string());
+        }
+        if world.dimension_context.dimension.as_deref() != Some("dim:SegmentAxis") {
+            return Err(format!(
+                "primary dimension was not recorded: {:?}",
+                world.dimension_context.dimension
+            ));
+        }
+        if world.dimension_context.segment_dimension.as_deref() != Some("dim:SegmentAxis") {
+            return Err(format!(
+                "segment dimension was not recorded: {:?}",
+                world.dimension_context.segment_dimension
+            ));
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn clearing_dimension_state_removes_all_dimension_values() -> Result<(), String> {
         let mut context = DimensionContext {
             dimension: Some("dim:Axis".to_string()),
