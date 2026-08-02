@@ -51,3 +51,62 @@ pub(crate) fn test_context() -> Context {
         scenario: None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{scenario_taxonomy, test_context};
+    use taxonomy_dimensions::Dimension;
+
+    #[test]
+    fn scenario_taxonomy_contains_the_shared_axis_and_members() -> Result<(), String> {
+        let taxonomy = scenario_taxonomy();
+        let axis = taxonomy
+            .dimensions
+            .get("us-gaap:StatementScenarioAxis")
+            .ok_or_else(|| "shared scenario axis is missing".to_string())?;
+        match axis {
+            Dimension::Explicit {
+                default_domain,
+                required,
+                ..
+            } if default_domain.as_deref() == Some("us-gaap:ScenarioDomain") && !required => {}
+            _ => return Err("shared scenario axis has unexpected definition".to_string()),
+        }
+
+        let domain = taxonomy
+            .domains
+            .get("us-gaap:ScenarioDomain")
+            .ok_or_else(|| "shared scenario domain is missing".to_string())?;
+        if domain.members.len() != 2 {
+            return Err(format!(
+                "expected two shared scenario members, got {}",
+                domain.members.len()
+            ));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_context_contains_the_shared_entity_and_period() -> Result<(), String> {
+        let context = test_context();
+        if context.id != "test-context" {
+            return Err(format!("unexpected context id: {}", context.id));
+        }
+        if context.entity.value != "0001234567" {
+            return Err(format!(
+                "unexpected context entity: {}",
+                context.entity.value
+            ));
+        }
+        if !matches!(
+            context.period,
+            xbrl_contexts::Period::Duration {
+                start,
+                end
+            } if start == "2024-01-01" && end == "2024-12-31"
+        ) {
+            return Err("shared context period is not the expected duration".to_string());
+        }
+        Ok(())
+    }
+}
