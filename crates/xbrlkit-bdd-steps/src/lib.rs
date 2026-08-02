@@ -10,6 +10,7 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
+use std::fs;
 use std::path::{Component, PathBuf};
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
@@ -179,6 +180,19 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
                 {
                     anyhow::bail!(
                         "fixture path {} contains parent-directory traversal outside repository fixture root {}",
+                        path.display(),
+                        fixture_root.display()
+                    );
+                }
+                let resolved_fixture_root = fs::canonicalize(&fixture_root).with_context(|| {
+                    format!("resolving repository fixture root {}", fixture_root.display())
+                })?;
+                let resolved_path = fs::canonicalize(path).with_context(|| {
+                    format!("resolving fixture path {}", path.display())
+                })?;
+                if !resolved_path.starts_with(&resolved_fixture_root) {
+                    anyhow::bail!(
+                        "fixture path {} is outside repository fixture root {}",
                         path.display(),
                         fixture_root.display()
                     );
@@ -364,7 +378,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
                 continue;
             }
 
-            if let Ok(content) = std::fs::read_to_string(path) {
+            if let Ok(content) = fs::read_to_string(path) {
                 // Check for @alpha-active tag in the file
                 if content.contains("@alpha-active") {
                     has_alpha_scenarios = true;
@@ -626,7 +640,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     if step.text == "a cache directory is configured" {
         let cache_dir = std::env::temp_dir().join("xbrlkit_taxonomy_cache");
         // Create the cache directory so it exists for the Then step
-        let _ = std::fs::create_dir_all(&cache_dir);
+        let _ = fs::create_dir_all(&cache_dir);
         world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
         world.taxonomy_loader_context.loader =
             Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
@@ -880,7 +894,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     if step.text == "I build the filing manifest" {
         let fixture_dir = world.fixture_dirs.first().context("no fixture loaded")?;
         let submission_path = fixture_dir.join("submission.txt");
-        let submission = std::fs::read_to_string(&submission_path).with_context(|| {
+        let submission = fs::read_to_string(&submission_path).with_context(|| {
             format!(
                 "failed to read submission.txt from {}",
                 fixture_dir.display()
@@ -1662,7 +1676,64 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{FeatureGrid, ScenarioRecord, World, assert_declared_inputs_match};
-    use std::path::PathBuf;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_TEMP_DIR: AtomicU64 = AtomicU64::new(0);
+
+    struct TempDir(PathBuf);
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn temp_dir() -> Result<TempDir, String> {
+        let id = NEXT_TEMP_DIR.fetch_add(1, Ordering::Relaxed);
+        let path = std::env::temp_dir().join(format!(
+            "xbrlkit-bdd-steps-fixture-path-{}-{id}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&path).map_err(|error| error.to_string())?;
+        Ok(TempDir(path))
+    }
+
+    fn symlink_dir(source: &Path, link: &Path) -> Result<(), String> {
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(source, link).map_err(|error| error.to_string())
+        }
+        #[cfg(windows)]
+        {
+            match std::os::windows::fs::symlink_dir(source, link) {
+                Ok(()) => Ok(()),
+                Err(error) if error.raw_os_error() == Some(1314) => {
+                    let link = link.to_string_lossy();
+                    let source = source.to_string_lossy();
+                    let output = std::process::Command::new("cmd")
+                        .arg("/C")
+                        .arg("mklink")
+                        .arg("/J")
+                        .arg(link.as_ref())
+                        .arg(source.as_ref())
+                        .output()
+                        .map_err(|error| error.to_string())?;
+                    if output.status.success() {
+                        Ok(())
+                    } else {
+                        Err(format!(
+                            "{}{}",
+                            String::from_utf8_lossy(&output.stdout),
+                            String::from_utf8_lossy(&output.stderr)
+                        ))
+                    }
+                }
+                Err(error) => Err(error.to_string()),
+            }
+        }
+    }
 
     #[test]
     fn fixture_path_outside_repository_root_returns_error() -> Result<(), String> {
@@ -1701,11 +1772,40 @@ mod tests {
     }
 
     #[test]
+    fn fixture_path_symlink_escape_returns_error() -> Result<(), String> {
+        let repo = temp_dir()?;
+        let outside = temp_dir()?;
+        let fixture_root = repo.0.join("fixtures");
+        fs::create_dir_all(&fixture_root).map_err(|error| error.to_string())?;
+        let link = fixture_root.join("linked");
+        symlink_dir(&outside.0, &link)?;
+
+        let mut world = World::new(repo.0.clone(), FeatureGrid::default());
+        world.fixture_dirs.push(link);
+        let scenario = ScenarioRecord {
+            fixtures: vec!["linked".to_string()],
+            ..ScenarioRecord::default()
+        };
+
+        let error = match assert_declared_inputs_match(&world, &scenario) {
+            Ok(()) => return Err("fixture symlink escape should be rejected".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("outside repository fixture root") {
+            return Err(format!("unexpected symlink escape error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
     fn fixture_path_under_repository_root_matches_metadata() -> Result<(), String> {
-        let mut world = World::new(PathBuf::from("repo"), FeatureGrid::default());
+        let repo = temp_dir()?;
+        fs::create_dir_all(repo.0.join("fixtures/synthetic/example"))
+            .map_err(|error| error.to_string())?;
+        let mut world = World::new(repo.0.clone(), FeatureGrid::default());
         world
             .fixture_dirs
-            .push(PathBuf::from("repo/fixtures/synthetic/example"));
+            .push(repo.0.join("fixtures/synthetic/example"));
         let scenario = ScenarioRecord {
             fixtures: vec!["synthetic/example".to_string()],
             ..ScenarioRecord::default()
