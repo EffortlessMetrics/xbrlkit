@@ -4,6 +4,7 @@
 Feature: OIM JSON export
 
   @alpha-active
+  @AC-XK-EXPORT-001
   @SCN-XK-EXPORT-001
   @speed.fast
   Scenario: Emit canonical JSON export with provenance

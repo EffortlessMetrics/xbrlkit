@@ -56,7 +56,7 @@ Still minimal or not implemented yet:
 
 - filing manifest derivation from raw submissions
 - required-facts enforcement from the SEC profile pack
-- mature BDD execution; `cargo xtask test-ac` is the authoritative scenario runner for active slices
+- mature BDD execution; `cargo xtask test-ac` is the authoritative focused acceptance entry point for active slices
 - oracle comparison and broad differential lanes
 - broad EDGAR / XBRL coverage beyond the active synthetic SEC slices
 
