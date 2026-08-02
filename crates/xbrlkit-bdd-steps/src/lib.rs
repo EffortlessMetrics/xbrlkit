@@ -29,7 +29,7 @@ pub struct World {
     pub execution: Option<ScenarioExecution>,
     pub dimension_context: DimensionContext,
     pub context_completeness_context: ContextCompletenessContext,
-    pub streaming_context: StreamingContext,
+    pub streaming_state: BddWorldState,
     pub taxonomy_loader_context: TaxonomyLoaderContext,
     pub bundle_manifest: Option<BundleManifest>,
     pub validation_receipt: Option<receipt_types::Receipt>,
@@ -60,7 +60,7 @@ pub struct ContextCompletenessContext {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct StreamingContext {
+pub struct BddWorldState {
     pub file_size_mb: Option<f64>,
     pub fact_count: Option<usize>,
     pub memory_peak_mb: Option<f64>,
@@ -91,7 +91,7 @@ impl World {
             execution: None,
             dimension_context: DimensionContext::default(),
             context_completeness_context: ContextCompletenessContext::default(),
-            streaming_context: StreamingContext::default(),
+            streaming_state: BddWorldState::default(),
             taxonomy_loader_context: TaxonomyLoaderContext::default(),
             bundle_manifest: None,
             validation_receipt: None,
@@ -496,7 +496,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     // Streaming parser Given steps
     if step.text == "the xbrl-stream crate is available" {
         // Verify the crate exists and can be used
-        world.streaming_context.use_streaming = true;
+        world.streaming_state.use_streaming = true;
         return Ok(true);
     }
 
@@ -512,7 +512,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
                     .and_then(|s| s.strip_suffix("mb"))
             });
         if let Some(mb) = mb_str {
-            world.streaming_context.file_size_mb = Some(mb.parse().unwrap_or(100.0));
+            world.streaming_state.file_size_mb = Some(mb.parse().unwrap_or(100.0));
             return Ok(true);
         }
         anyhow::bail!("invalid file size specification: {}", step.text);
@@ -530,8 +530,8 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
                     .and_then(|s| s.strip_suffix("mb"))
             });
         if let Some(mb) = mb_str {
-            world.streaming_context.file_size_mb = Some(mb.parse().unwrap_or(10.0));
-            world.streaming_context.use_streaming = true; // Always available as option
+            world.streaming_state.file_size_mb = Some(mb.parse().unwrap_or(10.0));
+            world.streaming_state.use_streaming = true; // Always available as option
             return Ok(true);
         }
         anyhow::bail!("invalid file size specification: {}", step.text);
@@ -545,8 +545,8 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
                 .next()
                 .and_then(|s| s.trim().parse().ok())
                 .unwrap_or(1000);
-            world.streaming_context.fact_count = Some(facts);
-            world.streaming_context.file_size_mb = Some(50.0); // Assume large
+            world.streaming_state.fact_count = Some(facts);
+            world.streaming_state.file_size_mb = Some(50.0); // Assume large
             return Ok(true);
         }
         anyhow::bail!("invalid fact count specification: {}", step.text);
@@ -554,15 +554,15 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text == "some facts reference non-existent contexts" {
         // Mark that we'll simulate missing context refs
-        world.streaming_context.missing_context_refs = vec!["missing-ctx-1".to_string()];
+        world.streaming_state.missing_context_refs = vec!["missing-ctx-1".to_string()];
         return Ok(true);
     }
 
     if step.text == "a streaming parser with a custom handler" {
-        world.streaming_context.use_streaming = true;
-        world.streaming_context.facts_processed.clear();
-        world.streaming_context.contexts_collected.clear();
-        world.streaming_context.units_collected.clear();
+        world.streaming_state.use_streaming = true;
+        world.streaming_state.facts_processed.clear();
+        world.streaming_state.contexts_collected.clear();
+        world.streaming_state.units_collected.clear();
         return Ok(true);
     }
 
@@ -929,8 +929,8 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     if step.text == "I validate it using the streaming parser" {
         // Simulate streaming validation - in real implementation this would
         // use xbrl_stream to parse a large file
-        world.streaming_context.memory_peak_mb = Some(45.0); // Simulated under 50MB
-        world.streaming_context.facts_processed = vec![xbrl_stream::StreamingFact {
+        world.streaming_state.memory_peak_mb = Some(45.0); // Simulated under 50MB
+        world.streaming_state.facts_processed = vec![xbrl_stream::StreamingFact {
             concept: "us-gaap:Revenue".to_string(),
             context_ref: "ctx-1".to_string(),
             unit_ref: Some("usd".to_string()),
@@ -943,14 +943,14 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     if step.text == "I check if streaming is needed" {
         // Determine if streaming should be recommended based on file size
         // Streaming is always available as an option, but recommended for large files
-        let _size = world.streaming_context.file_size_mb.unwrap_or(0.0);
+        let _size = world.streaming_state.file_size_mb.unwrap_or(0.0);
         // use_streaming remains true (set in Given step) to indicate availability
         return Ok(true);
     }
 
     if step.text == "I run streaming context validation" {
         // Simulate streaming context validation
-        world.streaming_context.facts_processed = vec![
+        world.streaming_state.facts_processed = vec![
             xbrl_stream::StreamingFact {
                 concept: "us-gaap:Revenue".to_string(),
                 context_ref: "ctx-1".to_string(),
@@ -966,7 +966,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 value: "2000".to_string(),
             },
         ];
-        world.streaming_context.contexts_collected = vec![xbrl_stream::StreamingContext {
+        world.streaming_state.contexts_collected = vec![xbrl_stream::StreamingContext {
             id: "ctx-1".to_string(),
             entity_scheme: Some("http://www.sec.gov/CIK".to_string()),
             entity_value: Some("0001234567".to_string()),
@@ -974,13 +974,13 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         }];
         // Detect missing context refs
         let context_ids: std::collections::HashSet<_> = world
-            .streaming_context
+            .streaming_state
             .contexts_collected
             .iter()
             .map(|c| c.id.clone())
             .collect();
-        world.streaming_context.missing_context_refs = world
-            .streaming_context
+        world.streaming_state.missing_context_refs = world
+            .streaming_state
             .facts_processed
             .iter()
             .filter(|f| !context_ids.contains(&f.context_ref))
@@ -991,20 +991,20 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 
     if step.text == "facts are encountered during parsing" {
         // Simulate fact parsing with custom handler
-        world.streaming_context.facts_processed = vec![xbrl_stream::StreamingFact {
+        world.streaming_state.facts_processed = vec![xbrl_stream::StreamingFact {
             concept: "us-gaap:Revenue".to_string(),
             context_ref: "ctx-1".to_string(),
             unit_ref: Some("usd".to_string()),
             decimals: Some("-3".to_string()),
             value: "12345000".to_string(),
         }];
-        world.streaming_context.contexts_collected = vec![xbrl_stream::StreamingContext {
+        world.streaming_state.contexts_collected = vec![xbrl_stream::StreamingContext {
             id: "ctx-1".to_string(),
             entity_scheme: Some("http://www.sec.gov/CIK".to_string()),
             entity_value: Some("0001234567".to_string()),
             period: xbrl_stream::StreamingPeriod::Instant("2024-12-31".to_string()),
         }];
-        world.streaming_context.units_collected = vec![xbrl_stream::StreamingUnit {
+        world.streaming_state.units_collected = vec![xbrl_stream::StreamingUnit {
             id: "usd".to_string(),
             measure: Some("iso4217:USD".to_string()),
         }];
@@ -1380,7 +1380,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
 
     // Streaming parser Then steps
     if step.text == "memory usage should stay under 50MB peak" {
-        let peak = world.streaming_context.memory_peak_mb.unwrap_or(f64::MAX);
+        let peak = world.streaming_state.memory_peak_mb.unwrap_or(f64::MAX);
         if peak > 50.0 {
             anyhow::bail!("memory usage was {peak}MB, expected under 50MB");
         }
@@ -1388,7 +1388,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "all facts should be processed" {
-        if world.streaming_context.facts_processed.is_empty() {
+        if world.streaming_state.facts_processed.is_empty() {
             anyhow::bail!("no facts were processed");
         }
         return Ok(());
@@ -1400,7 +1400,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "the DOM parser should be recommended" {
-        let size = world.streaming_context.file_size_mb.unwrap_or(0.0);
+        let size = world.streaming_state.file_size_mb.unwrap_or(0.0);
         if size > 10.0 {
             anyhow::bail!(
                 "DOM parser should be recommended for files under 10MB, but file is {size}MB"
@@ -1410,14 +1410,14 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "the streaming parser should be available as option" {
-        if !world.streaming_context.use_streaming {
+        if !world.streaming_state.use_streaming {
             anyhow::bail!("streaming parser should be available as an option");
         }
         return Ok(());
     }
 
     if step.text == "missing context references should be reported" {
-        if world.streaming_context.missing_context_refs.is_empty() {
+        if world.streaming_state.missing_context_refs.is_empty() {
             anyhow::bail!("expected missing context references to be reported");
         }
         return Ok(());
@@ -1429,21 +1429,21 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "the handler should receive each fact" {
-        if world.streaming_context.facts_processed.is_empty() {
+        if world.streaming_state.facts_processed.is_empty() {
             anyhow::bail!("handler did not receive any facts");
         }
         return Ok(());
     }
 
     if step.text == "contexts should be collected" {
-        if world.streaming_context.contexts_collected.is_empty() {
+        if world.streaming_state.contexts_collected.is_empty() {
             anyhow::bail!("no contexts were collected");
         }
         return Ok(());
     }
 
     if step.text == "units should be available for reference" {
-        if world.streaming_context.units_collected.is_empty() {
+        if world.streaming_state.units_collected.is_empty() {
             anyhow::bail!("no units were collected");
         }
         return Ok(());
