@@ -871,6 +871,24 @@ mod tests {
     }
 
     #[test]
+    fn test_validate_typed_datetime_rejects_impossible_calendar_day() -> Result<(), String> {
+        let taxonomy = create_test_typed_taxonomy("xs:dateTime");
+        let context = create_test_context_with_typed_dim("ctx-1", "2024-02-31T10:30:00");
+
+        let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
+
+        if result
+            .findings
+            .iter()
+            .any(|finding| finding.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE")
+        {
+            Ok(())
+        } else {
+            Err("expected INVALID_TYPED_VALUE for impossible dateTime day".to_string())
+        }
+    }
+
+    #[test]
     fn test_validate_typed_uri_value_valid() {
         let taxonomy = create_test_typed_taxonomy("xs:anyURI");
 
