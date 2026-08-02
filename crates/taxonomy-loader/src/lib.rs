@@ -271,6 +271,14 @@ mod tests {
         if first != second {
             return Err("same URL produced different cache paths".into());
         }
+        let expected = "2989cb2a49e8937d05f00d00847a7f70b120b296b6e4a9de23c48b20ca218c3d";
+        if filename != expected {
+            return Err(format!(
+                "cache filename is not the SHA-256 digest: got {}, expected {expected}",
+                filename.to_string_lossy()
+            )
+            .into());
+        }
         if filename.len() != 64 {
             return Err("cache filename is not a SHA-256 hex digest".into());
         }
