@@ -2217,7 +2217,6 @@ dependencies = [
  "anyhow",
  "quick-xml",
  "thiserror",
- "xbrl-report-types",
 ]
 
 [[package]]
