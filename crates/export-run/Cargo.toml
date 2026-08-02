@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 serde_json.workspace = true
+thiserror.workspace = true
 receipt-types.workspace = true
 oim-normalize.workspace = true
 xbrl-report-types.workspace = true

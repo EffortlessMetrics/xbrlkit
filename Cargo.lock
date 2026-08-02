@@ -326,6 +326,7 @@ dependencies = [
  "oim-normalize",
  "receipt-types",
  "serde_json",
+ "thiserror 2.0.18",
  "xbrl-report-types",
 ]
 
@@ -2266,6 +2267,7 @@ dependencies = [
  "context-completeness",
  "dimensional-rules",
  "edgar-attachments",
+ "export-run",
  "filing-load",
  "numeric-rules",
  "receipt-types",

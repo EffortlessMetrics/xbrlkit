@@ -5,7 +5,7 @@ scenarios:
   SCN-XK-EXPORT-001:
     ac_id: AC-XK-EXPORT-001
     req_id: REQ-XK-EXPORT
-    crates: [oim-normalize, export-run, render-json]
+    crates: [oim-normalize, export-run, render-json, scenario-runner, xbrlkit-cli, xbrlkit-bdd-steps]
     fixtures: [synthetic/inline/ixds-single-file-01]
     profile_pack: sec/efm-77/opco
     receipts: [export.report.v1, scenario.run.v1]
@@ -15,4 +15,21 @@ scenarios:
       - crates/oim-normalize
       - crates/export-run
       - crates/render-json
+      - crates/scenario-runner
+      - crates/xbrlkit-cli
+      - crates/xbrlkit-bdd-steps
+      - specs/features/export
+  SCN-XK-EXPORT-002:
+    ac_id: AC-XK-EXPORT-002
+    req_id: REQ-XK-EXPORT
+    crates: [export-run, xbrl-report-types, xbrlkit-bdd-steps]
+    fixtures: [synthetic/inline/ixds-single-file-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/export-run
+      - crates/xbrl-report-types
+      - crates/xbrlkit-bdd-steps
       - specs/features/export

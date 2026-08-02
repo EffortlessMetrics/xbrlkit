@@ -40,6 +40,7 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+    pub export_error: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -102,6 +103,7 @@ impl World {
             cli_output: None,
             cli_json_output: None,
             cli_exit_code: None,
+            export_error: None,
         }
     }
 }
@@ -685,6 +687,32 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I export the canonical report with a failing writer" {
+        use std::io::{self, Write};
+
+        struct FailingWriter;
+
+        impl Write for FailingWriter {
+            fn write(&mut self, _buffer: &[u8]) -> io::Result<usize> {
+                Err(io::Error::new(
+                    io::ErrorKind::BrokenPipe,
+                    "BDD test sink failed",
+                ))
+            }
+
+            fn flush(&mut self) -> io::Result<()> {
+                Ok(())
+            }
+        }
+
+        let report = xbrl_report_types::CanonicalReport::default();
+        let error = export_run::export_json_to(&report, FailingWriter)
+            .err()
+            .context("a failing export writer should return an error")?;
+        world.export_error = Some(error.to_string());
+        return Ok(true);
+    }
+
     // Feature grid When steps
     if step.text == "I compile the feature grid" {
         world.compiled_grid = Some(xbrlkit_feature_grid::compile(&world.repo_root)?);
@@ -1136,6 +1164,16 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
             let execution = execution(world)?;
             if execution.export_receipt.is_none() {
                 anyhow::bail!("export report receipt was not emitted");
+            }
+            Ok(())
+        }
+        "the export serialization error is surfaced" => {
+            let error = world
+                .export_error
+                .as_deref()
+                .context("export error was not captured")?;
+            if !error.contains("BDD test sink failed") {
+                anyhow::bail!("unexpected export error: {error}");
             }
             Ok(())
         }
