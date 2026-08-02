@@ -10,6 +10,7 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
+use std::fmt::Debug;
 use std::path::PathBuf;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
@@ -1041,17 +1042,21 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     Ok(false)
 }
 
+fn ensure_empty_findings<T: Debug>(findings: &[T], message_prefix: &str) -> anyhow::Result<()> {
+    if !findings.is_empty() {
+        anyhow::bail!("{message_prefix}{findings:?}");
+    }
+    Ok(())
+}
+
 #[allow(clippy::too_many_lines)]
 fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
-        if !world.dimension_context.validation_findings.is_empty() {
-            anyhow::bail!(
-                "expected validation to pass but got findings: {:?}",
-                world.dimension_context.validation_findings
-            );
-        }
-        return Ok(());
+        return ensure_empty_findings(
+            &world.dimension_context.validation_findings,
+            "expected validation to pass but got findings: ",
+        );
     }
 
     if step.text == "the validation should fail" {
@@ -1062,13 +1067,10 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
     }
 
     if step.text == "no findings should be reported" {
-        if !world.dimension_context.validation_findings.is_empty() {
-            anyhow::bail!(
-                "expected no findings but got: {:?}",
-                world.dimension_context.validation_findings
-            );
-        }
-        return Ok(());
+        return ensure_empty_findings(
+            &world.dimension_context.validation_findings,
+            "expected no findings but got: ",
+        );
     }
 
     if let Some(finding) = step.text.strip_prefix("an \"") {
@@ -1090,13 +1092,10 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
 
     // Decimal precision Then steps
     if step.text == "no validation errors are reported" {
-        if !world.context_completeness_context.findings.is_empty() {
-            anyhow::bail!(
-                "expected no validation errors but got: {:?}",
-                world.context_completeness_context.findings
-            );
-        }
-        return Ok(());
+        return ensure_empty_findings(
+            &world.context_completeness_context.findings,
+            "expected no validation errors but got: ",
+        );
     }
 
     if let Some(error_type) = step.text.strip_prefix("validation error \"") {
@@ -1326,13 +1325,10 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "no context completeness findings are reported" {
-        if !world.context_completeness_context.findings.is_empty() {
-            anyhow::bail!(
-                "expected no findings but got: {:?}",
-                world.context_completeness_context.findings
-            );
-        }
-        return Ok(());
+        return ensure_empty_findings(
+            &world.context_completeness_context.findings,
+            "expected no findings but got: ",
+        );
     }
 
     if let Some(count_str) = step
@@ -1622,4 +1618,26 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ensure_empty_findings;
+
+    #[test]
+    fn empty_findings_succeed() -> anyhow::Result<()> {
+        ensure_empty_findings::<String>(&[], "expected no findings: ")
+    }
+
+    #[test]
+    fn non_empty_findings_preserve_the_diagnostic_prefix() -> Result<(), String> {
+        let error = ensure_empty_findings(&["finding"], "expected no findings: ")
+            .err()
+            .ok_or_else(|| "non-empty findings should return an error".to_string())?;
+
+        if error.to_string() != "expected no findings: [\"finding\"]" {
+            return Err(format!("unexpected diagnostic: {error}"));
+        }
+        Ok(())
+    }
 }
