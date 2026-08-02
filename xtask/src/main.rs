@@ -156,6 +156,19 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
         anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
     }
 
+    if scenarios
+        .iter()
+        .all(|scenario| scenario.fixtures.is_empty())
+    {
+        return test_fixture_free_bdd_ac(&grid, &scenarios, ac_id);
+    }
+    if scenarios
+        .iter()
+        .any(|scenario| scenario.fixtures.is_empty())
+    {
+        anyhow::bail!("test-ac: selector mixes fixture-backed and fixture-free scenarios: {ac_id}");
+    }
+
     let mut scenario_receipt = Receipt::new("scenario.run", ac_id, RunResult::Success);
     let execution_start = Instant::now();
     for scenario in &scenarios {
@@ -176,6 +189,39 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     println!(
         "test-ac: executed {} scenario(s) for {}",
         scenarios.len(),
+        ac_id
+    );
+    Ok(())
+}
+
+fn test_fixture_free_bdd_ac(
+    grid: &FeatureGrid,
+    expected: &[ScenarioRecord],
+    ac_id: &str,
+) -> anyhow::Result<()> {
+    let tag = format!("@{ac_id}");
+    let run = xbrlkit_bdd::run(&repo_root(), grid, &tag)
+        .with_context(|| format!("test-ac: running BDD scenarios for {ac_id}"))?;
+    let expected_ids = expected
+        .iter()
+        .map(|scenario| scenario.scenario_id.as_str())
+        .collect::<Vec<_>>();
+    let selected_ids = run
+        .selected
+        .iter()
+        .map(|scenario| scenario.scenario_id.as_str())
+        .collect::<Vec<_>>();
+    if selected_ids != expected_ids {
+        anyhow::bail!(
+            "test-ac: BDD tag {tag} selected {selected_ids:?}, expected {expected_ids:?}"
+        );
+    }
+
+    let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
+    write_json(&receipt_path, &run.receipt)?;
+    println!(
+        "test-ac: executed {} BDD scenario(s) for {}",
+        run.selected.len(),
         ac_id
     );
     Ok(())
