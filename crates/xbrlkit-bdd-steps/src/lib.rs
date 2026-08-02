@@ -161,16 +161,21 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
     }
 
     if !world.fixture_dirs.is_empty() {
+        let fixture_root = world.repo_root.join("fixtures");
         let declared = world
             .fixture_dirs
             .iter()
             .map(|path| {
-                path.strip_prefix(world.repo_root.join("fixtures"))
-                    .expect("fixture path under repo root")
-                    .to_string_lossy()
-                    .replace('\\', "/")
+                let relative = path.strip_prefix(&fixture_root).with_context(|| {
+                    format!(
+                        "fixture path {} is outside repository fixture root {}",
+                        path.display(),
+                        fixture_root.display()
+                    )
+                })?;
+                Ok(relative.to_string_lossy().replace('\\', "/"))
             })
-            .collect::<Vec<_>>();
+            .collect::<anyhow::Result<Vec<_>>>()?;
         if declared != scenario.fixtures {
             anyhow::bail!("declared fixture directories do not match scenario metadata");
         }
@@ -1622,4 +1627,39 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FeatureGrid, ScenarioRecord, World, assert_declared_inputs_match};
+    use std::path::PathBuf;
+
+    #[test]
+    fn fixture_path_outside_repository_root_returns_error() -> Result<(), String> {
+        let mut world = World::new(PathBuf::from("repo"), FeatureGrid::default());
+        world.fixture_dirs.push(PathBuf::from("outside/fixture"));
+
+        let error = match assert_declared_inputs_match(&world, &ScenarioRecord::default()) {
+            Ok(()) => return Err("outside fixture path should be rejected".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("outside repository fixture root") {
+            return Err(format!("unexpected fixture-root error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn fixture_path_under_repository_root_matches_metadata() -> Result<(), String> {
+        let mut world = World::new(PathBuf::from("repo"), FeatureGrid::default());
+        world
+            .fixture_dirs
+            .push(PathBuf::from("repo/fixtures/synthetic/example"));
+        let scenario = ScenarioRecord {
+            fixtures: vec!["synthetic/example".to_string()],
+            ..ScenarioRecord::default()
+        };
+
+        assert_declared_inputs_match(&world, &scenario).map_err(|error| error.to_string())
+    }
 }
