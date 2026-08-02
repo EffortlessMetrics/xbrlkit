@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_instant_context() {
+    fn test_parse_instant_context() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:dei="http://xbrl.sec.gov/dei/2024"
@@ -374,21 +374,33 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        assert_eq!(set.len(), 1);
+        let set = parse_contexts(xml).map_err(|error| error.to_string())?;
+        if set.len() != 1 {
+            return Err(format!("expected one context, got {}", set.len()));
+        }
 
-        let ctx = set.get("ctx-2024").unwrap();
-        assert_eq!(ctx.entity.value, "0000320193");
-        assert!(!has_dimensions(ctx));
+        let ctx = set
+            .get("ctx-2024")
+            .ok_or_else(|| "missing ctx-2024".to_string())?;
+        if ctx.entity.value != "0000320193" {
+            return Err(format!(
+                "expected entity value 0000320193, got {}",
+                ctx.entity.value
+            ));
+        }
+        if has_dimensions(ctx) {
+            return Err("instant context unexpectedly has dimensions".to_string());
+        }
 
         match &ctx.period {
-            Period::Instant(date) => assert_eq!(date, "2024-12-31"),
-            _ => panic!("Expected instant period"),
+            Period::Instant(date) if date == "2024-12-31" => Ok(()),
+            Period::Instant(date) => Err(format!("expected instant 2024-12-31, got {date}")),
+            period => Err(format!("expected instant period, got {period:?}")),
         }
     }
 
     #[test]
-    fn test_parse_duration_context() {
+    fn test_parse_duration_context() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance">
                 <context id="ctx-duration" xmlns="http://www.xbrl.org/2003/instance">
@@ -403,15 +415,19 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        let ctx = set.get("ctx-duration").unwrap();
+        let set = parse_contexts(xml).map_err(|error| error.to_string())?;
+        let ctx = set
+            .get("ctx-duration")
+            .ok_or_else(|| "missing ctx-duration".to_string())?;
 
         match &ctx.period {
-            Period::Duration { start, end } => {
-                assert_eq!(start, "2024-01-01");
-                assert_eq!(end, "2024-12-31");
+            Period::Duration { start, end } if start == "2024-01-01" && end == "2024-12-31" => {
+                Ok(())
             }
-            _ => panic!("Expected duration period"),
+            Period::Duration { start, end } => Err(format!(
+                "expected duration 2024-01-01 to 2024-12-31, got {start} to {end}"
+            )),
+            period => Err(format!("expected duration period, got {period:?}")),
         }
     }
 
