@@ -633,9 +633,18 @@ mod tests {
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::{Mutex, MutexGuard, OnceLock};
     use std::time::{Duration, SystemTime};
 
     static NEXT_TEMP_DIR: AtomicU64 = AtomicU64::new(0);
+    static FIXTURE_CACHE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    fn lock_fixture_cache() -> Result<MutexGuard<'static, ()>, String> {
+        FIXTURE_CACHE_TEST_LOCK
+            .get_or_init(|| Mutex::new(()))
+            .lock()
+            .map_err(|_| "fixture cache test mutex poisoned".to_string())
+    }
 
     struct TempFixtureDir(PathBuf);
 
@@ -721,6 +730,7 @@ mod tests {
 
     #[test]
     fn loader_rereads_fixture_when_file_length_changes() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let report_path = fixture_dir.0.join("report.yaml");
         fs::write(&report_path, "facts: []\n").map_err(|error| error.to_string())?;
@@ -745,6 +755,7 @@ mod tests {
 
     #[test]
     fn loader_reads_unchanged_fixture_once() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let report_path = fixture_dir.0.join("report.yaml");
         fs::write(&report_path, "facts: []\n").map_err(|error| error.to_string())?;
@@ -767,6 +778,7 @@ mod tests {
 
     #[test]
     fn loader_rereads_fixture_after_explicit_invalidation() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let report_path = fixture_dir.0.join("report.yaml");
         fs::write(
@@ -798,6 +810,7 @@ mod tests {
 
     #[test]
     fn explicit_invalidation_discards_matching_metadata_entry() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let path = PathBuf::from(format!(
             "same-fingerprint-{}-{}.yaml",
             std::process::id(),
@@ -823,6 +836,7 @@ mod tests {
 
     #[test]
     fn missing_fixture_keeps_read_error_context() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let error = match load_fixture_facts(std::slice::from_ref(&fixture_dir.0)) {
             Ok(_) => return Err("missing fixture should fail".to_string()),
@@ -836,6 +850,7 @@ mod tests {
 
     #[test]
     fn malformed_fixture_keeps_parse_error_context() -> Result<(), String> {
+        let _guard = lock_fixture_cache()?;
         let fixture_dir = temp_fixture_dir()?;
         let report_path = fixture_dir.0.join("report.yaml");
         fs::write(&report_path, "facts: [").map_err(|error| error.to_string())?;
