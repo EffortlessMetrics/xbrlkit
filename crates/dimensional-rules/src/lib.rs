@@ -885,7 +885,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_typed_date_rejects_impossible_day() {
+    fn test_validate_typed_date_rejects_impossible_day() -> Result<(), String> {
         // Dates like Feb 31st or Apr 31st match YYYY-MM-DD but are not real days.
         let taxonomy = create_test_typed_taxonomy("xs:date");
         for bad in [
@@ -900,18 +900,21 @@ mod tests {
         ] {
             let context = create_test_context_with_typed_dim("ctx-1", bad);
             let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
-            assert!(
-                result
-                    .findings
-                    .iter()
-                    .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE"),
-                "Expected INVALID_TYPED_VALUE for impossible date {bad}"
-            );
+            if !result
+                .findings
+                .iter()
+                .any(|f| f.rule_id == "XBRL.DIMENSION.INVALID_TYPED_VALUE")
+            {
+                return Err(format!(
+                    "expected INVALID_TYPED_VALUE for impossible date {bad}"
+                ));
+            }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_validate_typed_date_accepts_leap_and_month_boundaries() {
+    fn test_validate_typed_date_accepts_leap_and_month_boundaries() -> Result<(), String> {
         // Real dates the previous naive check happened to accept must still pass.
         let taxonomy = create_test_typed_taxonomy("xs:date");
         for good in [
@@ -924,27 +927,43 @@ mod tests {
         ] {
             let context = create_test_context_with_typed_dim("ctx-1", good);
             let result = validate_context_dimensions(&context, "us-gaap:Revenue", &taxonomy);
-            assert!(
-                result.findings.is_empty(),
-                "Expected {good} to validate; got findings: {:?}",
-                result.findings
-            );
+            if !result.findings.is_empty() {
+                return Err(format!(
+                    "expected {good} to validate; got findings: {:?}",
+                    result.findings
+                ));
+            }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_days_in_month_and_leap_year_helpers() {
+    fn test_days_in_month_and_leap_year_helpers() -> Result<(), String> {
         // Direct coverage of the helpers so leap-year edge cases are pinned down.
-        assert_eq!(days_in_month(2024, 2), 29);
-        assert_eq!(days_in_month(2023, 2), 28);
-        assert_eq!(days_in_month(2000, 2), 29); // divisible by 400
-        assert_eq!(days_in_month(1900, 2), 28); // divisible by 100 but not 400
-        assert_eq!(days_in_month(2024, 4), 30);
-        assert_eq!(days_in_month(2024, 12), 31);
+        for (year, month, expected) in [
+            (2024, 2, 29),
+            (2023, 2, 28),
+            (2000, 2, 29),
+            (1900, 2, 28),
+            (2024, 4, 30),
+            (2024, 12, 31),
+        ] {
+            let actual = days_in_month(year, month);
+            if actual != expected {
+                return Err(format!(
+                    "expected {expected} days in {year}-{month}, got {actual}"
+                ));
+            }
+        }
 
-        assert!(is_leap_year(2024));
-        assert!(is_leap_year(2000));
-        assert!(!is_leap_year(1900));
-        assert!(!is_leap_year(2023));
+        for (year, expected) in [(2024, true), (2000, true), (1900, false), (2023, false)] {
+            let actual = is_leap_year(year);
+            if actual != expected {
+                return Err(format!(
+                    "expected leap-year status {expected} for {year}, got {actual}"
+                ));
+            }
+        }
+        Ok(())
     }
 }
