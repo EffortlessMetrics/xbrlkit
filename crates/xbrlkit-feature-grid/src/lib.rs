@@ -147,12 +147,20 @@ fn declared_test_for(
     feature_file: &str,
 ) -> anyhow::Result<Option<SpecTest>> {
     let scenario_tag = format!("@{scenario_id}");
-    let selected = ac_id.and_then(|id| declarations.get(id)).and_then(|tests| {
-        tests
-            .iter()
-            .find(|test| test.tag == scenario_tag)
-            .or_else(|| tests.first())
-    });
+    let selected = ac_id
+        .and_then(|id| declarations.get(id))
+        .and_then(|tests| {
+            tests
+                .iter()
+                .find(|test| test.tag == scenario_tag)
+                .or_else(|| tests.first())
+        })
+        .or_else(|| {
+            declarations
+                .values()
+                .flat_map(|tests| tests.iter())
+                .find(|test| test.tag == scenario_tag)
+        });
     let Some(test) = selected else {
         return Ok(None);
     };
@@ -223,6 +231,21 @@ mod tests {
         };
         if selected.tag != "@SCN-XK-WORKFLOW-003" {
             return Err(anyhow::anyhow!("selected the wrong declaration"));
+        }
+
+        let Some(selected_without_ac) = declared_test_for(
+            &declarations,
+            "SCN-XK-WORKFLOW-003",
+            None,
+            "specs/features/workflow/alpha_check.feature",
+        )?
+        else {
+            return Err(anyhow::anyhow!("expected tag-only declaration"));
+        };
+        if selected_without_ac.tag != "@SCN-XK-WORKFLOW-003" {
+            return Err(anyhow::anyhow!(
+                "tag-only lookup selected the wrong declaration"
+            ));
         }
         Ok(())
     }

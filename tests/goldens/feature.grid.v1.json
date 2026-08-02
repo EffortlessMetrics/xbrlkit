@@ -1717,8 +1717,8 @@
       ],
       "suite": "synthetic",
       "speed": "fast",
-      "test_type": null,
-      "test_tag": null
+      "test_type": "bdd",
+      "test_tag": "@SCN-XK-WORKFLOW-003"
     },
     {
       "scenario_id": "SCN-XK-WORKFLOW-004",

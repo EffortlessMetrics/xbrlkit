@@ -157,15 +157,15 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     }
 
     let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
-    let result = match resolve_test_mode(&scenarios)? {
-        TestMode::Bdd => run_bdd_scenarios(ac_id, &grid, &scenarios),
-        TestMode::ScenarioRunner => run_direct_scenarios(ac_id, &scenarios),
+    let result = match resolve_test_mode(&scenarios) {
+        Ok(TestMode::Bdd) => run_bdd_scenarios(ac_id, &grid, &scenarios),
+        Ok(TestMode::ScenarioRunner) => run_direct_scenarios(ac_id, &scenarios),
+        Err(error) => Err(error),
     };
     let receipt = match result {
         Ok(receipt) => receipt,
         Err(error) => {
-            let mut receipt = Receipt::new("scenario.run", ac_id, RunResult::Error);
-            receipt.notes.push(error.to_string());
+            let receipt = test_ac_error_receipt(ac_id, &error);
             write_json(&receipt_path, &receipt)?;
             return Err(error);
         }
@@ -177,6 +177,12 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
         ac_id
     );
     Ok(())
+}
+
+fn test_ac_error_receipt(ac_id: &str, error: &anyhow::Error) -> Receipt {
+    let mut receipt = Receipt::new("scenario.run", ac_id, RunResult::Error);
+    receipt.notes.push(error.to_string());
+    receipt
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -522,6 +528,21 @@ mod tests {
         };
         if !error.to_string().contains("missing declared test tag") {
             return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_ac_mode_failures_have_error_receipts() -> anyhow::Result<()> {
+        let error = anyhow::anyhow!("missing declared test type");
+        let receipt = super::test_ac_error_receipt("AC-XK-MISSING", &error);
+        if receipt.result != super::RunResult::Error
+            || receipt.subject != "AC-XK-MISSING"
+            || receipt.notes != vec!["missing declared test type".to_string()]
+        {
+            return Err(anyhow::anyhow!(
+                "mode failure receipt was not deterministic"
+            ));
         }
         Ok(())
     }
