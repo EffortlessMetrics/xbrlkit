@@ -1254,6 +1254,7 @@ name = "sec-profile-types"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "corpus-fs",
  "serde",
  "serde_yaml",
  "taxonomy-types",
@@ -2251,6 +2252,7 @@ name = "xbrlkit-bdd"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "corpus-fs",
  "receipt-types",
  "scenario-contract",
  "walkdir",
@@ -2326,6 +2328,7 @@ name = "xbrlkit-feature-grid"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
+ "corpus-fs",
  "scenario-contract",
  "serde",
  "serde_yaml",

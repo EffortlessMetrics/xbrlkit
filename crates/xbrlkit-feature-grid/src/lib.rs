@@ -1,6 +1,7 @@
 //! Compile feature sidecars into a searchable grid.
 
 use anyhow::Context;
+use corpus_fs::read_to_string;
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -51,8 +52,7 @@ pub fn compile(root: &Path) -> anyhow::Result<FeatureGrid> {
         if !is_sidecar {
             continue;
         }
-        let content =
-            std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+        let content = read_to_string(path)?;
         let sidecar: Sidecar = serde_yaml::from_str(&content)
             .with_context(|| format!("parsing {}", path.display()))?;
         let feature_file = sibling_feature(path);
