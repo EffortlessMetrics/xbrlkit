@@ -79,8 +79,9 @@ pub struct UnitRules {
 ///
 /// Returns an error if `profile.yaml`, `inline_rules.yaml`, or
 /// `accepted_taxonomies.yaml` cannot be read or parsed, or if
-/// `edgartaxonomies.xml` cannot be read. Errors reading or parsing the optional
-/// `required_facts.yaml` file are ignored and produce an empty list.
+/// `edgartaxonomies.xml` cannot be read. The XML file is scanned for namespace
+/// attributes rather than parsed or schema-validated. Errors reading or parsing
+/// the optional `required_facts.yaml` file are ignored and produce an empty list.
 pub fn load_profile_from_workspace(root: &Path, profile_id: &str) -> anyhow::Result<ProfilePack> {
     let profile_dir = profile_dir(root, profile_id);
     let profile_yaml = std::fs::read_to_string(profile_dir.join("profile.yaml"))
