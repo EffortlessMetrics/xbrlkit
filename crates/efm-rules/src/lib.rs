@@ -20,16 +20,18 @@ pub fn validate_inline_restrictions(
             .iter()
             .any(|banned| banned == &fragment.element_name)
         {
-            findings.push(ValidationFinding {
-                rule_id: inline_element_rule_id(&fragment.element_name),
-                severity: "error".to_string(),
-                message: format!(
-                    "{} is not allowed in the selected SEC profile pack",
-                    fragment.element_name
-                ),
-                member: Some(member.to_string()),
-                subject: Some(fragment.element_name.clone()),
-            });
+            findings.push(
+                ValidationFinding::new(
+                    inline_element_rule_id(&fragment.element_name),
+                    "error",
+                    format!(
+                        "{} is not allowed in the selected SEC profile pack",
+                        fragment.element_name
+                    ),
+                )
+                .with_member(member)
+                .with_subject(&fragment.element_name),
+            );
         }
         for attribute in fragment.attributes.keys() {
             if profile
@@ -38,13 +40,15 @@ pub fn validate_inline_restrictions(
                 .iter()
                 .any(|banned| banned == attribute)
             {
-                findings.push(ValidationFinding {
-                    rule_id: inline_attribute_rule_id(attribute),
-                    severity: "error".to_string(),
-                    message: format!("{attribute} is not allowed in the selected SEC profile pack"),
-                    member: Some(member.to_string()),
-                    subject: Some(attribute.clone()),
-                });
+                findings.push(
+                    ValidationFinding::new(
+                        inline_attribute_rule_id(attribute),
+                        "error",
+                        format!("{attribute} is not allowed in the selected SEC profile pack"),
+                    )
+                    .with_member(member)
+                    .with_subject(attribute),
+                );
             }
         }
     }
@@ -58,14 +62,14 @@ pub fn validate_taxonomy_years(
 ) -> Vec<ValidationFinding> {
     let mut findings = Vec::new();
     if mixed_taxonomy_years(entry_points) {
-        findings.push(ValidationFinding {
-            rule_id: "SEC.TAXONOMY.SAME_YEAR".to_string(),
-            severity: "error".to_string(),
-            message: "Taxonomy entry points must resolve to a single accepted taxonomy year"
-                .to_string(),
-            member: None,
-            subject: Some(entry_points.join(", ")),
-        });
+        findings.push(
+            ValidationFinding::new(
+                "SEC.TAXONOMY.SAME_YEAR",
+                "error",
+                "Taxonomy entry points must resolve to a single accepted taxonomy year",
+            )
+            .with_subject(entry_points.join(", ")),
+        );
     }
     findings
 }
@@ -85,13 +89,14 @@ pub fn validate_required_facts(
     // Check each required fact
     for required in &profile.required_facts {
         if !present_concepts.contains(required) {
-            findings.push(ValidationFinding {
-                rule_id: format!("SEC.REQUIRED_FACT.{}", sanitize_for_rule_id(required)),
-                severity: "error".to_string(),
-                message: format!("Required fact '{required}' is missing"),
-                member: None,
-                subject: Some(required.clone()),
-            });
+            findings.push(
+                ValidationFinding::new(
+                    format!("SEC.REQUIRED_FACT.{}", sanitize_for_rule_id(required)),
+                    "error",
+                    format!("Required fact '{required}' is missing"),
+                )
+                .with_subject(required),
+            );
         }
     }
 

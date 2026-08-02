@@ -29,6 +29,7 @@ pub struct World {
     pub execution: Option<ScenarioExecution>,
     pub dimension_context: DimensionContext,
     pub context_completeness_context: ContextCompletenessContext,
+    pub finding_constructor_context: FindingConstructorContext,
     pub streaming_context: StreamingContext,
     pub taxonomy_loader_context: TaxonomyLoaderContext,
     pub bundle_manifest: Option<BundleManifest>,
@@ -57,6 +58,18 @@ pub struct ContextCompletenessContext {
     pub contexts: Vec<xbrl_contexts::Context>,
     pub facts: Vec<xbrl_report_types::Fact>,
     pub findings: Vec<xbrl_report_types::ValidationFinding>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct FindingConstructorContext {
+    pub fact: Option<xbrl_report_types::Fact>,
+    pub dimension: Option<String>,
+    pub member: Option<String>,
+    pub baseline_finding: Option<serde_json::Value>,
+    pub context_finding: Option<serde_json::Value>,
+    pub builder_finding: Option<serde_json::Value>,
+    pub fact_finding: Option<serde_json::Value>,
+    pub dimension_finding: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -91,6 +104,7 @@ impl World {
             execution: None,
             dimension_context: DimensionContext::default(),
             context_completeness_context: ContextCompletenessContext::default(),
+            finding_constructor_context: FindingConstructorContext::default(),
             streaming_context: StreamingContext::default(),
             taxonomy_loader_context: TaxonomyLoaderContext::default(),
             bundle_manifest: None,
@@ -189,6 +203,39 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
             );
         }
         world.profile_id = Some(profile_id);
+        return Ok(true);
+    }
+
+    if let Some(rest) = step.text.strip_prefix("a fact with concept \"") {
+        let (concept, member) = rest
+            .split_once("\" and member \"")
+            .context("invalid validation finding fact specification")?;
+        let member = member
+            .strip_suffix('"')
+            .context("missing validation finding fact member")?;
+        world.finding_constructor_context.fact = Some(xbrl_report_types::Fact {
+            concept: concept.to_string(),
+            context_ref: "ctx-1".to_string(),
+            unit_ref: None,
+            decimals: None,
+            value: "1000".to_string(),
+            member: member.to_string(),
+        });
+        return Ok(true);
+    }
+
+    if let Some(rest) = step
+        .text
+        .strip_prefix("a dimension-member pair with dimension \"")
+    {
+        let (dimension, member) = rest
+            .split_once("\" and member \"")
+            .context("invalid validation finding dimension-member specification")?;
+        let member = member
+            .strip_suffix('"')
+            .context("missing validation finding dimension member")?;
+        world.finding_constructor_context.dimension = Some(dimension.to_string());
+        world.finding_constructor_context.member = Some(member.to_string());
         return Ok(true);
     }
 
@@ -685,6 +732,65 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I construct findings with the shared constructors" {
+        let context = &mut world.finding_constructor_context;
+        let fact = context
+            .fact
+            .as_ref()
+            .context("validation finding fact is not configured")?;
+        let dimension = context
+            .dimension
+            .as_ref()
+            .context("validation finding dimension is not configured")?;
+        let member = context
+            .member
+            .as_ref()
+            .context("validation finding member is not configured")?;
+
+        context.fact_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::for_fact(
+                "SCN.FINDING.FACT",
+                "error",
+                fact,
+                "fact finding",
+            ),
+        )?);
+        context.dimension_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::for_dimension_member(
+                "SCN.FINDING.DIMENSION",
+                "error",
+                dimension,
+                member,
+                "dimension finding",
+            ),
+        )?);
+        context.baseline_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::new(
+                "SCN.FINDING.BASELINE",
+                "info",
+                "baseline finding",
+            ),
+        )?);
+        context.context_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::for_context(
+                "SCN.FINDING.CONTEXT",
+                "warning",
+                "ctx-1",
+                "context finding",
+            ),
+        )?);
+        context.builder_finding = Some(serde_json::to_value(
+            xbrl_report_types::ValidationFinding::new(
+                "SCN.FINDING.BUILDER",
+                "error",
+                "builder finding",
+            )
+            .with_member(dimension)
+            .with_subject(member),
+        )?);
+        return Ok(true);
+    }
+
     // Feature grid When steps
     if step.text == "I compile the feature grid" {
         world.compiled_grid = Some(xbrlkit_feature_grid::compile(&world.repo_root)?);
@@ -1043,6 +1149,111 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 
 #[allow(clippy::too_many_lines)]
 fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
+    if step.text == "the baseline finding serializes with no member or subject" {
+        let finding = world
+            .finding_constructor_context
+            .baseline_finding
+            .as_ref()
+            .context("baseline finding was not constructed")?;
+        if finding.get("rule_id").and_then(serde_json::Value::as_str)
+            != Some("SCN.FINDING.BASELINE")
+            || finding.get("member") != Some(&serde_json::Value::Null)
+            || finding.get("subject") != Some(&serde_json::Value::Null)
+        {
+            anyhow::bail!("unexpected baseline finding: {finding}");
+        }
+        return Ok(());
+    }
+
+    if step.text == "the context finding serializes subject \"ctx-1\" with no member" {
+        let finding = world
+            .finding_constructor_context
+            .context_finding
+            .as_ref()
+            .context("context finding was not constructed")?;
+        if finding.get("subject").and_then(serde_json::Value::as_str) != Some("ctx-1")
+            || finding.get("member") != Some(&serde_json::Value::Null)
+        {
+            anyhow::bail!("unexpected context finding: {finding}");
+        }
+        return Ok(());
+    }
+
+    if let Some(rest) = step
+        .text
+        .strip_prefix("the builder finding serializes member \"")
+    {
+        let (expected_member, expected_subject) = rest
+            .split_once("\" and subject \"")
+            .context("invalid builder finding serialization assertion")?;
+        let expected_subject = expected_subject
+            .strip_suffix('"')
+            .context("missing expected builder finding subject")?;
+        let finding = world
+            .finding_constructor_context
+            .builder_finding
+            .as_ref()
+            .context("builder finding was not constructed")?;
+        if finding.get("member").and_then(serde_json::Value::as_str) != Some(expected_member)
+            || finding.get("subject").and_then(serde_json::Value::as_str) != Some(expected_subject)
+        {
+            anyhow::bail!(
+                "expected builder finding member/subject ({expected_member}, {expected_subject}), got {finding}"
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(rest) = step
+        .text
+        .strip_prefix("the fact finding serializes member \"")
+    {
+        let (expected_member, expected_subject) = rest
+            .split_once("\" and subject \"")
+            .context("invalid fact finding serialization assertion")?;
+        let expected_subject = expected_subject
+            .strip_suffix('"')
+            .context("missing expected fact finding subject")?;
+        let finding = world
+            .finding_constructor_context
+            .fact_finding
+            .as_ref()
+            .context("fact finding was not constructed")?;
+        if finding.get("member").and_then(serde_json::Value::as_str) != Some(expected_member)
+            || finding.get("subject").and_then(serde_json::Value::as_str) != Some(expected_subject)
+        {
+            anyhow::bail!(
+                "expected fact finding member/subject ({expected_member}, {expected_subject}), got {finding}"
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(rest) = step
+        .text
+        .strip_prefix("the dimension finding serializes member \"")
+    {
+        let (expected_member, expected_subject) = rest
+            .split_once("\" and subject \"")
+            .context("invalid dimension finding serialization assertion")?;
+        let expected_subject = expected_subject
+            .strip_suffix('"')
+            .context("missing expected dimension finding subject")?;
+        let finding = world
+            .finding_constructor_context
+            .dimension_finding
+            .as_ref()
+            .context("dimension finding was not constructed")?;
+        if finding.get("member").and_then(serde_json::Value::as_str) != Some(expected_member)
+            || finding.get("subject").and_then(serde_json::Value::as_str) != Some(expected_subject)
+        {
+            anyhow::bail!(
+                "expected dimension finding member/subject ({expected_member}, {expected_subject}), got {finding}"
+            );
+        }
+        return Ok(());
+    }
+
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
         if !world.dimension_context.validation_findings.is_empty() {
