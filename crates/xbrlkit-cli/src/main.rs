@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use validation_run::validate_html_members;
 use xbrl_contexts::{Period, get_dimensional_members, parse_contexts};
 use xbrl_report_types::ValidationFinding;
+use xbrlkit_cli::serialize_json_or_error;
 
 #[derive(Debug, Parser)]
 #[command(name = "xbrlkit")]
@@ -105,7 +106,13 @@ fn main() -> anyhow::Result<()> {
                 Ok(context_set) => {
                     if json {
                         let contexts: Vec<&xbrl_contexts::Context> = context_set.iter().collect();
-                        println!("{}", serde_json::to_string_pretty(&contexts).unwrap());
+                        let (exit_code, output) = serialize_json_or_error(&contexts, "contexts");
+                        if exit_code == 0 {
+                            println!("{output}");
+                        } else {
+                            eprintln!("{output}");
+                        }
+                        exit_code
                     } else {
                         println!("contexts: {}", context_set.len());
                         for context in context_set.iter() {
@@ -129,8 +136,8 @@ fn main() -> anyhow::Result<()> {
                                 }
                             }
                         }
+                        0
                     }
-                    0
                 }
                 Err(e) => {
                     eprintln!("error parsing contexts: {e}");
@@ -142,11 +149,17 @@ fn main() -> anyhow::Result<()> {
             match taxonomy_loader::load_taxonomy(&entrypoint) {
                 Ok(taxonomy) => {
                     if json {
-                        println!("{}", serde_json::to_string_pretty(&taxonomy).unwrap());
+                        let (exit_code, output) = serialize_json_or_error(&taxonomy, "taxonomy");
+                        if exit_code == 0 {
+                            println!("{output}");
+                        } else {
+                            eprintln!("{output}");
+                        }
+                        exit_code
                     } else {
                         print_taxonomy_summary(&taxonomy);
+                        0
                     }
-                    0
                 }
                 Err(e) => {
                     eprintln!("error loading taxonomy: {e}");
