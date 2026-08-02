@@ -2,6 +2,7 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 /// Expected unit type for a concept
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +19,38 @@ pub enum ExpectedUnitType {
     Custom(String),
 }
 
+// ─── Pre-compiled regex patterns (compiled once, shared by all instances) ───
+
+static DEFAULT_PATTERNS: LazyLock<Vec<(Regex, ExpectedUnitType)>> = LazyLock::new(|| {
+    [
+        // Share-related concepts → Shares unit
+        (r"(?i).*shares.*", ExpectedUnitType::Shares),
+        // Per-share concepts → PerShare unit
+        (r"(?i).*pershare.*", ExpectedUnitType::PerShare),
+        (r"(?i).*per.*share.*", ExpectedUnitType::PerShare),
+        // Employee-related → Pure unit
+        (r"(?i).*employees.*", ExpectedUnitType::Pure),
+        // Percentage/ratio → Pure unit
+        (r"(?i).*percentage.*", ExpectedUnitType::Pure),
+        (r"(?i).*ratio.*", ExpectedUnitType::Pure),
+    ]
+    .into_iter()
+    .filter_map(|(pattern, unit_type)| Regex::new(pattern).ok().map(|regex| (regex, unit_type)))
+    .collect()
+});
+
+// Monetary heuristic patterns
+static MONETARY_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
+    [
+        r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*",
+        r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*",
+        r"(?i).*(balance|amount|value|gain|proceed).*",
+    ]
+    .into_iter()
+    .filter_map(|pattern| Regex::new(pattern).ok())
+    .collect()
+});
+
 /// Pattern-based concept matcher for unit type determination
 pub struct ConceptUnitPatterns {
     /// Explicit concept name → expected unit type
@@ -29,40 +62,9 @@ pub struct ConceptUnitPatterns {
 impl ConceptUnitPatterns {
     /// Create a new pattern matcher with default patterns
     pub fn new() -> Self {
-        let patterns = vec![
-            // Share-related concepts → Shares unit
-            (
-                Regex::new(r"(?i).*shares.*").unwrap(),
-                ExpectedUnitType::Shares,
-            ),
-            // Per-share concepts → PerShare unit
-            (
-                Regex::new(r"(?i).*pershare.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
-            (
-                Regex::new(r"(?i).*per.*share.*").unwrap(),
-                ExpectedUnitType::PerShare,
-            ),
-            // Employee-related → Pure unit
-            (
-                Regex::new(r"(?i).*employees.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-            // Percentage/ratio → Pure unit
-            (
-                Regex::new(r"(?i).*percentage.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-            (
-                Regex::new(r"(?i).*ratio.*").unwrap(),
-                ExpectedUnitType::Pure,
-            ),
-        ];
-
         Self {
             explicit: HashMap::new(),
-            patterns,
+            patterns: DEFAULT_PATTERNS.clone(),
         }
     }
 
@@ -104,14 +106,8 @@ impl ConceptUnitPatterns {
     /// This is a heuristic based on common naming patterns.
     /// For more accuracy, use explicit configuration or taxonomy type info.
     pub fn is_likely_monetary(&self, concept: &str) -> bool {
-        let monetary_patterns = [
-            r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*",
-            r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*",
-            r"(?i).*(balance|amount|value|gain|proceed).*",
-        ];
-
-        for pattern in &monetary_patterns {
-            if Regex::new(pattern).unwrap().is_match(concept) {
+        for regex in MONETARY_PATTERNS.iter() {
+            if regex.is_match(concept) {
                 // But exclude share-related concepts
                 if !concept.to_lowercase().contains("share") {
                     return true;
@@ -134,37 +130,129 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_shares_pattern() {
+    fn test_shares_pattern() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert_eq!(
-            patterns.expected_type("us-gaap:CommonStockSharesOutstanding"),
-            Some(ExpectedUnitType::Shares)
-        );
+        let actual = patterns.expected_type("us-gaap:CommonStockSharesOutstanding");
+        if actual != Some(ExpectedUnitType::Shares) {
+            return Err(format!("shares concept matched {actual:?}"));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_pershare_pattern() {
+    fn test_pershare_pattern() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert_eq!(
-            patterns.expected_type("us-gaap:EarningsPerShare"),
-            Some(ExpectedUnitType::PerShare)
-        );
+        let actual = patterns.expected_type("us-gaap:EarningsPerShare");
+        if actual != Some(ExpectedUnitType::PerShare) {
+            return Err(format!("per-share concept matched {actual:?}"));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_employees_pattern() {
+    fn test_employees_pattern() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert_eq!(
-            patterns.expected_type("us-gaap:NumberOfEmployees"),
-            Some(ExpectedUnitType::Pure)
-        );
+        let actual = patterns.expected_type("us-gaap:NumberOfEmployees");
+        if actual != Some(ExpectedUnitType::Pure) {
+            return Err(format!("employee concept matched {actual:?}"));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_monetary_heuristic() {
+    fn test_percentage_and_ratio_patterns() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert!(patterns.is_likely_monetary("us-gaap:Revenue"));
-        assert!(patterns.is_likely_monetary("us-gaap:Assets"));
-        assert!(!patterns.is_likely_monetary("us-gaap:CommonStockSharesOutstanding"));
+        for (concept, expected) in [
+            ("us-gaap:PercentageOfAssets", ExpectedUnitType::Pure),
+            ("us-gaap:DebtToEquityRatio", ExpectedUnitType::Pure),
+        ] {
+            let actual = patterns.expected_type(concept);
+            if actual != Some(expected.clone()) {
+                return Err(format!(
+                    "{concept} matched {actual:?}, expected {expected:?}"
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_monetary_heuristic() -> Result<(), String> {
+        let patterns = ConceptUnitPatterns::new();
+        for concept in ["us-gaap:Revenue", "us-gaap:Assets"] {
+            if !patterns.is_likely_monetary(concept) {
+                return Err(format!("monetary concept was not recognized: {concept}"));
+            }
+        }
+        if patterns.is_likely_monetary("us-gaap:CommonStockSharesOutstanding") {
+            return Err("share concept was incorrectly recognized as monetary".to_string());
+        }
+        Ok(())
+    }
+
+    /// Verify every configured pattern compiled and preserves its behavior.
+    /// This catches invalid literals and accidental pattern substitutions in CI
+    /// before they can silently remove or change a default rule.
+    #[test]
+    fn test_all_lazy_regexes_compile_and_match_expected_concepts() -> Result<(), String> {
+        if DEFAULT_PATTERNS.len() != 6 {
+            return Err("a default concept pattern failed to compile".to_string());
+        }
+        if MONETARY_PATTERNS.len() != 3 {
+            return Err("a monetary heuristic pattern failed to compile".to_string());
+        }
+
+        let patterns = ConceptUnitPatterns::new();
+        let default_match_cases = [
+            ("us-gaap:CommonStockSharesOutstanding", "us-gaap:Revenue"),
+            ("us-gaap:EarningsPerShare", "us-gaap:Revenue"),
+            ("us-gaap:PricePerCommonShare", "us-gaap:Revenue"),
+            ("us-gaap:NumberOfEmployees", "us-gaap:Revenue"),
+            ("us-gaap:PercentageOfAssets", "us-gaap:Revenue"),
+            ("us-gaap:DebtToEquityRatio", "us-gaap:Revenue"),
+        ];
+
+        for (index, ((regex, expected_unit), (positive, negative))) in
+            DEFAULT_PATTERNS.iter().zip(default_match_cases).enumerate()
+        {
+            if !regex.is_match(positive) {
+                return Err(format!(
+                    "default pattern {index} did not match expected concept {positive}"
+                ));
+            }
+            if regex.is_match(negative) {
+                return Err(format!(
+                    "default pattern {index} unexpectedly matched {negative}"
+                ));
+            }
+            if patterns.expected_type(positive) != Some(expected_unit.clone()) {
+                return Err(format!(
+                    "default pattern {index} mapped {positive} to the wrong unit"
+                ));
+            }
+        }
+
+        let monetary_match_cases = [
+            ("us-gaap:Revenue", "us-gaap:Cash"),
+            ("us-gaap:Cash", "us-gaap:Balance"),
+            ("us-gaap:Balance", "us-gaap:Revenue"),
+        ];
+        for (index, (regex, (positive, negative))) in MONETARY_PATTERNS
+            .iter()
+            .zip(monetary_match_cases)
+            .enumerate()
+        {
+            if !regex.is_match(positive) {
+                return Err(format!(
+                    "monetary pattern {index} did not match expected concept {positive}"
+                ));
+            }
+            if regex.is_match(negative) {
+                return Err(format!(
+                    "monetary pattern {index} unexpectedly matched {negative}"
+                ));
+            }
+        }
+        Ok(())
     }
 }
