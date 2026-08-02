@@ -1706,6 +1706,35 @@
       ],
       "suite": "synthetic",
       "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-008",
+      "ac_id": "AC-XK-WORKFLOW-005",
+      "req_id": "REQ-XK-WORKFLOW",
+      "feature_file": "specs/features/workflow/fixture_cache.feature",
+      "sidecar_file": "specs/features/workflow/fixture_cache.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-CACHE:fixture-cache",
+      "crates": [
+        "scenario-runner",
+        "xbrlkit-bdd-steps",
+        "xbrlkit-bdd",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd-steps",
+        "crates/xbrlkit-bdd",
+        "xtask",
+        "specs/features/workflow"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
     }
   ]
 }
