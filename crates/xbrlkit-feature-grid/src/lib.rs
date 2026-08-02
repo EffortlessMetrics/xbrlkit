@@ -32,6 +32,12 @@ struct SidecarScenario {
     speed: Option<String>,
 }
 
+/// Compile feature sidecar metadata under a workspace into a searchable grid.
+///
+/// # Errors
+///
+/// Returns an error if a sidecar cannot be read or parsed, or if a generated
+/// feature or sidecar path cannot be made relative to `root`.
 pub fn compile(root: &Path) -> anyhow::Result<FeatureGrid> {
     let features_root = root.join("specs/features");
     let mut scenarios = Vec::new();
