@@ -8,6 +8,15 @@
       "sidecar_file": "specs/features/cli/describe_profile.meta.yaml",
       "layer": "cli",
       "module": "FEAT-XK-CLI:describe-profile",
+      "tags": [
+        "@REQ-XK-CLI",
+        "@layer.cli",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-CLI-001",
+        "@SCN-XK-CLI-001",
+        "@speed.fast"
+      ],
       "crates": [
         "xbrlkit-cli",
         "sec-profile-types",
@@ -35,6 +44,15 @@
       "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
       "layer": "foundation",
       "module": "FEAT-XK-CONTEXT:context-completeness",
+      "tags": [
+        "@REQ-XK-CONTEXT",
+        "@layer.foundation",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-CONTEXT-001",
+        "@SCN-XK-CONTEXT-001",
+        "@speed.fast"
+      ],
       "crates": [
         "context-completeness",
         "xbrl-contexts",
@@ -66,6 +84,15 @@
       "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
       "layer": "foundation",
       "module": "FEAT-XK-CONTEXT:context-completeness",
+      "tags": [
+        "@REQ-XK-CONTEXT",
+        "@layer.foundation",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-CONTEXT-002",
+        "@SCN-XK-CONTEXT-002",
+        "@speed.fast"
+      ],
       "crates": [
         "context-completeness",
         "xbrl-contexts",
@@ -97,6 +124,15 @@
       "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
       "layer": "foundation",
       "module": "FEAT-XK-CONTEXT:context-completeness",
+      "tags": [
+        "@REQ-XK-CONTEXT",
+        "@layer.foundation",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-CONTEXT-003",
+        "@SCN-XK-CONTEXT-003",
+        "@speed.fast"
+      ],
       "crates": [
         "context-completeness",
         "xbrl-contexts",
@@ -128,6 +164,15 @@
       "sidecar_file": "specs/features/foundation/context_completeness.meta.yaml",
       "layer": "foundation",
       "module": "FEAT-XK-CONTEXT:context-completeness",
+      "tags": [
+        "@REQ-XK-CONTEXT",
+        "@layer.foundation",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-CONTEXT-004",
+        "@SCN-XK-CONTEXT-004",
+        "@speed.fast"
+      ],
       "crates": [
         "context-completeness",
         "xbrl-contexts",
@@ -159,6 +204,12 @@
       "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "tags": [
+        "@REQ-XK-DIMENSIONS",
+        "@alpha-active",
+        "@SCN-XK-DIM-001",
+        "@AC-XK-DIM-001"
+      ],
       "crates": [
         "taxonomy-dimensions",
         "dimensional-rules",
@@ -195,6 +246,12 @@
       "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "tags": [
+        "@REQ-XK-DIMENSIONS",
+        "@alpha-active",
+        "@SCN-XK-DIM-002",
+        "@AC-XK-DIM-002"
+      ],
       "crates": [
         "taxonomy-dimensions",
         "dimensional-rules",
@@ -231,6 +288,12 @@
       "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "tags": [
+        "@REQ-XK-DIMENSIONS",
+        "@alpha-active",
+        "@SCN-XK-DIM-003",
+        "@AC-XK-DIM-003"
+      ],
       "crates": [
         "taxonomy-dimensions",
         "dimensional-rules",
@@ -267,6 +330,12 @@
       "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "tags": [
+        "@REQ-XK-DIMENSIONS",
+        "@alpha-active",
+        "@SCN-XK-DIM-004",
+        "@AC-XK-DIM-004"
+      ],
       "crates": [
         "taxonomy-dimensions",
         "dimensional-rules",
@@ -303,6 +372,15 @@
       "sidecar_file": "specs/features/foundation/duplicate_facts.meta.yaml",
       "layer": "standard",
       "module": "FEAT-XK-DUPLICATES:duplicate-facts",
+      "tags": [
+        "@REQ-XK-DUPLICATES",
+        "@layer.standard",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-DUPLICATES-001",
+        "@SCN-XK-DUPLICATES-001",
+        "@speed.fast"
+      ],
       "crates": [
         "duplicate-facts",
         "validation-run",
@@ -340,6 +418,14 @@
       "sidecar_file": "specs/features/export/oim_json.meta.yaml",
       "layer": "workflow",
       "module": "FEAT-XK-EXPORT-OIM:export-oim-json",
+      "tags": [
+        "@REQ-XK-EXPORT",
+        "@layer.workflow",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-EXPORT-001",
+        "@speed.fast"
+      ],
       "crates": [
         "oim-normalize",
         "export-run",
@@ -370,6 +456,15 @@
       "sidecar_file": "specs/features/inline/ixds_assembly.meta.yaml",
       "layer": "standard",
       "module": "FEAT-XK-IXDS:inline-xbrl-1.1",
+      "tags": [
+        "@REQ-XK-IXDS",
+        "@layer.standard",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-IXDS-001",
+        "@SCN-XK-IXDS-001",
+        "@speed.fast"
+      ],
       "crates": [
         "ixhtml-scan",
         "ixds-assemble",
@@ -410,6 +505,15 @@
       "sidecar_file": "specs/features/inline/ixds_assembly.meta.yaml",
       "layer": "standard",
       "module": "FEAT-XK-IXDS:inline-xbrl-1.1",
+      "tags": [
+        "@REQ-XK-IXDS",
+        "@layer.standard",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-IXDS-002",
+        "@SCN-XK-IXDS-002",
+        "@speed.fast"
+      ],
       "crates": [
         "ixhtml-scan",
         "ixds-assemble",
@@ -450,6 +554,15 @@
       "sidecar_file": "specs/features/foundation/filing_manifest.meta.yaml",
       "layer": "standard",
       "module": "FEAT-XK-MANIFEST:filing-manifest",
+      "tags": [
+        "@REQ-XK-MANIFEST",
+        "@layer.standard",
+        "@suite.synthetic",
+        "@AC-XK-MANIFEST-001",
+        "@SCN-XK-MANIFEST-001",
+        "@speed.fast",
+        "@alpha-active"
+      ],
       "crates": [
         "edgar-identity",
         "edgar-sgml",
@@ -483,6 +596,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-001",
+        "@SCN-XK-SEC-DECIMAL-001",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -511,6 +633,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-001",
+        "@SCN-XK-SEC-DECIMAL-002",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -539,6 +670,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-001",
+        "@SCN-XK-SEC-DECIMAL-003",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -567,6 +707,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-001",
+        "@SCN-XK-SEC-DECIMAL-004",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -595,6 +744,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-002",
+        "@SCN-XK-SEC-DECIMAL-005",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -623,6 +781,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-002",
+        "@SCN-XK-SEC-DECIMAL-006",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -651,6 +818,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-001",
+        "@SCN-XK-SEC-DECIMAL-007",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -679,6 +855,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-002",
+        "@SCN-XK-SEC-DECIMAL-008",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -707,6 +892,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-002",
+        "@SCN-XK-SEC-DECIMAL-009",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -735,6 +929,15 @@
       "sidecar_file": "specs/features/sec/decimal_precision.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-DECIMAL:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-DECIMAL",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-DECIMAL-001",
+        "@SCN-XK-SEC-DECIMAL-010",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "xbrl-report-types",
@@ -763,6 +966,15 @@
       "sidecar_file": "specs/features/sec/inline_restrictions.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-INLINE:inline-restrictions",
+      "tags": [
+        "@REQ-XK-SEC-INLINE",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-SEC-INLINE-001",
+        "@SCN-XK-SEC-INLINE-001",
+        "@speed.fast"
+      ],
       "crates": [
         "ixhtml-scan",
         "ixds-assemble",
@@ -810,6 +1022,15 @@
       "sidecar_file": "specs/features/sec/inline_restrictions.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-INLINE:inline-restrictions",
+      "tags": [
+        "@REQ-XK-SEC-INLINE",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-SEC-INLINE-002",
+        "@SCN-XK-SEC-INLINE-002",
+        "@speed.fast"
+      ],
       "crates": [
         "ixhtml-scan",
         "ixds-assemble",
@@ -857,6 +1078,15 @@
       "sidecar_file": "specs/features/sec/negative_values.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-NEGATIVE:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-NEGATIVE",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-NEGATIVE-001",
+        "@SCN-XK-SEC-NEGATIVE-001",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "validation-run",
@@ -888,6 +1118,15 @@
       "sidecar_file": "specs/features/sec/negative_values.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-NEGATIVE:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-NEGATIVE",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-NEGATIVE-002",
+        "@SCN-XK-SEC-NEGATIVE-002",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "validation-run",
@@ -919,6 +1158,15 @@
       "sidecar_file": "specs/features/sec/negative_values.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-NEGATIVE:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-NEGATIVE",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-NEGATIVE-003",
+        "@SCN-XK-SEC-NEGATIVE-003",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "validation-run",
@@ -950,6 +1198,15 @@
       "sidecar_file": "specs/features/sec/negative_values.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-NEGATIVE:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-NEGATIVE",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-NEGATIVE-004",
+        "@SCN-XK-SEC-NEGATIVE-004",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "validation-run",
@@ -981,6 +1238,15 @@
       "sidecar_file": "specs/features/sec/negative_values.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-NEGATIVE:numeric-rules",
+      "tags": [
+        "@REQ-XK-SEC-NEGATIVE",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-candidate",
+        "@AC-XK-SEC-NEGATIVE-005",
+        "@SCN-XK-SEC-NEGATIVE-005",
+        "@speed.fast"
+      ],
       "crates": [
         "numeric-rules",
         "validation-run",
@@ -1012,6 +1278,15 @@
       "sidecar_file": "specs/features/sec/required_facts.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-REQUIRED:required-facts",
+      "tags": [
+        "@REQ-XK-SEC-REQUIRED",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-SEC-REQUIRED-001",
+        "@SCN-XK-SEC-REQUIRED-001",
+        "@speed.fast"
+      ],
       "crates": [
         "efm-rules",
         "validation-run",
@@ -1055,6 +1330,15 @@
       "sidecar_file": "specs/features/sec/required_facts.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-SEC-REQUIRED:required-facts",
+      "tags": [
+        "@REQ-XK-SEC-REQUIRED",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-SEC-REQUIRED-002",
+        "@SCN-XK-SEC-REQUIRED-002",
+        "@speed.fast"
+      ],
       "crates": [
         "efm-rules",
         "validation-run",
@@ -1098,6 +1382,15 @@
       "sidecar_file": "specs/features/performance/streaming_parser.meta.yaml",
       "layer": "performance",
       "module": "FEAT-XK-STREAM:streaming-parser",
+      "tags": [
+        "@alpha-active",
+        "@REQ-XK-PERFORMANCE",
+        "@layer.performance",
+        "@suite.synthetic",
+        "@streaming",
+        "@memory",
+        "@SCN-XK-STREAM-001"
+      ],
       "crates": [
         "xbrl-stream",
         "xbrlkit-bdd",
@@ -1127,6 +1420,15 @@
       "sidecar_file": "specs/features/performance/streaming_parser.meta.yaml",
       "layer": "performance",
       "module": "FEAT-XK-STREAM:streaming-parser",
+      "tags": [
+        "@alpha-active",
+        "@REQ-XK-PERFORMANCE",
+        "@layer.performance",
+        "@suite.synthetic",
+        "@streaming",
+        "@fallback",
+        "@SCN-XK-STREAM-002"
+      ],
       "crates": [
         "xbrl-stream",
         "xbrlkit-bdd",
@@ -1156,6 +1458,15 @@
       "sidecar_file": "specs/features/performance/streaming_parser.meta.yaml",
       "layer": "performance",
       "module": "FEAT-XK-STREAM:streaming-parser",
+      "tags": [
+        "@alpha-active",
+        "@REQ-XK-PERFORMANCE",
+        "@layer.performance",
+        "@suite.synthetic",
+        "@streaming",
+        "@context",
+        "@SCN-XK-STREAM-003"
+      ],
       "crates": [
         "xbrl-stream",
         "xbrlkit-bdd",
@@ -1185,6 +1496,15 @@
       "sidecar_file": "specs/features/performance/streaming_parser.meta.yaml",
       "layer": "performance",
       "module": "FEAT-XK-STREAM:streaming-parser",
+      "tags": [
+        "@alpha-active",
+        "@REQ-XK-PERFORMANCE",
+        "@layer.performance",
+        "@suite.synthetic",
+        "@streaming",
+        "@handler",
+        "@SCN-XK-STREAM-004"
+      ],
       "crates": [
         "xbrl-stream",
         "xbrlkit-bdd",
@@ -1214,6 +1534,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-001",
+        "@AC-XK-TAX-LOAD-001",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1245,6 +1574,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-002",
+        "@AC-XK-TAX-LOAD-002",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1276,6 +1614,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-003",
+        "@AC-XK-TAX-LOAD-003",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1307,6 +1654,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-004",
+        "@AC-XK-TAX-LOAD-004",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1338,6 +1694,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-005",
+        "@AC-XK-TAX-LOAD-005",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1369,6 +1734,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-006",
+        "@AC-XK-TAX-LOAD-006",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1400,6 +1774,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-007",
+        "@AC-XK-TAX-LOAD-007",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1433,6 +1816,15 @@
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
       "layer": "taxonomy",
       "module": "FEAT-XK-TAX-LOAD:taxonomy-loader",
+      "tags": [
+        "@REQ-XK-TAXONOMY-LOADER",
+        "@layer.taxonomy",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@SCN-XK-TAX-LOAD-008",
+        "@AC-XK-TAX-LOAD-008",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-loader",
         "taxonomy-dimensions",
@@ -1466,6 +1858,15 @@
       "sidecar_file": "specs/features/taxonomy/standard_locations.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-TAX-LOC:standard-locations",
+      "tags": [
+        "@REQ-XK-TAXONOMY",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-TAXONOMY-001",
+        "@SCN-XK-TAXONOMY-001",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-dts",
         "sec-profile-types",
@@ -1505,6 +1906,15 @@
       "sidecar_file": "specs/features/sec/taxonomy_years.meta.yaml",
       "layer": "sec",
       "module": "FEAT-XK-TAX-YEARS:taxonomy-year-compatibility",
+      "tags": [
+        "@REQ-XK-TAXONOMY",
+        "@layer.sec",
+        "@suite.synthetic",
+        "@alpha-active",
+        "@AC-XK-TAXONOMY-002",
+        "@SCN-XK-TAXONOMY-002",
+        "@speed.fast"
+      ],
       "crates": [
         "taxonomy-dts",
         "efm-rules",
@@ -1546,8 +1956,19 @@
       "sidecar_file": "specs/features/workflow/feature_grid.meta.yaml",
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-GRID:feature-grid",
+      "tags": [
+        "@REQ-XK-WORKFLOW",
+        "@layer.workflow",
+        "@suite.synthetic",
+        "@AC-XK-WORKFLOW-001",
+        "@SCN-XK-WORKFLOW-001",
+        "@speed.fast",
+        "@alpha-active"
+      ],
       "crates": [
+        "scenario-contract",
         "xbrlkit-feature-grid",
+        "xbrlkit-bdd-steps",
         "xtask"
       ],
       "fixtures": [],
@@ -1558,7 +1979,10 @@
       ],
       "allowed_edit_roots": [
         "crates/xbrlkit-feature-grid",
+        "crates/scenario-contract",
+        "crates/xbrlkit-bdd-steps",
         "xtask",
+        "contracts/schemas",
         "specs/features/workflow"
       ],
       "suite": "synthetic",
@@ -1572,6 +1996,15 @@
       "sidecar_file": "specs/features/workflow/bundle.meta.yaml",
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-BUNDLE:bundle",
+      "tags": [
+        "@REQ-XK-WORKFLOW",
+        "@layer.workflow",
+        "@suite.synthetic",
+        "@AC-XK-WORKFLOW-002",
+        "@SCN-XK-WORKFLOW-002",
+        "@speed.fast",
+        "@alpha-active"
+      ],
       "crates": [
         "scenario-contract",
         "xbrlkit-feature-grid",
@@ -1600,6 +2033,14 @@
       "sidecar_file": "specs/features/workflow/cockpit_pack.meta.yaml",
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-COCKPIT:cockpit-pack",
+      "tags": [
+        "@REQ-XK-WORKFLOW",
+        "@layer.workflow",
+        "@suite.synthetic",
+        "@SCN-XK-WORKFLOW-003",
+        "@speed.fast",
+        "@alpha-active"
+      ],
       "crates": [
         "cockpit-export",
         "receipt-types",
@@ -1628,6 +2069,15 @@
       "sidecar_file": "specs/features/workflow/bundle.meta.yaml",
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-BUNDLE:bundle",
+      "tags": [
+        "@REQ-XK-WORKFLOW",
+        "@layer.workflow",
+        "@suite.synthetic",
+        "@AC-XK-WORKFLOW-002",
+        "@SCN-XK-WORKFLOW-004",
+        "@speed.fast",
+        "@alpha-active"
+      ],
       "crates": [
         "scenario-contract",
         "xbrlkit-feature-grid",
@@ -1656,6 +2106,15 @@
       "sidecar_file": "specs/features/workflow/alpha_check.meta.yaml",
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-ALPHA:alpha-check",
+      "tags": [
+        "@REQ-XK-WORKFLOW",
+        "@layer.workflow",
+        "@suite.synthetic",
+        "@AC-XK-WORKFLOW-003",
+        "@SCN-XK-WORKFLOW-005",
+        "@speed.fast",
+        "@alpha-active"
+      ],
       "crates": [
         "xtask",
         "scenario-runner",
@@ -1686,6 +2145,14 @@
       "sidecar_file": "specs/features/workflow/package_check.meta.yaml",
       "layer": "workflow",
       "module": "FEAT-XK-WORKFLOW-PACKAGE:package-check",
+      "tags": [
+        "@REQ-XK-WORKFLOW",
+        "@layer.workflow",
+        "@suite.synthetic",
+        "@AC-XK-WORKFLOW-004",
+        "@SCN-XK-WORKFLOW-006",
+        "@speed.fast"
+      ],
       "crates": [
         "xtask",
         "xbrlkit-core"

@@ -24,6 +24,10 @@
         "sidecar_file": { "type": "string" },
         "layer": { "type": "string" },
         "module": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
         "crates": {
           "type": "array",
           "items": { "type": "string" }
@@ -52,6 +56,7 @@
         "sidecar_file",
         "layer",
         "module",
+        "tags",
         "crates",
         "fixtures",
         "profile_pack",

@@ -64,7 +64,7 @@ stories:
         title: Package scenario-bounded work for agents
         acceptance_criteria:
           - id: AC-XK-WORKFLOW-001
-            title: Compile the feature grid
+            title: Compile the feature grid with lifecycle tags
             tests:
               - type: bdd
                 tag: "@AC-XK-WORKFLOW-001"

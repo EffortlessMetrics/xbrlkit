@@ -12,6 +12,8 @@ pub struct ScenarioRecord {
     pub layer: String,
     pub module: String,
     #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default)]
     pub crates: Vec<String>,
     #[serde(default)]
     pub fixtures: Vec<String>,
@@ -43,4 +45,26 @@ pub struct ImpactReport {
     pub changed_paths: Vec<String>,
     #[serde(default)]
     pub impacted_scenarios: Vec<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ScenarioRecord;
+
+    #[test]
+    fn deserializes_legacy_record_without_tags() -> Result<(), String> {
+        let mut value =
+            serde_json::to_value(ScenarioRecord::default()).map_err(|error| error.to_string())?;
+        value
+            .as_object_mut()
+            .ok_or_else(|| "scenario record should serialize as an object".to_string())?
+            .remove("tags");
+
+        let record: ScenarioRecord =
+            serde_json::from_value(value).map_err(|error| error.to_string())?;
+        if !record.tags.is_empty() {
+            return Err("legacy record should default tags to empty".to_string());
+        }
+        Ok(())
+    }
 }

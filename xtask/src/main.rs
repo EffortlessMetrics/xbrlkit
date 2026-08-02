@@ -363,6 +363,7 @@ mod tests {
             sidecar_file: "specs/features/workflow/bundle.meta.yaml".to_string(),
             layer: "workflow".to_string(),
             module: "bundle".to_string(),
+            tags: Vec::new(),
             crates: vec!["xtask".to_string()],
             fixtures: Vec::new(),
             profile_pack: None,
