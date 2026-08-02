@@ -1043,7 +1043,6 @@ name = "receipt-types"
 version = "0.1.0-alpha.1"
 dependencies = [
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -1223,7 +1222,6 @@ name = "scenario-contract"
 version = "0.1.0-alpha.1"
 dependencies = [
  "serde",
- "serde_json",
 ]
 
 [[package]]
