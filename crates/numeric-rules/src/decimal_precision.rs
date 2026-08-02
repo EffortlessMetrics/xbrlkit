@@ -209,90 +209,90 @@ mod tests {
     }
 
     #[test]
-    fn valid_exact_value_with_inf() {
+    fn valid_exact_value_with_inf() -> Result<(), String> {
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1234.56", "INF")];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
-    fn valid_rounded_value_with_appropriate_decimals() {
+    fn valid_rounded_value_with_appropriate_decimals() -> Result<(), String> {
         // Value is exact to units, decimals="0" is valid
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1234.00", "0")];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
-    fn invalid_truncation_of_fractional_digits() {
+    fn invalid_truncation_of_fractional_digits() -> Result<(), String> {
         // Value has .56 but decimals="0" would truncate it
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1234.56", "0")];
         let findings = validate_decimal_precision(&facts);
-        assert_eq!(findings.len(), 1);
-        assert_eq!(findings[0].rule_id, "fs-0637-Nonzero-Digits-Truncated");
+        ensure_one_finding(&findings)?;
+        ensure_rule_id(&findings, "fs-0637-Nonzero-Digits-Truncated")
     }
 
     #[test]
-    fn invalid_truncation_of_significant_digits() {
+    fn invalid_truncation_of_significant_digits() -> Result<(), String> {
         // Value is 1234, decimals="-3" would round to thousands, truncating 234
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1234", "-3")];
         let findings = validate_decimal_precision(&facts);
-        assert_eq!(findings.len(), 1);
+        ensure_one_finding(&findings)
     }
 
     #[test]
-    fn valid_high_magnitude_rounding() {
+    fn valid_high_magnitude_rounding() -> Result<(), String> {
         // Value is exactly 1000000, decimals="-5" is valid (no truncation of non-zero digits)
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1000000", "-5")];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
-    fn valid_two_decimal_places() {
+    fn valid_two_decimal_places() -> Result<(), String> {
         let facts = vec![fact_with_decimals("us-gaap:EarningsPerShare", "1.23", "2")];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
-    fn invalid_three_fractional_digits_with_decimals_2() {
+    fn invalid_three_fractional_digits_with_decimals_2() -> Result<(), String> {
         let facts = vec![fact_with_decimals("us-gaap:EarningsPerShare", "1.234", "2")];
         let findings = validate_decimal_precision(&facts);
-        assert_eq!(findings.len(), 1);
+        ensure_one_finding(&findings)
     }
 
     #[test]
-    fn valid_negative_value_with_inf() {
+    fn valid_negative_value_with_inf() -> Result<(), String> {
         let facts = vec![fact_with_decimals(
             "us-gaap:NetIncomeLoss",
             "-2345.67",
             "INF",
         )];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
-    fn invalid_negative_value_truncation() {
+    fn invalid_negative_value_truncation() -> Result<(), String> {
         let facts = vec![fact_with_decimals("us-gaap:NetIncomeLoss", "-2345.67", "0")];
         let findings = validate_decimal_precision(&facts);
-        assert_eq!(findings.len(), 1);
+        ensure_one_finding(&findings)
     }
 
     #[test]
-    fn ignores_non_numeric_values() {
+    fn ignores_non_numeric_values() -> Result<(), String> {
         let facts = vec![fact_with_decimals(
             "dei:EntityRegistrantName",
             "Example Corp",
             "2",
         )];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
-    fn ignores_missing_decimals() {
+    fn ignores_missing_decimals() -> Result<(), String> {
         let facts = vec![Fact {
             concept: "us-gaap:Revenue".to_string(),
             value: "1234.56".to_string(),
@@ -302,15 +302,15 @@ mod tests {
             member: String::new(),
         }];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
-    fn valid_thousands_rounding() {
+    fn valid_thousands_rounding() -> Result<(), String> {
         // 1234000 with decimals="-3" is valid (rounds to thousands, 1234 is preserved)
         let facts = vec![fact_with_decimals("us-gaap:Revenue", "1234000", "-3")];
         let findings = validate_decimal_precision(&facts);
-        assert!(findings.is_empty());
+        ensure_no_findings(&findings)
     }
 
     #[test]
