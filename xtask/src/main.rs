@@ -191,53 +191,38 @@ enum TestMode {
     ScenarioRunner,
 }
 
+fn parse_declared_mode(scenario: &ScenarioRecord) -> anyhow::Result<TestMode> {
+    let test_type = scenario.test_type.as_deref().with_context(|| {
+        format!(
+            "test-ac: scenario {} is missing declared test type",
+            scenario.scenario_id
+        )
+    })?;
+    if scenario.test_tag.is_none() {
+        anyhow::bail!(
+            "test-ac: scenario {} is missing declared test tag",
+            scenario.scenario_id
+        );
+    }
+    match test_type {
+        "bdd" => Ok(TestMode::Bdd),
+        "direct" | "scenario-runner" => Ok(TestMode::ScenarioRunner),
+        other => anyhow::bail!(
+            "test-ac: scenario {} declares unsupported test type {}; expected bdd, direct, or scenario-runner",
+            scenario.scenario_id,
+            other
+        ),
+    }
+}
+
 fn resolve_test_mode(scenarios: &[ScenarioRecord]) -> anyhow::Result<TestMode> {
     let first = scenarios
         .first()
         .context("test-ac: no scenarios supplied for mode resolution")?;
-    let test_type = first
-        .test_type
-        .as_deref()
-        .context("test-ac: scenario is missing declared test type")?;
-    if first.test_tag.is_none() {
-        anyhow::bail!(
-            "test-ac: scenario {} is missing declared test tag",
-            first.scenario_id
-        );
-    }
-
-    let mode = match test_type {
-        "bdd" => TestMode::Bdd,
-        "direct" | "scenario-runner" => TestMode::ScenarioRunner,
-        other => anyhow::bail!(
-            "test-ac: scenario {} declares unsupported test type {}; expected bdd, direct, or scenario-runner",
-            first.scenario_id,
-            other
-        ),
-    };
+    let mode = parse_declared_mode(first)?;
 
     for scenario in scenarios.iter().skip(1) {
-        let scenario_type = scenario.test_type.as_deref().with_context(|| {
-            format!(
-                "test-ac: scenario {} is missing declared test type",
-                scenario.scenario_id
-            )
-        })?;
-        if scenario.test_tag.is_none() {
-            anyhow::bail!(
-                "test-ac: scenario {} is missing declared test tag",
-                scenario.scenario_id
-            );
-        }
-        let scenario_mode = match scenario_type {
-            "bdd" => TestMode::Bdd,
-            "direct" | "scenario-runner" => TestMode::ScenarioRunner,
-            other => anyhow::bail!(
-                "test-ac: scenario {} declares unsupported test type {}; expected bdd, direct, or scenario-runner",
-                scenario.scenario_id,
-                other
-            ),
-        };
+        let scenario_mode = parse_declared_mode(scenario)?;
         if scenario_mode != mode {
             anyhow::bail!(
                 "test-ac: selector mixes declared test modes: {} is {:?}, {} is {:?}",

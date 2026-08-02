@@ -147,20 +147,27 @@ fn declared_test_for(
     feature_file: &str,
 ) -> anyhow::Result<Option<SpecTest>> {
     let scenario_tag = format!("@{scenario_id}");
-    let selected = ac_id
-        .and_then(|id| declarations.get(id))
-        .and_then(|tests| {
-            tests
-                .iter()
-                .find(|test| test.tag == scenario_tag)
-                .or_else(|| tests.first())
-        })
-        .or_else(|| {
-            declarations
-                .values()
-                .flat_map(|tests| tests.iter())
-                .find(|test| test.tag == scenario_tag)
-        });
+    let selected = if let Some(ac_id) = ac_id {
+        let tests = declarations.get(ac_id).with_context(|| {
+            format!(
+                "scenario {scenario_id} references AC {ac_id}, but the specification ledger has no test declaration"
+            )
+        })?;
+        if tests.is_empty() {
+            anyhow::bail!(
+                "scenario {scenario_id} references AC {ac_id}, but its specification ledger test declarations are empty"
+            );
+        }
+        tests
+            .iter()
+            .find(|test| test.tag == scenario_tag)
+            .or_else(|| tests.first())
+    } else {
+        declarations
+            .values()
+            .flat_map(|tests| tests.iter())
+            .find(|test| test.tag == scenario_tag)
+    };
     let Some(test) = selected else {
         return Ok(None);
     };
@@ -273,6 +280,24 @@ mod tests {
             .to_string()
             .contains("does not match declared test file")
         {
+            return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn explicit_ac_without_a_ledger_declaration_fails_closed() -> anyhow::Result<()> {
+        let Err(error) = declared_test_for(
+            &BTreeMap::new(),
+            "SCN-XK-MISSING-001",
+            Some("AC-XK-MISSING-001"),
+            "specs/features/missing.feature",
+        ) else {
+            return Err(anyhow::anyhow!(
+                "missing declaration unexpectedly succeeded"
+            ));
+        };
+        if !error.to_string().contains("has no test declaration") {
             return Err(anyhow::anyhow!("unexpected error: {error}"));
         }
         Ok(())
