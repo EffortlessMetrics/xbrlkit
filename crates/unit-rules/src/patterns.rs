@@ -190,16 +190,68 @@ mod tests {
         Ok(())
     }
 
-    /// Eagerly access all LazyLock statics to verify every configured pattern
-    /// compiled successfully. This catches invalid literals in CI before they
-    /// can silently remove a default rule.
+    /// Verify every configured pattern compiled and preserves its behavior.
+    /// This catches invalid literals and accidental pattern substitutions in CI
+    /// before they can silently remove or change a default rule.
     #[test]
-    fn test_all_lazy_regexes_compile() -> Result<(), &'static str> {
+    fn test_all_lazy_regexes_compile_and_match_expected_concepts() -> Result<(), String> {
         if DEFAULT_PATTERNS.len() != 6 {
-            return Err("a default concept pattern failed to compile");
+            return Err("a default concept pattern failed to compile".to_string());
         }
         if MONETARY_PATTERNS.len() != 3 {
-            return Err("a monetary heuristic pattern failed to compile");
+            return Err("a monetary heuristic pattern failed to compile".to_string());
+        }
+
+        let patterns = ConceptUnitPatterns::new();
+        let default_match_cases = [
+            ("us-gaap:CommonStockSharesOutstanding", "us-gaap:Revenue"),
+            ("us-gaap:EarningsPerShare", "us-gaap:Revenue"),
+            ("us-gaap:PricePerCommonShare", "us-gaap:Revenue"),
+            ("us-gaap:NumberOfEmployees", "us-gaap:Revenue"),
+            ("us-gaap:PercentageOfAssets", "us-gaap:Revenue"),
+            ("us-gaap:DebtToEquityRatio", "us-gaap:Revenue"),
+        ];
+
+        for (index, ((regex, expected_unit), (positive, negative))) in
+            DEFAULT_PATTERNS.iter().zip(default_match_cases).enumerate()
+        {
+            if !regex.is_match(positive) {
+                return Err(format!(
+                    "default pattern {index} did not match expected concept {positive}"
+                ));
+            }
+            if regex.is_match(negative) {
+                return Err(format!(
+                    "default pattern {index} unexpectedly matched {negative}"
+                ));
+            }
+            if patterns.expected_type(positive) != Some(expected_unit.clone()) {
+                return Err(format!(
+                    "default pattern {index} mapped {positive} to the wrong unit"
+                ));
+            }
+        }
+
+        let monetary_match_cases = [
+            ("us-gaap:Revenue", "us-gaap:Cash"),
+            ("us-gaap:Cash", "us-gaap:Balance"),
+            ("us-gaap:Balance", "us-gaap:Revenue"),
+        ];
+        for (index, (regex, (positive, negative))) in MONETARY_PATTERNS
+            .iter()
+            .zip(monetary_match_cases)
+            .enumerate()
+        {
+            if !regex.is_match(positive) {
+                return Err(format!(
+                    "monetary pattern {index} did not match expected concept {positive}"
+                ));
+            }
+            if regex.is_match(negative) {
+                return Err(format!(
+                    "monetary pattern {index} unexpectedly matched {negative}"
+                ));
+            }
         }
         Ok(())
     }
