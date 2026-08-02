@@ -282,12 +282,6 @@ stories:
               - type: bdd
                 tag: "@AC-XK-EXPORT-001"
                 file: "specs/features/export/oim_json.feature"
-          - id: AC-XK-EXPORT-002
-            title: Surface canonical JSON export failures
-            tests:
-              - type: bdd
-                tag: "@AC-XK-EXPORT-002"
-                file: "specs/features/export/oim_json.feature"
       - id: REQ-XK-DIMENSIONS
         title: Validate dimension-member pairs against taxonomy definitions
         acceptance_criteria:
