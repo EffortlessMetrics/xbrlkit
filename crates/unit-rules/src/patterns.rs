@@ -130,30 +130,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_shares_pattern() {
+    fn test_shares_pattern() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert_eq!(
-            patterns.expected_type("us-gaap:CommonStockSharesOutstanding"),
-            Some(ExpectedUnitType::Shares)
-        );
+        let actual = patterns.expected_type("us-gaap:CommonStockSharesOutstanding");
+        if actual != Some(ExpectedUnitType::Shares) {
+            return Err(format!("shares concept matched {actual:?}"));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_pershare_pattern() {
+    fn test_pershare_pattern() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert_eq!(
-            patterns.expected_type("us-gaap:EarningsPerShare"),
-            Some(ExpectedUnitType::PerShare)
-        );
+        let actual = patterns.expected_type("us-gaap:EarningsPerShare");
+        if actual != Some(ExpectedUnitType::PerShare) {
+            return Err(format!("per-share concept matched {actual:?}"));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_employees_pattern() {
+    fn test_employees_pattern() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert_eq!(
-            patterns.expected_type("us-gaap:NumberOfEmployees"),
-            Some(ExpectedUnitType::Pure)
-        );
+        let actual = patterns.expected_type("us-gaap:NumberOfEmployees");
+        if actual != Some(ExpectedUnitType::Pure) {
+            return Err(format!("employee concept matched {actual:?}"));
+        }
+        Ok(())
     }
 
     #[test]
@@ -174,11 +177,17 @@ mod tests {
     }
 
     #[test]
-    fn test_monetary_heuristic() {
+    fn test_monetary_heuristic() -> Result<(), String> {
         let patterns = ConceptUnitPatterns::new();
-        assert!(patterns.is_likely_monetary("us-gaap:Revenue"));
-        assert!(patterns.is_likely_monetary("us-gaap:Assets"));
-        assert!(!patterns.is_likely_monetary("us-gaap:CommonStockSharesOutstanding"));
+        for concept in ["us-gaap:Revenue", "us-gaap:Assets"] {
+            if !patterns.is_likely_monetary(concept) {
+                return Err(format!("monetary concept was not recognized: {concept}"));
+            }
+        }
+        if patterns.is_likely_monetary("us-gaap:CommonStockSharesOutstanding") {
+            return Err("share concept was incorrectly recognized as monetary".to_string());
+        }
+        Ok(())
     }
 
     /// Eagerly access all LazyLock statics to verify every configured pattern
