@@ -1218,8 +1218,21 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
     }
 }
 
-#[allow(clippy::too_many_lines)]
 fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<()> {
+    if handle_report_assertion(world, step)?
+        || handle_bundle_assertion(world, step)?
+        || handle_context_assertion(world, step)?
+        || handle_streaming_assertion(world, step)?
+        || handle_taxonomy_structure_assertion(world, step)?
+        || handle_taxonomy_storage_assertion(world, step)?
+    {
+        return Ok(());
+    }
+
+    anyhow::bail!("unsupported BDD step: {}", step.text)
+}
+
+fn handle_report_assertion(world: &World, step: &Step) -> anyhow::Result<bool> {
     if let Some(rule_id) = step
         .text
         .strip_prefix("the validation report contains rule \"")
@@ -1228,7 +1241,8 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .validation_run
             .as_ref()
             .context("missing validation run")?;
-        return ensure_report_contains_rule(validation_run, rule_id.trim_end_matches('"'));
+        ensure_report_contains_rule(validation_run, rule_id.trim_end_matches('"'))?;
+        return Ok(true);
     }
 
     if let Some(rule_id) = step
@@ -1239,13 +1253,15 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .validation_run
             .as_ref()
             .context("missing validation run")?;
-        return ensure_report_does_not_contain_rule(validation_run, rule_id.trim_end_matches('"'));
+        ensure_report_does_not_contain_rule(validation_run, rule_id.trim_end_matches('"'))?;
+        return Ok(true);
     }
 
     if let Some(member_count) =
         parse_count_suffix(&step.text, "the IXDS assembly receipt contains ", "member")
     {
-        return ensure_ixds_member_count(execution(world)?, member_count);
+        ensure_ixds_member_count(execution(world)?, member_count)?;
+        return Ok(true);
     }
 
     if let Some(namespace_count) = parse_count_suffix(
@@ -1253,14 +1269,19 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         "the taxonomy resolution resolves at least ",
         "namespace",
     ) {
-        return ensure_taxonomy_resolution_resolves_at_least(execution(world)?, namespace_count);
+        ensure_taxonomy_resolution_resolves_at_least(execution(world)?, namespace_count)?;
+        return Ok(true);
     }
 
     if let Some(fact_count) = parse_count_suffix(&step.text, "the report contains ", "fact") {
-        return ensure_report_fact_count(execution(world)?, fact_count);
+        ensure_report_fact_count(execution(world)?, fact_count)?;
+        return Ok(true);
     }
 
-    // Bundle-related assertions
+    Ok(false)
+}
+
+fn handle_bundle_assertion(world: &World, step: &Step) -> anyhow::Result<bool> {
     if let Some(scenario_id) = step
         .text
         .strip_prefix("the bundle manifest lists scenario \"")
@@ -1281,10 +1302,9 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 manifest.scenarios.len()
             );
         }
-        return Ok(());
+        return Ok(true);
     }
 
-    // Feature grid assertions
     if let Some(scenario_id) = step
         .text
         .strip_prefix("the feature grid contains scenario \"")
@@ -1301,10 +1321,13 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 grid.scenarios.len()
             );
         }
-        return Ok(());
+        return Ok(true);
     }
 
-    // Context completeness Then steps
+    Ok(false)
+}
+
+fn handle_context_assertion(world: &World, step: &Step) -> anyhow::Result<bool> {
     if let Some(context_ref) = step
         .text
         .strip_prefix("a context-missing error is reported for context \"")
@@ -1322,7 +1345,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 world.context_completeness_context.findings
             );
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "no context completeness findings are reported" {
@@ -1332,7 +1355,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 world.context_completeness_context.findings
             );
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if let Some(count_str) = step
@@ -1358,7 +1381,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 world.context_completeness_context.findings
             );
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if let Some(rule_id) = step.text.strip_prefix("the finding rule ID is \"") {
@@ -1375,28 +1398,31 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 world.context_completeness_context.findings
             );
         }
-        return Ok(());
+        return Ok(true);
     }
 
-    // Streaming parser Then steps
+    Ok(false)
+}
+
+fn handle_streaming_assertion(world: &World, step: &Step) -> anyhow::Result<bool> {
     if step.text == "memory usage should stay under 50MB peak" {
         let peak = world.streaming_context.memory_peak_mb.unwrap_or(f64::MAX);
         if peak > 50.0 {
             anyhow::bail!("memory usage was {peak}MB, expected under 50MB");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "all facts should be processed" {
         if world.streaming_context.facts_processed.is_empty() {
             anyhow::bail!("no facts were processed");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "context references should be validated" {
         // Context refs were validated during streaming parse
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "the DOM parser should be recommended" {
@@ -1406,50 +1432,53 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 "DOM parser should be recommended for files under 10MB, but file is {size}MB"
             );
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "the streaming parser should be available as option" {
         if !world.streaming_context.use_streaming {
             anyhow::bail!("streaming parser should be available as an option");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "missing context references should be reported" {
         if world.streaming_context.missing_context_refs.is_empty() {
             anyhow::bail!("expected missing context references to be reported");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "line numbers should indicate error locations" {
         // Line number tracking would be implemented in real streaming parser
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "the handler should receive each fact" {
         if world.streaming_context.facts_processed.is_empty() {
             anyhow::bail!("handler did not receive any facts");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "contexts should be collected" {
         if world.streaming_context.contexts_collected.is_empty() {
             anyhow::bail!("no contexts were collected");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "units should be available for reference" {
         if world.streaming_context.units_collected.is_empty() {
             anyhow::bail!("no units were collected");
         }
-        return Ok(());
+        return Ok(true);
     }
 
-    // Taxonomy loader Then steps
+    Ok(false)
+}
+
+fn handle_taxonomy_structure_assertion(world: &World, step: &Step) -> anyhow::Result<bool> {
     if step.text == "the taxonomy should contain dimensions" {
         let taxonomy = world
             .taxonomy_loader_context
@@ -1459,7 +1488,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         if taxonomy.dimensions.is_empty() {
             anyhow::bail!("taxonomy has no dimensions");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "explicit dimensions should have domains" {
@@ -1475,7 +1504,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         if !has_explicit_with_domain && !taxonomy.dimensions.is_empty() {
             anyhow::bail!("no explicit dimensions have domains defined");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "domains should have members" {
@@ -1488,25 +1517,21 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         if !has_members {
             anyhow::bail!("no domains have members defined");
         }
-        return Ok(());
+        return Ok(true);
     }
 
-    if step.text == "members should maintain parent-child relationships" {
-        return Ok(());
+    if step.text == "members should maintain parent-child relationships"
+        || step.text == "typed dimensions should have value types"
+        || step.text == "the value types should be valid XSD types"
+        || step.text == "hypercubes should contain their dimensions"
+    {
+        return Ok(true);
     }
 
-    if step.text == "typed dimensions should have value types" {
-        return Ok(());
-    }
+    Ok(false)
+}
 
-    if step.text == "the value types should be valid XSD types" {
-        return Ok(());
-    }
-
-    if step.text == "hypercubes should contain their dimensions" {
-        return Ok(());
-    }
-
+fn handle_taxonomy_storage_assertion(world: &World, step: &Step) -> anyhow::Result<bool> {
     if step.text == "dimensions should reference their domains" {
         let taxonomy = world
             .taxonomy_loader_context
@@ -1516,7 +1541,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         if taxonomy.dimension_domains.is_empty() && !taxonomy.dimensions.is_empty() {
             anyhow::bail!("no dimension-domain references found");
         }
-        return Ok(());
+        return Ok(true);
     }
 
     if step.text == "the taxonomy file should be cached" {
@@ -1528,15 +1553,13 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         if !cache_dir.exists() {
             anyhow::bail!("cache directory does not exist");
         }
-        return Ok(());
+        return Ok(true);
     }
 
-    if step.text == "subsequent loads should use the cache" {
-        return Ok(());
-    }
-
-    if step.text == "imported schemas should be loaded" {
-        return Ok(());
+    if step.text == "subsequent loads should use the cache"
+        || step.text == "imported schemas should be loaded"
+    {
+        return Ok(true);
     }
 
     if step.text == "all dimension definitions should be available" {
@@ -1548,10 +1571,10 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         if taxonomy.dimensions.is_empty() {
             anyhow::bail!("no dimension definitions available");
         }
-        return Ok(());
+        return Ok(true);
     }
 
-    anyhow::bail!("unsupported BDD step: {}", step.text)
+    Ok(false)
 }
 
 /// Create a synthetic taxonomy for testing when fixture files don't exist
