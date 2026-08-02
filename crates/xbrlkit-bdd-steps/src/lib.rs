@@ -2,6 +2,7 @@
 
 use anyhow::Context;
 use dimensional_rules::validate_context_dimensions;
+mod test_fixtures;
 use scenario_contract::{BundleManifest, FeatureGrid, ScenarioRecord};
 use scenario_runner::{
     ScenarioExecution, assert_scenario_outcome, ensure_ixds_member_count,
@@ -11,7 +12,7 @@ use scenario_runner::{
     execute_scenario, write_execution_receipts,
 };
 use std::path::PathBuf;
-use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
+use taxonomy_dimensions::{Dimension, DimensionTaxonomy};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -626,35 +627,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a loaded taxonomy with dimension definitions" {
-        // Simulate loading a taxonomy with dimensions
-        let mut taxonomy = DimensionTaxonomy::new();
-
-        // Add a domain
-        let mut domain = Domain::new("us-gaap:ScenarioDomain");
-        domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioActualMember".to_string(),
-            parent: None,
-            order: 1,
-            label: None,
-        });
-        domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioForecastMember".to_string(),
-            parent: None,
-            order: 2,
-            label: None,
-        });
-        taxonomy.add_domain(domain);
-
-        // Add an explicit dimension
-        taxonomy.add_dimension(Dimension::Explicit {
-            qname: "us-gaap:StatementScenarioAxis".to_string(),
-            default_domain: Some("us-gaap:ScenarioDomain".to_string()),
-            required: false,
-        });
-        taxonomy.dimension_domains.insert(
-            "us-gaap:StatementScenarioAxis".to_string(),
-            "us-gaap:ScenarioDomain".to_string(),
-        );
+        let taxonomy = test_fixtures::scenario_taxonomy();
 
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
@@ -698,47 +671,10 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         let dimension = world.dimension_context.dimension.as_deref().unwrap_or("");
         let member = world.dimension_context.member.as_deref().unwrap_or("");
 
-        // Build minimal taxonomy with StatementScenarioAxis
-        let mut taxonomy = DimensionTaxonomy::new();
-        let mut scenario_domain = Domain::new("us-gaap:ScenarioDomain");
-        scenario_domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioActualMember".to_string(),
-            parent: None,
-            order: 1,
-            label: None,
-        });
-        scenario_domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioForecastMember".to_string(),
-            parent: None,
-            order: 2,
-            label: None,
-        });
-        taxonomy.add_domain(scenario_domain);
-
-        taxonomy.add_dimension(Dimension::Explicit {
-            qname: "us-gaap:StatementScenarioAxis".to_string(),
-            default_domain: Some("us-gaap:ScenarioDomain".to_string()),
-            required: false,
-        });
-        taxonomy.dimension_domains.insert(
-            "us-gaap:StatementScenarioAxis".to_string(),
-            "us-gaap:ScenarioDomain".to_string(),
-        );
+        let taxonomy = test_fixtures::scenario_taxonomy();
 
         // Build context with dimensional information in scenario
-        let mut context = xbrl_contexts::Context {
-            id: "test-context".to_string(),
-            entity: EntityIdentifier {
-                scheme: "http://www.sec.gov/CIK".to_string(),
-                value: "0001234567".to_string(),
-            },
-            period: Period::Duration {
-                start: "2024-01-01".to_string(),
-                end: "2024-12-31".to_string(),
-            },
-            entity_segment: None,
-            scenario: None,
-        };
+        let mut context = test_fixtures::test_context();
 
         // Add dimensional member if specified
         if !dimension.is_empty() && !member.is_empty() {
@@ -808,27 +744,16 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         });
 
         // Build context with typed dimension
-        let context = xbrl_contexts::Context {
-            id: "test-context".to_string(),
-            entity: EntityIdentifier {
-                scheme: "http://www.sec.gov/CIK".to_string(),
-                value: "0001234567".to_string(),
-            },
-            period: Period::Duration {
-                start: "2024-01-01".to_string(),
-                end: "2024-12-31".to_string(),
-            },
-            entity_segment: None,
-            scenario: Some(DimensionalContainer {
-                dimensions: vec![DimensionMember {
-                    dimension: dimension.to_string(),
-                    member: value.to_string(),
-                    is_typed: true,
-                    typed_value: Some(value.to_string()),
-                }],
-                raw_xml: None,
-            }),
-        };
+        let mut context = test_fixtures::test_context();
+        context.scenario = Some(DimensionalContainer {
+            dimensions: vec![DimensionMember {
+                dimension: dimension.to_string(),
+                member: value.to_string(),
+                is_typed: true,
+                typed_value: Some(value.to_string()),
+            }],
+            raw_xml: None,
+        });
 
         // Validate
         let result = validate_context_dimensions(&context, "", &taxonomy);
@@ -1556,32 +1481,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
 
 /// Create a synthetic taxonomy for testing when fixture files don't exist
 fn create_synthetic_taxonomy() -> DimensionTaxonomy {
-    let mut taxonomy = DimensionTaxonomy::new();
-
-    let mut scenario_domain = Domain::new("us-gaap:ScenarioDomain");
-    scenario_domain.add_member(DomainMember {
-        qname: "us-gaap:ScenarioActualMember".to_string(),
-        parent: None,
-        order: 1,
-        label: None,
-    });
-    scenario_domain.add_member(DomainMember {
-        qname: "us-gaap:ScenarioForecastMember".to_string(),
-        parent: None,
-        order: 2,
-        label: None,
-    });
-    taxonomy.add_domain(scenario_domain);
-
-    taxonomy.add_dimension(Dimension::Explicit {
-        qname: "us-gaap:StatementScenarioAxis".to_string(),
-        default_domain: Some("us-gaap:ScenarioDomain".to_string()),
-        required: false,
-    });
-    taxonomy.dimension_domains.insert(
-        "us-gaap:StatementScenarioAxis".to_string(),
-        "us-gaap:ScenarioDomain".to_string(),
-    );
+    let mut taxonomy = test_fixtures::scenario_taxonomy();
 
     taxonomy.add_dimension(Dimension::Typed {
         qname: "dim:CustomerAxis".to_string(),
