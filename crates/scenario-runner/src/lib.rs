@@ -8,7 +8,7 @@ use serde::Deserialize;
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Mutex, MutexGuard, OnceLock};
 use std::time::SystemTime;
 use validation_run::{
     TaxonomyResolutionRun, ValidationRun, resolve_taxonomy_entry_points, validate_duplicate_report,
@@ -103,6 +103,12 @@ fn fixture_cache() -> &'static Mutex<FixtureCache> {
     FIXTURE_CACHE.get_or_init(|| Mutex::new(FixtureCache::default()))
 }
 
+fn locked_fixture_cache() -> anyhow::Result<MutexGuard<'static, FixtureCache>> {
+    fixture_cache()
+        .lock()
+        .map_err(|_| anyhow!("fixture cache mutex poisoned"))
+}
+
 /// Invalidate cached fixture content after an in-process fixture write.
 ///
 /// The cache uses metadata to avoid repeated content reads. Callers that
@@ -114,20 +120,13 @@ fn fixture_cache() -> &'static Mutex<FixtureCache> {
 ///
 /// Returns an error if the process-local cache mutex is poisoned.
 pub fn invalidate_fixture_cache() -> anyhow::Result<()> {
-    fixture_cache()
-        .lock()
-        .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
-        .clear();
+    locked_fixture_cache()?.clear();
     Ok(())
 }
 
 fn read_fixture_file(path: &Path) -> anyhow::Result<String> {
     let fingerprint = file_fingerprint(path)?;
-    if let Some(content) = fixture_cache()
-        .lock()
-        .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
-        .get(path, fingerprint)
-    {
+    if let Some(content) = locked_fixture_cache()?.get(path, fingerprint) {
         return Ok(content);
     }
 
@@ -135,10 +134,7 @@ fn read_fixture_file(path: &Path) -> anyhow::Result<String> {
     record_fixture_file_read(path)?;
     let content =
         fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
-    fixture_cache()
-        .lock()
-        .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
-        .insert(path.to_path_buf(), fingerprint, content.clone());
+    locked_fixture_cache()?.insert(path.to_path_buf(), fingerprint, content.clone());
     Ok(content)
 }
 

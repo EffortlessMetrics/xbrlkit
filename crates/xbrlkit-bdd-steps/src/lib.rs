@@ -21,7 +21,7 @@ pub struct Step {
     pub table: Vec<Vec<String>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct World {
     pub repo_root: PathBuf,
     pub grid: FeatureGrid,
@@ -82,7 +82,7 @@ pub struct TaxonomyLoaderContext {
     pub loaded: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct FixtureCacheContext {
     fixture_dir: PathBuf,
     expected_value: String,
