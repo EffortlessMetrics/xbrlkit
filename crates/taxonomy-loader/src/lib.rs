@@ -22,10 +22,13 @@ pub use taxonomy_dimensions::DimensionTaxonomy;
 pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};
 
 use std::collections::HashSet;
+#[cfg(feature = "http")]
 use std::path::Path;
+#[cfg(feature = "http")]
 use std::time::Duration;
 
 /// Default timeout for HTTP requests (30 seconds).
+#[cfg(feature = "http")]
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Loads a dimension taxonomy from an entrypoint URL or local path.
@@ -41,8 +44,10 @@ pub fn load_taxonomy(entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoad
 /// XBRL taxonomy loader with optional caching support.
 #[derive(Debug, Clone)]
 pub struct TaxonomyLoader {
+    #[cfg(feature = "http")]
     cache_dir: Option<std::path::PathBuf>,
     visited: std::cell::RefCell<HashSet<String>>,
+    #[cfg(feature = "http")]
     http_client: Option<reqwest::blocking::Client>,
 }
 
@@ -57,8 +62,10 @@ impl TaxonomyLoader {
     #[must_use]
     pub fn new() -> Self {
         Self {
+            #[cfg(feature = "http")]
             cache_dir: None,
             visited: std::cell::RefCell::new(HashSet::new()),
+            #[cfg(feature = "http")]
             http_client: None,
         }
     }
@@ -66,16 +73,26 @@ impl TaxonomyLoader {
     /// Creates a new taxonomy loader with a cache directory.
     #[must_use]
     pub fn with_cache_dir(path: impl Into<std::path::PathBuf>) -> Self {
-        let cache_dir = Some(path.into());
-        let http_client = Self::build_http_client();
+        #[cfg(feature = "http")]
+        let (cache_dir, http_client) = {
+            let cache_dir = Some(path.into());
+            let http_client = Self::build_http_client();
+            (cache_dir, http_client)
+        };
+        #[cfg(not(feature = "http"))]
+        let _ = path.into();
+
         Self {
+            #[cfg(feature = "http")]
             cache_dir,
             visited: std::cell::RefCell::new(HashSet::new()),
+            #[cfg(feature = "http")]
             http_client,
         }
     }
 
     /// Builds the HTTP client with proper configuration.
+    #[cfg(feature = "http")]
     fn build_http_client() -> Option<reqwest::blocking::Client> {
         reqwest::blocking::Client::builder()
             .timeout(HTTP_TIMEOUT)
@@ -141,14 +158,25 @@ impl TaxonomyLoader {
     }
 
     fn fetch_content(&self, path: &str) -> Result<String, TaxonomyLoaderError> {
+        #[cfg(not(feature = "http"))]
+        let _ = self;
+
         // Check if it's a URL or local path
         if path.starts_with("http://") || path.starts_with("https://") {
-            self.fetch_url(path)
-        } else {
-            TaxonomyLoader::fetch_file(path)
+            #[cfg(feature = "http")]
+            {
+                return self.fetch_url(path);
+            }
+            #[cfg(not(feature = "http"))]
+            {
+                return Err(TaxonomyLoaderError::UnsupportedUrl(path.to_string()));
+            }
         }
+
+        TaxonomyLoader::fetch_file(path)
     }
 
+    #[cfg(feature = "http")]
     fn fetch_url(&self, url: &str) -> Result<String, TaxonomyLoaderError> {
         // Validate URL format
         let parsed_url: url::Url = url.parse()?;
@@ -210,6 +238,7 @@ impl TaxonomyLoader {
         Ok(content)
     }
 
+    #[cfg(feature = "http")]
     fn write_to_cache(content: &str, cache_path: &Path) -> Result<(), std::io::Error> {
         // Ensure parent directory exists
         if let Some(parent) = cache_path.parent() {
@@ -222,6 +251,7 @@ impl TaxonomyLoader {
         std::fs::read_to_string(path).map_err(|e| TaxonomyLoaderError::Io(path.to_string(), e))
     }
 
+    #[cfg(feature = "http")]
     fn url_to_cache_path(url: &str, cache_dir: &Path) -> std::path::PathBuf {
         // Simple cache path generation based on URL
         let filename = url.replace(['/', ':', '?', '&', '='], "_");
@@ -236,16 +266,21 @@ mod tests {
     #[test]
     fn test_loader_new() {
         let loader = TaxonomyLoader::new();
+        #[cfg(feature = "http")]
         assert!(loader.cache_dir.is_none());
+        #[cfg(not(feature = "http"))]
+        let _ = loader;
     }
 
     #[test]
+    #[cfg(feature = "http")]
     fn test_loader_with_cache() {
         let loader = TaxonomyLoader::with_cache_dir("/tmp/cache");
         assert!(loader.cache_dir.is_some());
     }
 
     #[test]
+    #[cfg(feature = "http")]
     fn test_url_to_cache_path() {
         let cache_dir = Path::new("/tmp/cache");
         let url = "https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-2024.xsd";
@@ -258,6 +293,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "http")]
     fn test_fetch_url_invalid_scheme() {
         let loader = TaxonomyLoader::new();
         let result = loader.fetch_url("ftp://example.com/test.xsd");
@@ -266,6 +302,18 @@ mod tests {
         assert!(matches!(
             result.unwrap_err(),
             TaxonomyLoaderError::UnsupportedUrl(_)
+        ));
+    }
+
+    #[cfg(not(feature = "http"))]
+    #[test]
+    fn test_http_url_requires_http_feature() {
+        let loader = TaxonomyLoader::new();
+        let result = loader.fetch_content("https://example.com/test.xsd");
+
+        assert!(matches!(
+            result,
+            Err(TaxonomyLoaderError::UnsupportedUrl(url)) if url == "https://example.com/test.xsd"
         ));
     }
 }

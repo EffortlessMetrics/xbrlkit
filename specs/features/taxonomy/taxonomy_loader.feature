@@ -76,3 +76,10 @@ Feature: Taxonomy Loader
     When I validate the dimension-member pair
     Then the validation should fail
     And an "XBRL.DIMENSION.INVALID_MEMBER" finding should be reported
+
+  @alpha-active @SCN-XK-TAX-LOAD-009 @AC-XK-TAX-LOAD-009
+  @speed.fast
+  Scenario: Keep HTTP loading opt-in for offline defaults
+    Given the taxonomy loader is configured for offline defaults
+    When I inspect the taxonomy loader feature configuration
+    Then the default taxonomy loader should exclude HTTP dependencies

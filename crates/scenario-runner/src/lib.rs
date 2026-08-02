@@ -258,6 +258,14 @@ pub fn assert_scenario_outcome(
             Ok(())
         }
 
+        // Taxonomy-loader feature configuration
+        Some("AC-XK-TAX-LOAD-009") => {
+            // The deterministic manifest assertion is exercised by the BDD
+            // step implementation; this keeps the AC selector compatible
+            // with scenario-runner's receipt path.
+            Ok(())
+        }
+
         // Scenarios without AC ID use BDD step definitions
         None => Ok(()),
 

@@ -78,6 +78,7 @@ pub struct TaxonomyLoaderContext {
     pub cache_dir: Option<PathBuf>,
     pub schema_path: Option<String>,
     pub loaded: bool,
+    pub offline_default_verified: bool,
 }
 
 impl World {
@@ -625,6 +626,10 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    if step.text == "the taxonomy loader is configured for offline defaults" {
+        return Ok(true);
+    }
+
     if step.text == "a loaded taxonomy with dimension definitions" {
         // Simulate loading a taxonomy with dimensions
         let mut taxonomy = DimensionTaxonomy::new();
@@ -688,6 +693,23 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     // Feature grid When steps
     if step.text == "I compile the feature grid" {
         world.compiled_grid = Some(xbrlkit_feature_grid::compile(&world.repo_root)?);
+        return Ok(true);
+    }
+
+    if step.text == "I inspect the taxonomy loader feature configuration" {
+        let manifest_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("taxonomy-loader")
+            .join("Cargo.toml");
+        let manifest = std::fs::read_to_string(&manifest_path).with_context(|| {
+            format!(
+                "failed to read taxonomy-loader manifest at {}",
+                manifest_path.display()
+            )
+        })?;
+        world.taxonomy_loader_context.offline_default_verified = manifest.contains("default = []")
+            && manifest.contains("http = [\"dep:reqwest\"]")
+            && manifest.contains("optional = true");
         return Ok(true);
     }
 
@@ -1043,6 +1065,13 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 
 #[allow(clippy::too_many_lines)]
 fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
+    if step.text == "the default taxonomy loader should exclude HTTP dependencies" {
+        if !world.taxonomy_loader_context.offline_default_verified {
+            anyhow::bail!("taxonomy-loader does not declare an offline default with opt-in HTTP");
+        }
+        return Ok(());
+    }
+
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
         if !world.dimension_context.validation_findings.is_empty() {

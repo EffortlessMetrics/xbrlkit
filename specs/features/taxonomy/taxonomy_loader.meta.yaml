@@ -116,3 +116,17 @@ scenarios:
       - crates/dimensional-rules
       - crates/xbrlkit-bdd
       - crates/xbrlkit-bdd-steps
+  SCN-XK-TAX-LOAD-009:
+    ac_id: AC-XK-TAX-LOAD-009
+    req_id: REQ-XK-TAXONOMY-LOADER
+    crates: [taxonomy-loader, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: [synthetic/taxonomy/standard-location-01]
+    profile_pack: sec/efm-77/opco
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/taxonomy-loader
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
