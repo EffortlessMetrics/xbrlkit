@@ -2,7 +2,8 @@
 
 **Date:** 2026-03-24
 **Status:** Wave 1 ✅, Wave 2 ✅, Wave 3 🔄
-**Current State:** 21 @alpha-active scenarios passing, CI green
+**Last verified:** 2026-08-02 with `cargo xtask alpha-check`
+**Current State:** 33 @alpha-active scenarios passing under the current alpha gate
 
 ## Goals for Phase 2
 
@@ -42,7 +43,7 @@
 
 ## Success Criteria
 
-- [x] 21+ @alpha-active scenarios passing (21 achieved)
+- [x] 33+ @alpha-active scenarios passing (33 verified)
 - [x] `make quick` and `make full` commands work locally
 - [x] CI emits machine-readable validation receipts
 - [ ] All code TODOs have issues or are resolved

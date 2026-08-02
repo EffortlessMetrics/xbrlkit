@@ -32,7 +32,7 @@
 - Legacy foundation in place
 - Dimensional validation infrastructure complete
 - BDD scenario framework active
-- 13 @alpha-active scenarios passing
+- 33 @alpha-active scenarios passing under the current alpha gate (verified 2026-08-02)
 
 ## Target Architecture
 
