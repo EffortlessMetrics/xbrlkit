@@ -8,9 +8,10 @@ use scenario_runner::{
     ensure_report_concept_set, ensure_report_contains_rule, ensure_report_does_not_contain_rule,
     ensure_report_fact_count, ensure_report_has_no_error_findings,
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
-    execute_scenario, write_execution_receipts,
+    execute_scenario, invalidate_fixture_cache, load_fixture_facts, write_execution_receipts,
 };
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -20,7 +21,7 @@ pub struct Step {
     pub table: Vec<Vec<String>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct World {
     pub repo_root: PathBuf,
     pub grid: FeatureGrid,
@@ -40,6 +41,7 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+    pub fixture_cache_context: Option<FixtureCacheContext>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -80,6 +82,20 @@ pub struct TaxonomyLoaderContext {
     pub loaded: bool,
 }
 
+#[derive(Debug)]
+pub struct FixtureCacheContext {
+    fixture_dir: PathBuf,
+    expected_value: String,
+}
+
+impl Drop for FixtureCacheContext {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.fixture_dir);
+    }
+}
+
+static NEXT_FIXTURE_CACHE_SCENARIO_ID: AtomicU64 = AtomicU64::new(0);
+
 impl World {
     #[must_use]
     pub fn new(repo_root: PathBuf, grid: FeatureGrid) -> Self {
@@ -102,6 +118,7 @@ impl World {
             cli_output: None,
             cli_json_output: None,
             cli_exit_code: None,
+            fixture_cache_context: None,
         }
     }
 }
@@ -179,6 +196,10 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
     Ok(())
 }
 
+fn fixture_report(value: &str) -> String {
+    format!("facts:\n  - concept: test:Fact\n    context: c1\n    value: \"{value}\"\n")
+}
+
 #[allow(clippy::too_many_lines)]
 fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
     if let Some(profile_id) = step.text.strip_prefix("the profile pack \"") {
@@ -208,6 +229,27 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world
             .fixture_dirs
             .push(world.repo_root.join("fixtures").join(fixture));
+        return Ok(true);
+    }
+
+    if let Some(value) = step
+        .text
+        .strip_prefix("a temporary fixture report with value \"")
+        .and_then(|value| value.strip_suffix('"'))
+    {
+        let id = NEXT_FIXTURE_CACHE_SCENARIO_ID.fetch_add(1, Ordering::Relaxed);
+        let fixture_dir = std::env::temp_dir().join(format!(
+            "xbrlkit-bdd-fixture-cache-{}-{id}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&fixture_dir)
+            .with_context(|| format!("creating {}", fixture_dir.display()))?;
+        std::fs::write(fixture_dir.join("report.yaml"), fixture_report(value))
+            .with_context(|| format!("writing {}", fixture_dir.display()))?;
+        world.fixture_cache_context = Some(FixtureCacheContext {
+            fixture_dir,
+            expected_value: value.to_string(),
+        });
         return Ok(true);
     }
 
@@ -688,6 +730,34 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     // Feature grid When steps
     if step.text == "I compile the feature grid" {
         world.compiled_grid = Some(xbrlkit_feature_grid::compile(&world.repo_root)?);
+        return Ok(true);
+    }
+
+    if let Some(value) = step
+        .text
+        .strip_prefix("the temporary fixture report is rewritten with value \"")
+        .and_then(|value| value.strip_suffix("\" and the cache is invalidated"))
+    {
+        let context = world
+            .fixture_cache_context
+            .as_mut()
+            .context("temporary fixture report was not created")?;
+        let first = load_fixture_facts(std::slice::from_ref(&context.fixture_dir))?;
+        if first.facts.first().map(|fact| fact.value.as_str())
+            != Some(context.expected_value.as_str())
+        {
+            anyhow::bail!(
+                "initial fixture value was not cached as expected: {:?}",
+                first.facts.first().map(|fact| &fact.value)
+            );
+        }
+        std::fs::write(
+            context.fixture_dir.join("report.yaml"),
+            fixture_report(value),
+        )
+        .with_context(|| format!("writing {}", context.fixture_dir.display()))?;
+        invalidate_fixture_cache()?;
+        context.expected_value = value.to_string();
         return Ok(true);
     }
 
@@ -1279,6 +1349,26 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
                 "scenario {} not found in bundle manifest (contains {} scenario(s))",
                 scenario_id,
                 manifest.scenarios.len()
+            );
+        }
+        return Ok(());
+    }
+
+    if step.text == "the temporary fixture report loads with its rewritten value" {
+        let context = world
+            .fixture_cache_context
+            .as_ref()
+            .context("temporary fixture report was not created")?;
+        let report = load_fixture_facts(std::slice::from_ref(&context.fixture_dir))?;
+        let actual = report
+            .facts
+            .first()
+            .map(|fact| fact.value.as_str())
+            .context("temporary fixture report contained no facts")?;
+        if actual != context.expected_value.as_str() {
+            anyhow::bail!(
+                "expected rewritten fixture value {}, found {actual}",
+                context.expected_value
             );
         }
         return Ok(());

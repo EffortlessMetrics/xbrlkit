@@ -1,0 +1,18 @@
+feature_id: FEAT-XK-WORKFLOW-CACHE
+layer: workflow
+module: fixture-cache
+scenarios:
+  SCN-XK-WORKFLOW-008:
+    ac_id: AC-XK-WORKFLOW-005
+    req_id: REQ-XK-WORKFLOW
+    crates: [scenario-runner, xbrlkit-bdd-steps, xbrlkit-bdd, xtask]
+    fixtures: []
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd-steps
+      - crates/xbrlkit-bdd
+      - xtask
+      - specs/features/workflow
