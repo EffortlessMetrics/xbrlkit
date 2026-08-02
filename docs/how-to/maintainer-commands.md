@@ -304,6 +304,19 @@ cargo xtask cockpit-pack
 
 ---
 
+### Fixture cache lifecycle
+
+`scenario-runner` keeps fixture file contents in a process-local cache. The
+metadata fingerprint avoids repeated reads for unchanged fixtures, so fixture
+trees must remain immutable while a runner process is active. An in-process
+tool that writes a fixture and then loads it again must call
+`scenario_runner::invalidate_fixture_cache()` before the next load. This
+explicit boundary also handles same-size rewrites that preserve the file
+metadata fingerprint; separate `cargo xtask` invocations naturally start with
+an empty cache.
+
+---
+
 ## Common Workflows
 
 ### Daily Development Loop
