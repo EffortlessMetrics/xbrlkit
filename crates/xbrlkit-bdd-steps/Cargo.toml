@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 walkdir.workspace = true
 scenario-contract.workspace = true
@@ -26,6 +27,7 @@ xbrlkit-feature-grid.workspace = true
 sec-profile-types.workspace = true
 context-completeness.workspace = true
 xbrl-report-types.workspace = true
+xbrlkit-cli.workspace = true
 numeric-rules.workspace = true
 xbrl-stream.workspace = true
 taxonomy-loader.workspace = true

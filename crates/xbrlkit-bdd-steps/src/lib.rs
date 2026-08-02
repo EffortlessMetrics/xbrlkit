@@ -10,6 +10,7 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
+use serde::Serializer;
 use std::path::PathBuf;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
@@ -40,6 +41,17 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+}
+
+struct FailingJson;
+
+impl serde::Serialize for FailingJson {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        Err(serde::ser::Error::custom("synthetic serialization failure"))
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -891,6 +903,31 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "a synthetic CLI JSON serialization failure" {
+        world.cli_output = None;
+        world.cli_exit_code = None;
+        return Ok(true);
+    }
+
+    if step.text == "I serialize the inspect-contexts and inspect-taxonomy JSON responses" {
+        let responses = [
+            xbrlkit_cli::serialize_json_or_error(&FailingJson, "contexts"),
+            xbrlkit_cli::serialize_json_or_error(&FailingJson, "taxonomy"),
+        ];
+        if responses.iter().any(|(exit_code, _)| *exit_code != 1) {
+            anyhow::bail!("an inspect JSON serialization failure did not return exit code 1");
+        }
+        world.cli_exit_code = Some(1);
+        world.cli_output = Some(
+            responses
+                .into_iter()
+                .map(|(_, output)| output)
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
+        return Ok(true);
+    }
+
     // Alpha check When steps
     if step.text == "I run the alpha readiness gate" {
         // Instead of running bdd (which causes recursion), just verify the grid can be loaded
@@ -1198,6 +1235,27 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
             for field in &required_fields {
                 if json_value.get(field).is_none() {
                     anyhow::bail!("required field '{field}' is missing from profile output");
+                }
+            }
+            Ok(())
+        }
+        "both inspect JSON responses fail with exit code \"1\"" => {
+            if world.cli_exit_code != Some(1) {
+                anyhow::bail!(
+                    "expected inspect JSON serialization failures to return exit code 1, got {:?}",
+                    world.cli_exit_code
+                );
+            }
+            Ok(())
+        }
+        "the CLI error output names both JSON responses" => {
+            let output = world
+                .cli_output
+                .as_deref()
+                .context("CLI error output not captured")?;
+            for subject in ["contexts", "taxonomy"] {
+                if !output.contains(subject) {
+                    anyhow::bail!("CLI error output did not name {subject}: {output}");
                 }
             }
             Ok(())

@@ -11,9 +11,13 @@ publish = false
 name = "xbrlkit-cli"
 path = "src/main.rs"
 
+[lib]
+path = "src/lib.rs"
+
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
 corpus-fs.workspace = true
