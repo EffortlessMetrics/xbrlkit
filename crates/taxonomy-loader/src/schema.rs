@@ -6,6 +6,7 @@
 //! - `xbrli:domainItemType` type elements → Domain members
 
 use crate::error::TaxonomyLoaderError;
+use crate::xml_util::{base_directory, extract_namespaces, resolve_path};
 use roxmltree::{Document, Node};
 use std::collections::HashMap;
 use taxonomy_dimensions::{Dimension, Hypercube};
@@ -34,18 +35,6 @@ pub fn parse_schema(
     }
 
     Ok(())
-}
-
-/// Extracts namespace mappings from the schema.
-fn extract_namespaces(doc: &Document<'_>) -> HashMap<String, String> {
-    let mut ns_map = HashMap::new();
-
-    for ns in doc.root_element().namespaces() {
-        let prefix = ns.name().unwrap_or("");
-        ns_map.insert(prefix.to_string(), ns.uri().to_string());
-    }
-
-    ns_map
 }
 
 /// Parses an individual element definition.
@@ -150,10 +139,7 @@ pub fn extract_import_refs(
     let doc = Document::parse(content)?;
     let mut refs = Vec::new();
 
-    let base_dir = std::path::Path::new(base_path)
-        .parent()
-        .map(|p| p.to_string_lossy().to_string())
-        .unwrap_or_default();
+    let base_dir = base_directory(base_path);
 
     for node in doc.root_element().children() {
         let tag = node.tag_name().name();
@@ -166,16 +152,6 @@ pub fn extract_import_refs(
     }
 
     Ok(refs)
-}
-
-/// Resolves a relative path against a base directory.
-/// Resolves a relative path against a base directory.
-fn resolve_path(base_dir: &str, relative: &str) -> String {
-    if relative.starts_with("http://") || relative.starts_with("https://") || base_dir.is_empty() {
-        relative.to_string()
-    } else {
-        format!("{base_dir}/{relative}")
-    }
 }
 
 #[cfg(test)]
