@@ -337,4 +337,22 @@ mod tests {
             Err(error) => Err(format!("unexpected error for HTTP URL: {error}")),
         }
     }
+
+    #[cfg(not(feature = "http"))]
+    #[test]
+    fn local_taxonomy_loading_remains_available_without_http_feature()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let directory = tempfile::tempdir()?;
+        let schema_path = directory.path().join("schema.xsd");
+        std::fs::write(
+            &schema_path,
+            r#"<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:test" />"#,
+        )?;
+        let entrypoint = schema_path
+            .to_str()
+            .ok_or_else(|| std::io::Error::other("temporary schema path is not UTF-8"))?;
+
+        load_taxonomy(entrypoint)?;
+        Ok(())
+    }
 }
