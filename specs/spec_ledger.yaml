@@ -51,6 +51,12 @@ stories:
               - type: bdd
                 tag: "@AC-XK-SEC-INLINE-001"
                 file: "specs/features/sec/inline_restrictions.feature"
+          - id: AC-XK-SEC-INLINE-002
+            title: Reject ix:tuple in inline content
+            tests:
+              - type: bdd
+                tag: "@AC-XK-SEC-INLINE-002"
+                file: "specs/features/sec/inline_restrictions.feature"
       - id: REQ-XK-DUPLICATES
         title: Apply duplicate fact policy
         acceptance_criteria:

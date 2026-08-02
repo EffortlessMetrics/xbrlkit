@@ -898,8 +898,8 @@
       ],
       "suite": "synthetic",
       "speed": "fast",
-      "test_type": null,
-      "test_tag": null
+      "test_type": "bdd",
+      "test_tag": "@AC-XK-SEC-INLINE-002"
     },
     {
       "scenario_id": "SCN-XK-SEC-NEGATIVE-001",
