@@ -322,6 +322,7 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+        || scenario.tags.iter().any(|tag| tag == selector)
 }
 
 fn normalize_repo_path(path: &str) -> String {
@@ -376,8 +377,10 @@ mod tests {
 
     #[test]
     fn selector_matching_supports_ids_and_tags() {
+        let mut scenario = scenario_record();
+        scenario.tags = vec!["@alpha-active".to_string()];
         let grid = FeatureGrid {
-            scenarios: vec![scenario_record()],
+            scenarios: vec![scenario],
         };
 
         assert_eq!(
@@ -396,6 +399,7 @@ mod tests {
             select_matching_scenarios(&grid, "@SCN-XK-WORKFLOW-002").len(),
             1
         );
+        assert_eq!(select_matching_scenarios(&grid, "@alpha-active").len(), 1);
         assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
     }
 

@@ -55,7 +55,6 @@
         "sidecar_file",
         "layer",
         "module",
-        "tags",
         "crates",
         "fixtures",
         "profile_pack",

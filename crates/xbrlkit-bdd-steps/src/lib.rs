@@ -1644,4 +1644,5 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+        || scenario.tags.iter().any(|tag| tag == selector)
 }

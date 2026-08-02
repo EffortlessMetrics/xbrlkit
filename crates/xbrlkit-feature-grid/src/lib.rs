@@ -105,13 +105,17 @@ fn parse_feature_tags(path: &Path) -> anyhow::Result<BTreeMap<String, Vec<String
             continue;
         }
         if line.starts_with('@') {
-            let tags = line.split_whitespace().map(ToString::to_string);
+            let tags = line.split_whitespace();
             let target = if !feature_header_seen && current.is_none() {
                 &mut feature_tags
             } else {
                 &mut pending_tags
             };
             for tag in tags {
+                if !tag.starts_with('@') || tag.len() == 1 {
+                    anyhow::bail!("invalid tag {tag:?} in {}", path.display());
+                }
+                let tag = tag.to_string();
                 if !target.contains(&tag) {
                     target.push(tag);
                 }
@@ -122,7 +126,7 @@ fn parse_feature_tags(path: &Path) -> anyhow::Result<BTreeMap<String, Vec<String
             feature_header_seen = true;
             continue;
         }
-        if line.starts_with("Scenario:") {
+        if line.starts_with("Scenario:") || line.starts_with("Scenario Outline:") {
             if let Some((scenario_id, tags)) = current.take() {
                 scenarios.insert(scenario_id, tags);
             }
@@ -136,6 +140,7 @@ fn parse_feature_tags(path: &Path) -> anyhow::Result<BTreeMap<String, Vec<String
                 .iter()
                 .find_map(|tag| {
                     tag.strip_prefix("@SCN-")
+                        .filter(|suffix| !suffix.is_empty())
                         .map(|suffix| format!("SCN-{suffix}"))
                 })
                 .with_context(|| {
@@ -242,6 +247,60 @@ mod tests {
         };
         if !error.contains("missing an @SCN tag") {
             return Err(format!("unexpected parse error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn compile_rejects_malformed_tag_token() -> Result<(), String> {
+        let root = temp_root()?;
+        write_inputs(
+            &root,
+            "@REQ-TEST invalid\nFeature: Example\n\n  @SCN-TEST-001\n  Scenario: Invalid tag\n",
+            "feature_id: FEAT-TEST\nlayer: foundation\nmodule: example\nscenarios:\n  SCN-TEST-001:\n    ac_id: AC-TEST-001\n    req_id: REQ-TEST\n",
+        )?;
+
+        let error = match compile(&root.0) {
+            Ok(_) => return Err("malformed tag should fail".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("invalid tag \"invalid\"") {
+            return Err(format!("unexpected parse error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn compile_rejects_empty_scenario_id_suffix() -> Result<(), String> {
+        let root = temp_root()?;
+        write_inputs(
+            &root,
+            "Feature: Example\n\n  @SCN-\n  Scenario: Empty ID\n",
+            "feature_id: FEAT-TEST\nlayer: foundation\nmodule: example\nscenarios:\n  SCN-:\n    ac_id: AC-TEST-001\n    req_id: REQ-TEST\n",
+        )?;
+
+        let error = match compile(&root.0) {
+            Ok(_) => return Err("empty scenario ID suffix should fail".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("missing an @SCN tag") {
+            return Err(format!("unexpected parse error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn compile_supports_scenario_outline() -> Result<(), String> {
+        let root = temp_root()?;
+        write_inputs(
+            &root,
+            "Feature: Example\n\n  @SCN-TEST-001\n  Scenario Outline: Outline\n    Given a value <value>\n\n    Examples:\n      | value |\n      | one   |\n",
+            "feature_id: FEAT-TEST\nlayer: foundation\nmodule: example\nscenarios:\n  SCN-TEST-001:\n    ac_id: AC-TEST-001\n    req_id: REQ-TEST\n",
+        )?;
+
+        let grid = compile(&root.0).map_err(|error| error.to_string())?;
+        if grid.scenarios.len() != 1 || grid.scenarios[0].scenario_id != "SCN-TEST-001" {
+            return Err("scenario outline should compile into its sidecar scenario".to_string());
         }
         Ok(())
     }
