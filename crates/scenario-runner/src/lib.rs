@@ -51,12 +51,20 @@ struct FixtureCache {
 }
 
 impl FixtureCache {
-    fn get(&mut self, path: &Path, fingerprint: FileFingerprint) -> Option<String> {
+    fn get(
+        &mut self,
+        path: &Path,
+        fingerprint: FileFingerprint,
+        current_content: &str,
+    ) -> Option<String> {
+        // Metadata can remain unchanged when a same-size rewrite preserves the
+        // file timestamp, so content equality is required before serving a hit.
         let cached = self
             .entries
             .get(path)
             .and_then(|(cached_fingerprint, content)| {
-                (cached_fingerprint == &fingerprint).then(|| content.clone())
+                (cached_fingerprint == &fingerprint && content == current_content)
+                    .then(|| content.clone())
             });
         if cached.is_some() {
             self.touch(path);
@@ -97,21 +105,21 @@ fn fixture_cache() -> &'static Mutex<FixtureCache> {
 
 fn read_fixture_file(path: &Path) -> anyhow::Result<String> {
     let fingerprint = file_fingerprint(path)?;
+    let current_content =
+        fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     let cached = fixture_cache()
         .lock()
         .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
-        .get(path, fingerprint);
+        .get(path, fingerprint, &current_content);
     if let Some(content) = cached {
         return Ok(content);
     }
 
-    let content =
-        fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     fixture_cache()
         .lock()
         .map_err(|_| anyhow!("fixture cache mutex poisoned"))?
-        .insert(path.to_path_buf(), fingerprint, content.clone());
-    Ok(content)
+        .insert(path.to_path_buf(), fingerprint, current_content.clone());
+    Ok(current_content)
 }
 
 fn file_fingerprint(path: &Path) -> anyhow::Result<FileFingerprint> {
@@ -619,7 +627,7 @@ mod tests {
         let file_fingerprint = fingerprint(1);
         cache.insert(path.clone(), file_fingerprint, "cached".to_string());
 
-        if cache.get(&path, file_fingerprint).as_deref() != Some("cached") {
+        if cache.get(&path, file_fingerprint, "cached").as_deref() != Some("cached") {
             return Err("matching fixture should be served from cache".to_string());
         }
         Ok(())
@@ -631,11 +639,27 @@ mod tests {
         let path = PathBuf::from("fixture.yaml");
         cache.insert(path.clone(), fingerprint(1), "stale".to_string());
 
-        if cache.get(&path, fingerprint(2)).is_some() {
+        if cache.get(&path, fingerprint(2), "stale").is_some() {
             return Err("changed fixture metadata must invalidate the cache".to_string());
         }
         if cache.entries.contains_key(&path) {
             return Err("invalidated fixture must be removed from the cache".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn cache_invalidates_same_fingerprint_when_content_changes() -> Result<(), String> {
+        let mut cache = FixtureCache::default();
+        let path = PathBuf::from("fixture.yaml");
+        let file_fingerprint = fingerprint(1);
+        cache.insert(path.clone(), file_fingerprint, "old".to_string());
+
+        if cache.get(&path, file_fingerprint, "new").is_some() {
+            return Err("same metadata must not hide rewritten fixture content".to_string());
+        }
+        if cache.entries.contains_key(&path) {
+            return Err("stale content must be removed from the cache".to_string());
         }
         Ok(())
     }
@@ -648,7 +672,7 @@ mod tests {
             cache.insert(path, fingerprint(index as u64), index.to_string());
         }
         let oldest_path = Path::new("fixture-0.yaml");
-        if cache.get(oldest_path, fingerprint(0)).is_none() {
+        if cache.get(oldest_path, fingerprint(0), "0").is_none() {
             return Err("fixture 0 should be present before eviction".to_string());
         }
         cache.insert(
@@ -657,11 +681,11 @@ mod tests {
             "new".to_string(),
         );
 
-        if cache.get(oldest_path, fingerprint(0)).is_none() {
+        if cache.get(oldest_path, fingerprint(0), "0").is_none() {
             return Err("recently used fixture should not be evicted".to_string());
         }
         if cache
-            .get(Path::new("fixture-1.yaml"), fingerprint(1))
+            .get(Path::new("fixture-1.yaml"), fingerprint(1), "1")
             .is_some()
         {
             return Err("least-recently-used fixture should be evicted".to_string());
