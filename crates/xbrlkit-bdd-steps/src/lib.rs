@@ -104,6 +104,12 @@ impl World {
             cli_exit_code: None,
         }
     }
+
+    fn load_fixture_schema(&mut self) {
+        self.taxonomy_loader_context.schema_path =
+            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
+        self.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+    }
 }
 
 pub fn run_scenario(
@@ -573,31 +579,22 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a taxonomy schema with dimension elements" {
-        // Use a fixture path or create synthetic schema
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        world.load_fixture_schema();
         return Ok(true);
     }
 
     if step.text == "a taxonomy definition linkbase with domain members" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        world.load_fixture_schema();
         return Ok(true);
     }
 
     if step.text == "a taxonomy with typed dimensions" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        world.load_fixture_schema();
         return Ok(true);
     }
 
     if step.text == "a taxonomy with hypercube elements" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        world.load_fixture_schema();
         return Ok(true);
     }
 
@@ -619,9 +616,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a taxonomy schema that imports another schema" {
-        world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
-        world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        world.load_fixture_schema();
         return Ok(true);
     }
 
@@ -1622,4 +1617,25 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FeatureGrid, PathBuf, World};
+
+    #[test]
+    fn load_fixture_schema_initializes_the_shared_taxonomy_context() -> Result<(), String> {
+        let mut world = World::new(PathBuf::from("."), FeatureGrid::default());
+        world.load_fixture_schema();
+
+        if world.taxonomy_loader_context.schema_path.as_deref()
+            != Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd")
+        {
+            return Err("shared fixture schema path was not initialized".to_string());
+        }
+        if world.taxonomy_loader_context.loader.is_none() {
+            return Err("shared taxonomy loader was not initialized".to_string());
+        }
+        Ok(())
+    }
 }
