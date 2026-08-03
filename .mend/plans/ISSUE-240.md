@@ -21,6 +21,8 @@ The public names and emitted receipt shape remain unchanged.
 - `receipt-types` contains the only `oracle.compare` receipt construction.
 - Both existing crate-level functions remain available as re-exports.
 - The focused test proves kind, version, subject, and warning result.
+- Compatibility tests exercise both public wrapper names against the same
+  receipt contract.
 - Workspace metadata and lockfile remain unchanged.
 
 ## Proof
