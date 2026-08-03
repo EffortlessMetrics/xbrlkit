@@ -28,6 +28,32 @@ The selection result should make the two alpha-check tracks explicit:
 
 The implementation must fail closed on an ambiguous record. It must not silently infer direct execution from a lifecycle tag alone.
 
+### Required merged metadata contract
+
+The implementation must consume the merged contracts from #380 and #389 as two
+separate inputs:
+
+- #380 supplies normalized scenario lifecycle tags, including the exact
+  `@alpha-active` membership used by the single BDD gate.
+- #389 supplies the declared execution `test_type` and exact `test_tag` used
+  to identify the test declaration for a scenario.
+
+`test_tag` is not a substitute for a lifecycle tag, and lifecycle tags are not
+an execution-mode declaration. The implementation must use an explicit,
+documented matrix of supported `test_type`/`test_tag`/`ac_id` combinations from
+the merged ledger contract. It must reject missing, unsupported, or
+contradictory combinations with the scenario ID, field, and value in the
+error. In particular, it must not infer direct execution from crate membership,
+feature text, scenario IDs, or a BDD tag; nor may it invent a
+`scenario-runner` value if the reconciled ledger uses a different canonical
+value.
+
+The prerequisite sequence is therefore: repair and prove #380's malformed
+mixed-tag handling; land and prove #389's declaration contract; record the
+canonical dispatch matrix and reconcile the current direct-ID inventory; then
+implement #212. A plan or implementation that leaves that matrix implicit is
+not ready to replace `ACTIVE_ALPHA_ACS`.
+
 ## Migration and compatibility decision
 
 Before replacing the constant, compute a compatibility report against the current `ACTIVE_ALPHA_ACS` behavior using the post-#380/#389 grid:
@@ -46,6 +72,7 @@ If this comparison is not empty, stop the implementation slice and update the go
 - [ ] Direct AC IDs are sorted and deduplicated deterministically.
 - [ ] BDD-only scenarios are covered by the existing `@alpha-active` run exactly once.
 - [ ] Missing or unsupported classification data produces a contextual error naming the scenario and field.
+- [ ] The implementation proves the supported dispatch matrix and rejects contradictory lifecycle/tag/mode combinations; it does not infer mode from unrelated metadata.
 - [ ] A compatibility test proves the derived plan preserves the intended current alpha-check coverage, including streaming and BDD lanes.
 - [ ] The machine-readable alpha summary records the discovered direct count and BDD selection count, or the output contract is updated with a separate receipt-backed selection section.
 - [ ] No production behavior, feature tags, or ledger semantics are changed silently by the implementation PR.
@@ -71,6 +98,7 @@ Add fixture-style unit coverage for:
 - one BDD-only record with an exact test tag;
 - missing AC, missing mode/tag, and unsupported mode;
 - a legacy streaming/direct record;
+- contradictory mode/tag/AC combinations, including a lifecycle `@alpha-active` tag paired with an unsupported or missing declared execution mode;
 - deterministic ordering independent of input order.
 
 The acceptance receipt must show that the selected direct IDs and BDD count are derived from the exact grid used by the run. A green alpha check proves this selection and execution path only; it does not prove release readiness.
