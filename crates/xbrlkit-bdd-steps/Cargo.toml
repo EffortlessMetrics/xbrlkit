@@ -29,6 +29,7 @@ xbrl-report-types.workspace = true
 numeric-rules.workspace = true
 xbrl-stream.workspace = true
 taxonomy-loader.workspace = true
+tempfile = "3"
 
 [lints]
 workspace = true

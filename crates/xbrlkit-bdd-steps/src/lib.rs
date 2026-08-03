@@ -12,14 +12,10 @@ use scenario_runner::{
 };
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::sync::{
-    Arc,
-    atomic::{AtomicUsize, Ordering},
-};
+use std::sync::Arc;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
+use tempfile::TempDir;
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
-
-static TAXONOMY_TEMP_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Step {
@@ -86,16 +82,7 @@ pub struct TaxonomyLoaderContext {
     pub schema_path: Option<String>,
     pub loaded: bool,
     first_load_cache_hits: Option<HashSet<String>>,
-    temporary_dirs: Vec<Arc<TaxonomyTempDir>>,
-}
-
-#[derive(Debug)]
-struct TaxonomyTempDir(PathBuf);
-
-impl Drop for TaxonomyTempDir {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
-    }
+    temporary_dirs: Vec<Arc<TempDir>>,
 }
 
 impl World {
@@ -627,7 +614,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text == "a cache directory is configured" {
         let temp_dir = taxonomy_temp_dir("cache")?;
-        let cache_dir = temp_dir.0.clone();
+        let cache_dir = temp_dir.path().to_path_buf();
         let schema_path = world
             .taxonomy_loader_context
             .schema_path
@@ -647,9 +634,9 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text == "a taxonomy schema that imports another schema" {
         let temp_dir = taxonomy_temp_dir("imports")?;
-        let schema_path = temp_dir.0.join("root.xsd");
+        let schema_path = temp_dir.path().join("root.xsd");
         std::fs::write(&schema_path, importing_schema()).context("writing importing schema")?;
-        std::fs::write(temp_dir.0.join("imported.xsd"), imported_schema())
+        std::fs::write(temp_dir.path().join("imported.xsd"), imported_schema())
             .context("writing imported schema")?;
         world.taxonomy_loader_context.schema_path =
             Some(schema_path.to_string_lossy().into_owned());
@@ -1628,15 +1615,13 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     anyhow::bail!("unsupported BDD step: {}", step.text)
 }
 
-fn taxonomy_temp_dir(label: &str) -> anyhow::Result<Arc<TaxonomyTempDir>> {
-    let sequence = TAXONOMY_TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
-    let path = std::env::temp_dir().join(format!(
-        "xbrlkit-taxonomy-{label}-{}-{sequence}",
-        std::process::id()
-    ));
-    std::fs::create_dir_all(&path)
-        .with_context(|| format!("creating taxonomy test directory {}", path.display()))?;
-    Ok(Arc::new(TaxonomyTempDir(path)))
+fn taxonomy_temp_dir(label: &str) -> anyhow::Result<Arc<TempDir>> {
+    let prefix = format!("xbrlkit-taxonomy-{label}-");
+    let temp_dir = tempfile::Builder::new()
+        .prefix(&prefix)
+        .tempdir()
+        .with_context(|| format!("creating taxonomy test directory with prefix {prefix}"))?;
+    Ok(Arc::new(temp_dir))
 }
 
 fn synthetic_schema() -> &'static str {
@@ -1739,7 +1724,7 @@ mod tests {
     fn taxonomy_temp_dir_is_removed_when_dropped() -> anyhow::Result<()> {
         let path = {
             let temp_dir = taxonomy_temp_dir("cleanup-test")?;
-            let path = temp_dir.0.clone();
+            let path = temp_dir.path().to_path_buf();
             anyhow::ensure!(path.is_dir(), "temporary directory was not created");
             path
         };

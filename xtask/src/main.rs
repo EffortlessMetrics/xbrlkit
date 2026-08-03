@@ -155,6 +155,9 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     // not by the generic fixture execution path below.
     if ac_id.starts_with("AC-XK-TAX-LOAD-") {
         let run = xbrlkit_bdd::run(&repo_root(), &grid, &format!("@{ac_id}"))?;
+        if run.selected.is_empty() {
+            anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
+        }
         let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
         write_json(&receipt_path, &run.receipt)?;
         println!(
