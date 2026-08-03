@@ -22,6 +22,12 @@ pub struct ScenarioRecord {
     pub allowed_edit_roots: Vec<String>,
     pub suite: Option<String>,
     pub speed: Option<String>,
+    /// Test execution mode declared by the specification ledger.
+    #[serde(default)]
+    pub test_type: Option<String>,
+    /// Exact selector tag declared by the specification ledger.
+    #[serde(default)]
+    pub test_tag: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]

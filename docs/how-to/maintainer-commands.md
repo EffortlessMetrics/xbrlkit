@@ -137,6 +137,13 @@ cargo xtask schema-check
 
 **Purpose:** Run a specific acceptance criterion (AC) by ID.
 
+`test-ac` uses the test type and tag declared for the AC in
+`specs/spec_ledger.yaml`, carried into the generated feature grid. BDD
+declarations run through the tagged BDD steps; `direct` and
+`scenario-runner` declarations use the scenario-runner assertions. A missing,
+unsupported, mixed, or grid-mismatched declaration fails closed. The command
+writes the deterministic result to `artifacts/runs/scenario.run.v1.json`.
+
 **Active AC IDs:**
 - `AC-XK-SEC-INLINE-001` - Inline XBRL validation
 - `AC-XK-SEC-INLINE-002` - Inline XBRL edge cases

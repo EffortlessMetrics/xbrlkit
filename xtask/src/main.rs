@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand};
 use receipt_types::{Receipt, RunResult};
 use scenario_contract::{BundleManifest, FeatureGrid, ImpactReport, ScenarioRecord};
 use scenario_runner::{assert_scenario_outcome, execute_scenario, write_execution_receipts};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
 
@@ -151,22 +152,28 @@ fn impact(changed: &[String]) -> anyhow::Result<()> {
 fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     let grid = load_grid()?;
     let scenarios = select_matching_scenarios(&grid, ac_id);
-    if scenarios.is_empty() {
-        anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
-    }
-
-    let mut scenario_receipt = Receipt::new("scenario.run", ac_id, RunResult::Success);
-    for scenario in &scenarios {
-        let execution = execute_scenario(&repo_root(), scenario)?;
-        write_execution_receipts(&repo_root(), &execution)?;
-        assert_scenario_outcome(scenario, &execution)?;
-        scenario_receipt
-            .notes
-            .push(format!("{} passed", scenario.scenario_id));
-    }
-
     let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
-    write_json(&receipt_path, &scenario_receipt)?;
+    if scenarios.is_empty() {
+        let error = anyhow::anyhow!("test-ac: selector matched no scenarios: {ac_id}");
+        let receipt = test_ac_error_receipt(ac_id, &error);
+        write_json(&receipt_path, &receipt)?;
+        return Err(error);
+    }
+
+    let result = match resolve_test_mode(&scenarios) {
+        Ok(TestMode::Bdd) => run_bdd_scenarios(ac_id, &grid, &scenarios),
+        Ok(TestMode::ScenarioRunner) => run_direct_scenarios(ac_id, &scenarios),
+        Err(error) => Err(error),
+    };
+    let receipt = match result {
+        Ok(receipt) => receipt,
+        Err(error) => {
+            let receipt = test_ac_error_receipt(ac_id, &error);
+            write_json(&receipt_path, &receipt)?;
+            return Err(error);
+        }
+    };
+    write_json(&receipt_path, &receipt)?;
     println!(
         "test-ac: executed {} scenario(s) for {}",
         scenarios.len(),
@@ -175,14 +182,129 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn test_ac_error_receipt(ac_id: &str, error: &anyhow::Error) -> Receipt {
+    let mut receipt = Receipt::new("scenario.run", ac_id, RunResult::Error);
+    receipt.notes.push(error.to_string());
+    receipt
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TestMode {
+    Bdd,
+    ScenarioRunner,
+}
+
+fn parse_declared_mode(scenario: &ScenarioRecord) -> anyhow::Result<TestMode> {
+    let test_type = scenario.test_type.as_deref().with_context(|| {
+        format!(
+            "test-ac: scenario {} is missing declared test type",
+            scenario.scenario_id
+        )
+    })?;
+    if scenario.test_tag.is_none() {
+        anyhow::bail!(
+            "test-ac: scenario {} is missing declared test tag",
+            scenario.scenario_id
+        );
+    }
+    match test_type {
+        "bdd" => Ok(TestMode::Bdd),
+        "direct" | "scenario-runner" => Ok(TestMode::ScenarioRunner),
+        other => anyhow::bail!(
+            "test-ac: scenario {} declares unsupported test type {}; expected bdd, direct, or scenario-runner",
+            scenario.scenario_id,
+            other
+        ),
+    }
+}
+
+fn resolve_test_mode(scenarios: &[ScenarioRecord]) -> anyhow::Result<TestMode> {
+    let first = scenarios
+        .first()
+        .context("test-ac: no scenarios supplied for mode resolution")?;
+    let mode = parse_declared_mode(first)?;
+
+    for scenario in scenarios.iter().skip(1) {
+        let scenario_mode = parse_declared_mode(scenario)?;
+        if scenario_mode != mode {
+            anyhow::bail!(
+                "test-ac: selector mixes declared test modes: {} is {:?}, {} is {:?}",
+                first.scenario_id,
+                mode,
+                scenario.scenario_id,
+                scenario_mode
+            );
+        }
+    }
+    Ok(mode)
+}
+
+fn run_direct_scenarios(ac_id: &str, scenarios: &[ScenarioRecord]) -> anyhow::Result<Receipt> {
+    let mut receipt = Receipt::new("scenario.run", ac_id, RunResult::Success);
+    for scenario in scenarios {
+        let execution = execute_scenario(&repo_root(), scenario)?;
+        write_execution_receipts(&repo_root(), &execution)?;
+        assert_scenario_outcome(scenario, &execution)?;
+        receipt
+            .notes
+            .push(format!("{} passed", scenario.scenario_id));
+    }
+    Ok(receipt)
+}
+
+fn bdd_groups(scenarios: &[ScenarioRecord]) -> anyhow::Result<BTreeMap<String, Vec<String>>> {
+    let mut groups = BTreeMap::<String, Vec<String>>::new();
+    for scenario in scenarios {
+        let tag = scenario.test_tag.as_ref().with_context(|| {
+            format!("scenario {} is missing BDD test tag", scenario.scenario_id)
+        })?;
+        groups
+            .entry(tag.clone())
+            .or_default()
+            .push(scenario.scenario_id.clone());
+    }
+    for expected_ids in groups.values_mut() {
+        expected_ids.sort();
+    }
+    Ok(groups)
+}
+
+fn run_bdd_scenarios(
+    ac_id: &str,
+    grid: &FeatureGrid,
+    scenarios: &[ScenarioRecord],
+) -> anyhow::Result<Receipt> {
+    let mut receipt = Receipt::new("scenario.run", ac_id, RunResult::Success);
+    for (tag, expected_ids) in bdd_groups(scenarios)? {
+        let run = xbrlkit_bdd::run(&repo_root(), grid, &tag)?;
+        let mut selected_ids = run
+            .selected
+            .iter()
+            .map(|scenario| scenario.scenario_id.clone())
+            .collect::<Vec<_>>();
+        selected_ids.sort();
+        if selected_ids != expected_ids {
+            anyhow::bail!(
+                "test-ac: BDD tag {tag} selected {selected_ids:?}, expected {expected_ids:?}"
+            );
+        }
+        receipt.notes.extend(
+            run.receipt
+                .notes
+                .into_iter()
+                .map(|note| format!("{tag}: {note}")),
+        );
+    }
+    Ok(receipt)
+}
+
 fn bdd(tag: &str) -> anyhow::Result<()> {
     let grid = load_grid()?;
     let path = repo_root().join("artifacts/runs/scenario.run.v1.json");
     let run = match xbrlkit_bdd::run(&repo_root(), &grid, tag) {
         Ok(run) => run,
         Err(error) => {
-            let mut receipt = Receipt::new("scenario.run", tag, RunResult::Error);
-            receipt.notes.push(error.to_string());
+            let receipt = test_ac_error_receipt(tag, &error);
             write_json(&path, &receipt)?;
             return Err(error);
         }
@@ -317,6 +439,7 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
     scenario.scenario_id == selector
         || scenario.ac_id.as_deref() == Some(selector)
         || scenario.req_id.as_deref() == Some(selector)
+        || scenario.test_tag.as_deref() == Some(selector)
         || format!("@{}", scenario.scenario_id) == selector
         || scenario
             .ac_id
@@ -349,8 +472,8 @@ fn scenario_impacted(scenario: &ScenarioRecord, changed: &[String]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        CargoMetadataPackage, normalize_repo_path, package_is_publishable, scenario_impacted,
-        select_matching_scenarios,
+        CargoMetadataPackage, TestMode, bdd_groups, normalize_repo_path, package_is_publishable,
+        resolve_test_mode, scenario_impacted, select_matching_scenarios,
     };
     use scenario_contract::{FeatureGrid, ScenarioRecord};
 
@@ -370,11 +493,90 @@ mod tests {
             allowed_edit_roots: vec!["specs/features/workflow".to_string(), "xtask".to_string()],
             suite: Some("synthetic".to_string()),
             speed: Some("fast".to_string()),
+            test_type: Some("bdd".to_string()),
+            test_tag: Some("@AC-XK-WORKFLOW-002".to_string()),
         }
     }
 
     #[test]
-    fn selector_matching_supports_ids_and_tags() {
+    fn test_ac_requires_declared_mode_and_tag() -> anyhow::Result<()> {
+        let mut scenario = scenario_record();
+        scenario.test_type = None;
+        let Err(error) = resolve_test_mode(&[scenario]) else {
+            return Err(anyhow::anyhow!("missing test type unexpectedly resolved"));
+        };
+        if !error.to_string().contains("missing declared test type") {
+            return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+
+        let mut scenario = scenario_record();
+        scenario.test_tag = None;
+        let Err(error) = resolve_test_mode(&[scenario]) else {
+            return Err(anyhow::anyhow!("missing test tag unexpectedly resolved"));
+        };
+        if !error.to_string().contains("missing declared test tag") {
+            return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_ac_mode_failures_have_error_receipts() -> anyhow::Result<()> {
+        let error = anyhow::anyhow!("missing declared test type");
+        let receipt = super::test_ac_error_receipt("AC-XK-MISSING", &error);
+        if receipt.result != super::RunResult::Error
+            || receipt.subject != "AC-XK-MISSING"
+            || receipt.notes != vec!["missing declared test type".to_string()]
+        {
+            return Err(anyhow::anyhow!(
+                "mode failure receipt was not deterministic"
+            ));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_ac_rejects_mixed_declared_modes() -> anyhow::Result<()> {
+        let mut direct = scenario_record();
+        direct.scenario_id = "SCN-XK-WORKFLOW-003".to_string();
+        direct.test_type = Some("scenario-runner".to_string());
+        direct.test_tag = Some("@SCN-XK-WORKFLOW-003".to_string());
+        if resolve_test_mode(&[direct.clone()])? != TestMode::ScenarioRunner {
+            return Err(anyhow::anyhow!(
+                "direct declaration did not resolve to scenario-runner mode"
+            ));
+        }
+        let Err(error) = resolve_test_mode(&[scenario_record(), direct]) else {
+            return Err(anyhow::anyhow!("mixed modes unexpectedly resolved"));
+        };
+        if !error.to_string().contains("mixes declared test modes") {
+            return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn bdd_groups_are_exact_and_deterministic() -> anyhow::Result<()> {
+        let mut second = scenario_record();
+        second.scenario_id = "SCN-XK-WORKFLOW-001".to_string();
+        second.test_tag = Some("@AC-XK-WORKFLOW-001".to_string());
+        let groups = bdd_groups(&[scenario_record(), second])?;
+        if groups.get("@AC-XK-WORKFLOW-002") != Some(&vec!["SCN-XK-WORKFLOW-002".to_string()]) {
+            return Err(anyhow::anyhow!("unexpected workflow-002 BDD group"));
+        }
+        if groups.get("@AC-XK-WORKFLOW-001") != Some(&vec!["SCN-XK-WORKFLOW-001".to_string()]) {
+            return Err(anyhow::anyhow!("unexpected workflow-001 BDD group"));
+        }
+        if resolve_test_mode(&[scenario_record()])? != TestMode::Bdd {
+            return Err(anyhow::anyhow!(
+                "BDD declaration did not resolve to BDD mode"
+            ));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn selector_matching_supports_ids_and_tags() -> anyhow::Result<()> {
         let grid = FeatureGrid {
             scenarios: vec![scenario_record()],
         };
@@ -395,7 +597,19 @@ mod tests {
             select_matching_scenarios(&grid, "@SCN-XK-WORKFLOW-002").len(),
             1
         );
+
+        let mut tagged = scenario_record();
+        tagged.test_tag = Some("@workflow-bundle".to_string());
+        let tagged_grid = FeatureGrid {
+            scenarios: vec![tagged],
+        };
+        if select_matching_scenarios(&tagged_grid, "@workflow-bundle").len() != 1 {
+            return Err(anyhow::anyhow!(
+                "declared test tag did not select the tagged scenario"
+            ));
+        }
         assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
+        Ok(())
     }
 
     #[test]

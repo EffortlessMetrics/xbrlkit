@@ -41,7 +41,9 @@
           "items": { "type": "string" }
         },
         "suite": { "type": ["string", "null"] },
-        "speed": { "type": ["string", "null"] }
+        "speed": { "type": ["string", "null"] },
+        "test_type": { "type": ["string", "null"] },
+        "test_tag": { "type": ["string", "null"] }
       },
       "required": [
         "scenario_id",
@@ -57,7 +59,9 @@
         "receipts",
         "allowed_edit_roots",
         "suite",
-        "speed"
+        "speed",
+        "test_type",
+        "test_tag"
       ]
     }
   }
