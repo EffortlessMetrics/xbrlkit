@@ -1,0 +1,36 @@
+[package]
+name = "xbrlkit-bench"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Criterion benchmarks for xbrlkit hot paths"
+publish = false
+
+[dependencies]
+sec-profile-types.workspace = true
+taxonomy-dts.workspace = true
+taxonomy-loader.workspace = true
+taxonomy-types.workspace = true
+validation-run.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+tempfile = "3"
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "taxonomy_loader"
+harness = false
+
+[[bench]]
+name = "dts_resolution"
+harness = false
+
+[[bench]]
+name = "validation_pipeline"
+harness = false

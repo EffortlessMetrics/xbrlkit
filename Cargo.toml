@@ -50,6 +50,7 @@ members = [
   "crates/context-completeness",
   "crates/taxonomy-loader",
   "crates/xbrl-stream",
+  "crates/xbrlkit-bench",
 ]
 default-members = ["crates/xbrlkit-cli", "xtask"]
 
@@ -71,6 +72,7 @@ serde_yaml = "0.9.34"
 thiserror = "2.0.12"
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros", "sync"] }
 walkdir = "2.5.0"
+criterion = { version = "0.5", features = ["html_reports"] }
 archive-zip = { version = "0.1.0-alpha.1", path = "crates/archive-zip" }
 calc11 = { version = "0.1.0-alpha.1", path = "crates/calc11" }
 cockpit-export = { version = "0.1.0-alpha.1", path = "crates/cockpit-export" }
