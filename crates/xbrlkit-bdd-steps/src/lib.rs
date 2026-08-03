@@ -11,7 +11,7 @@ use scenario_runner::{
     execute_scenario, write_execution_receipts,
 };
 use std::fs;
-use std::path::{Component, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -203,8 +203,7 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
             );
         }
         for path in &world.fixture_dirs {
-            let resolved_path = fs::canonicalize(path)
-                .with_context(|| format!("resolving fixture path {}", path.display()))?;
+            let resolved_path = canonicalize_existing_path(path)?;
             if !resolved_path.starts_with(&resolved_fixture_root) {
                 anyhow::bail!(
                     "fixture path {} is outside repository fixture root {}",
@@ -219,6 +218,22 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
     }
 
     Ok(())
+}
+
+fn canonicalize_existing_path(path: &Path) -> anyhow::Result<PathBuf> {
+    let mut existing_path = path;
+    loop {
+        if existing_path
+            .try_exists()
+            .with_context(|| format!("checking fixture path {}", path.display()))?
+        {
+            return fs::canonicalize(existing_path)
+                .with_context(|| format!("resolving fixture path {}", path.display()));
+        }
+        existing_path = existing_path
+            .parent()
+            .with_context(|| format!("finding an existing parent for {}", path.display()))?;
+    }
 }
 
 #[allow(clippy::too_many_lines)]
@@ -1076,13 +1091,12 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             .context("schema path not set")?;
 
         // For synthetic test schemas that may not exist, create a minimal taxonomy
-        let taxonomy =
-            if schema_path.contains("fixtures/") && !std::path::Path::new(&schema_path).exists() {
-                // Create synthetic taxonomy for testing
-                create_synthetic_taxonomy()
-            } else {
-                loader.load(&schema_path)?
-            };
+        let taxonomy = if schema_path.contains("fixtures/") && !Path::new(&schema_path).exists() {
+            // Create synthetic taxonomy for testing
+            create_synthetic_taxonomy()
+        } else {
+            loader.load(&schema_path)?
+        };
 
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
@@ -1834,6 +1848,22 @@ mod tests {
             return Err(format!("unexpected fixture-root symlink error: {error}"));
         }
         Ok(())
+    }
+
+    #[test]
+    fn nonexistent_fixture_path_under_repository_root_matches_metadata() -> Result<(), String> {
+        let repo = temp_dir()?;
+        fs::create_dir_all(repo.0.join("fixtures")).map_err(|error| error.to_string())?;
+        let mut world = World::new(repo.0.clone(), FeatureGrid::default());
+        world
+            .fixture_dirs
+            .push(repo.0.join("fixtures").join("missing"));
+        let scenario = ScenarioRecord {
+            fixtures: vec!["missing".to_string()],
+            ..ScenarioRecord::default()
+        };
+
+        assert_declared_inputs_match(&world, &scenario).map_err(|error| error.to_string())
     }
 
     #[test]
