@@ -85,8 +85,8 @@ pub struct TaxonomyLoaderContext {
 
 const CACHE_COLLISION_FIXTURE: &str = "fixtures/synthetic/taxonomy/cache-collision";
 const CACHE_COLLISION_URLS: (&str, &str) = (
-    "http://example.test/taxonomy/a/b.xsd",
-    "http://example.test/taxonomy/a_b.xsd",
+    "http://127.0.0.1:9/taxonomy/a/b.xsd",
+    "http://127.0.0.1:9/taxonomy/a_b.xsd",
 );
 
 fn cache_path_for_url(url: &str, cache_dir: &std::path::Path) -> PathBuf {
