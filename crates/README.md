@@ -46,7 +46,7 @@ The map was reconciled from the current `Cargo.toml` manifests and the
 workspace package graph produced by:
 
 ```text
-cargo metadata --no-deps --format-version 1
+cargo metadata --format-version 1 --locked --offline
 ```
 
 The graph result is a point-in-time maintenance signal. Future integration or

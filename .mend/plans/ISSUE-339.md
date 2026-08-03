@@ -26,7 +26,7 @@ ownership decisions to explicit follow-up issues.
 
 ## Proof
 
-- `cargo metadata --no-deps --format-version 1`
+- `cargo metadata --format-version 1 --locked --offline`
 - `cargo check --workspace --locked --offline`
 - `cargo xtask doctor`
 - Verify the README and plan links from the repository root.
