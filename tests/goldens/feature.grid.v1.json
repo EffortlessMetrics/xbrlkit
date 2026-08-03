@@ -1732,6 +1732,7 @@
         "crates/xbrlkit-bdd-steps",
         "xtask",
         "specs/features/workflow",
+        "contracts/schemas",
         "tests/goldens"
       ],
       "suite": "synthetic",
