@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_instant_context() {
+    fn test_parse_instant_context() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:dei="http://xbrl.sec.gov/dei/2024"
@@ -374,21 +374,25 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("instant context XML should parse: {error}"))?;
         assert_eq!(set.len(), 1);
 
-        let ctx = set.get("ctx-2024").unwrap();
+        let ctx = set
+            .get("ctx-2024")
+            .ok_or_else(|| "context 'ctx-2024' should exist after parsing".to_string())?;
         assert_eq!(ctx.entity.value, "0000320193");
         assert!(!has_dimensions(ctx));
 
         match &ctx.period {
             Period::Instant(date) => assert_eq!(date, "2024-12-31"),
-            _ => panic!("Expected instant period"),
+            _ => return Err("expected instant period".to_string()),
         }
+        Ok(())
     }
 
     #[test]
-    fn test_parse_duration_context() {
+    fn test_parse_duration_context() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance">
                 <context id="ctx-duration" xmlns="http://www.xbrl.org/2003/instance">
@@ -403,20 +407,24 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        let ctx = set.get("ctx-duration").unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("duration context XML should parse: {error}"))?;
+        let ctx = set
+            .get("ctx-duration")
+            .ok_or_else(|| "context 'ctx-duration' should exist after parsing".to_string())?;
 
         match &ctx.period {
             Period::Duration { start, end } => {
                 assert_eq!(start, "2024-01-01");
                 assert_eq!(end, "2024-12-31");
             }
-            _ => panic!("Expected duration period"),
+            _ => return Err("expected duration period".to_string()),
         }
+        Ok(())
     }
 
     #[test]
-    fn test_parse_dimensional_context() {
+    fn test_parse_dimensional_context() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:xbrldi="http://xbrl.org/2006/xbrldi">
@@ -436,8 +444,11 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        let ctx = set.get("ctx-dim").unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("dimensional context XML should parse: {error}"))?;
+        let ctx = set
+            .get("ctx-dim")
+            .ok_or_else(|| "context 'ctx-dim' should exist after parsing".to_string())?;
 
         assert!(has_dimensions(ctx));
 
@@ -445,10 +456,11 @@ mod tests {
         assert_eq!(members.len(), 1);
         assert_eq!(members[0].dimension, "us-gaap:StatementScenarioAxis");
         assert!(members[0].member.contains("ScenarioActualMember"));
+        Ok(())
     }
 
     #[test]
-    fn test_parse_typed_member_context() {
+    fn test_parse_typed_member_context() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
@@ -470,10 +482,13 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("typed member context XML should parse: {error}"))?;
         assert_eq!(set.len(), 1);
 
-        let ctx = set.get("ctx-typed").unwrap();
+        let ctx = set
+            .get("ctx-typed")
+            .ok_or_else(|| "context 'ctx-typed' should exist after parsing".to_string())?;
         assert!(has_dimensions(ctx));
 
         let members = get_dimensional_members(ctx);
@@ -482,10 +497,11 @@ mod tests {
         assert_eq!(members[0].member, "12345");
         assert!(members[0].is_typed);
         assert_eq!(members[0].typed_value, Some("12345".to_string()));
+        Ok(())
     }
 
     #[test]
-    fn test_parse_typed_member_in_scenario() {
+    fn test_parse_typed_member_in_scenario() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
@@ -506,18 +522,22 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        let ctx = set.get("ctx-scenario-typed").unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("scenario typed-member XML should parse: {error}"))?;
+        let ctx = set
+            .get("ctx-scenario-typed")
+            .ok_or_else(|| "context 'ctx-scenario-typed' should exist after parsing".to_string())?;
 
         let members = get_dimensional_members(ctx);
         assert_eq!(members.len(), 1);
         assert_eq!(members[0].dimension, "dim:DateRangeAxis");
         assert_eq!(members[0].member, "2024-01-15");
         assert!(members[0].is_typed);
+        Ok(())
     }
 
     #[test]
-    fn test_parse_mixed_explicit_and_typed_members() {
+    fn test_parse_mixed_explicit_and_typed_members() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
@@ -542,27 +562,37 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        let ctx = set.get("ctx-mixed").unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("mixed-member context XML should parse: {error}"))?;
+        let ctx = set
+            .get("ctx-mixed")
+            .ok_or_else(|| "context 'ctx-mixed' should exist after parsing".to_string())?;
 
         let members = get_dimensional_members(ctx);
         assert_eq!(members.len(), 2);
 
         // Explicit member
-        let explicit = members.iter().find(|m| !m.is_typed).unwrap();
+        let explicit = members
+            .iter()
+            .find(|m| !m.is_typed)
+            .ok_or_else(|| "an explicit dimensional member should exist".to_string())?;
         assert_eq!(explicit.dimension, "us-gaap:StatementScenarioAxis");
         assert!(explicit.member.contains("ScenarioActualMember"));
         assert!(!explicit.is_typed);
 
         // Typed member
-        let typed = members.iter().find(|m| m.is_typed).unwrap();
+        let typed = members
+            .iter()
+            .find(|m| m.is_typed)
+            .ok_or_else(|| "a typed dimensional member should exist".to_string())?;
         assert_eq!(typed.dimension, "dim:ProductAxis");
         assert_eq!(typed.member, "PROD-789");
         assert!(typed.is_typed);
+        Ok(())
     }
 
     #[test]
-    fn test_parse_typed_member_with_namespace_prefix() {
+    fn test_parse_typed_member_with_namespace_prefix() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
@@ -583,18 +613,22 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        let ctx = set.get("ctx-nbb").unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("namespace-prefixed context XML should parse: {error}"))?;
+        let ctx = set
+            .get("ctx-nbb")
+            .ok_or_else(|| "context 'ctx-nbb' should exist after parsing".to_string())?;
 
         let members = get_dimensional_members(ctx);
         assert_eq!(members.len(), 1);
         assert_eq!(members[0].dimension, "dim:afnp");
         assert_eq!(members[0].member, "John");
         assert!(members[0].is_typed);
+        Ok(())
     }
 
     #[test]
-    fn test_parse_typed_member_empty_value() {
+    fn test_parse_typed_member_empty_value() -> Result<(), String> {
         let xml = r#"
             <xbrl xmlns="http://www.xbrl.org/2003/instance"
                   xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
@@ -615,19 +649,25 @@ mod tests {
             </xbrl>
         "#;
 
-        let set = parse_contexts(xml).unwrap();
-        let ctx = set.get("ctx-empty").unwrap();
+        let set = parse_contexts(xml)
+            .map_err(|error| format!("empty typed-member XML should parse: {error}"))?;
+        let ctx = set
+            .get("ctx-empty")
+            .ok_or_else(|| "context 'ctx-empty' should exist after parsing".to_string())?;
 
         let members = get_dimensional_members(ctx);
         assert_eq!(members.len(), 1);
         assert_eq!(members[0].dimension, "dim:EmptyAxis");
         assert_eq!(members[0].member, "");
         assert!(members[0].is_typed);
+        Ok(())
     }
 
     #[test]
-    fn test_empty_xml() {
-        let set = parse_contexts("").unwrap();
+    fn test_empty_xml() -> Result<(), String> {
+        let set = parse_contexts("")
+            .map_err(|error| format!("empty XML should parse as an empty set: {error}"))?;
         assert!(set.is_empty());
+        Ok(())
     }
 }

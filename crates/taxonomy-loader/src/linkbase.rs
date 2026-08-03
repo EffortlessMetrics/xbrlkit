@@ -383,16 +383,20 @@ mod tests {
 "#;
 
     #[test]
-    fn test_parse_definition_linkbase() {
+    fn test_parse_definition_linkbase() -> Result<(), String> {
         let mut taxonomy = taxonomy_dimensions::DimensionTaxonomy::new();
 
         // Pre-populate with hypercube and dimension
         taxonomy.add_hypercube(Hypercube::new("us-gaap:StatementTable"));
 
-        parse_definition_linkbase(TEST_LINKBASE, &mut taxonomy).unwrap();
+        parse_definition_linkbase(TEST_LINKBASE, &mut taxonomy)
+            .map_err(|error| format!("test definition linkbase should parse: {error}"))?;
 
         // Check hypercube-dimension link
-        let hypercube = taxonomy.hypercubes.get("us-gaap:StatementTable").unwrap();
+        let hypercube = taxonomy
+            .hypercubes
+            .get("us-gaap:StatementTable")
+            .ok_or_else(|| "test hypercube should be present after parsing".to_string())?;
         assert!(
             hypercube
                 .dimensions
@@ -411,14 +415,15 @@ mod tests {
         let domain = taxonomy
             .domains
             .get("us-gaap:StatementScenarioDomain")
-            .unwrap();
+            .ok_or_else(|| "test scenario domain should be present after parsing".to_string())?;
         assert!(domain.contains("us-gaap:ScenarioActualMember"));
         assert!(domain.contains("us-gaap:ScenarioBudgetMember"));
         assert_eq!(domain.roots.len(), 2);
+        Ok(())
     }
 
     #[test]
-    fn test_extract_linkbase_refs() {
+    fn test_extract_linkbase_refs() -> Result<(), String> {
         let schema = r#"<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:link="http://www.xbrl.org/2003/linkbase"
@@ -436,8 +441,10 @@ mod tests {
 </xsd:schema>
         "#;
 
-        let refs = extract_linkbase_refs(schema, "test.xsd").unwrap();
+        let refs = extract_linkbase_refs(schema, "test.xsd")
+            .map_err(|error| format!("test linkbase references should parse: {error}"))?;
         assert_eq!(refs.len(), 1);
         assert!(refs[0].contains("_def.xml"));
+        Ok(())
     }
 }

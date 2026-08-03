@@ -213,21 +213,24 @@ mod tests {
 "#;
 
     #[test]
-    fn test_parse_schema_detects_hypercube() {
+    fn test_parse_schema_detects_hypercube() -> Result<(), String> {
         let mut taxonomy = taxonomy_dimensions::DimensionTaxonomy::new();
-        parse_schema(TEST_SCHEMA, &mut taxonomy).unwrap();
+        parse_schema(TEST_SCHEMA, &mut taxonomy)
+            .map_err(|error| format!("test schema should parse: {error}"))?;
 
         // Debug output
         // eprintln!("Hypercubes: {:?}", taxonomy.hypercubes.keys().collect::<Vec<_>>());
 
         assert!(taxonomy.hypercubes.contains_key("us-gaap:StatementTable"));
         assert_eq!(taxonomy.hypercubes.len(), 1);
+        Ok(())
     }
 
     #[test]
-    fn test_parse_schema_detects_dimension() {
+    fn test_parse_schema_detects_dimension() -> Result<(), String> {
         let mut taxonomy = taxonomy_dimensions::DimensionTaxonomy::new();
-        parse_schema(TEST_SCHEMA, &mut taxonomy).unwrap();
+        parse_schema(TEST_SCHEMA, &mut taxonomy)
+            .map_err(|error| format!("test schema should parse: {error}"))?;
 
         assert!(
             taxonomy
@@ -235,13 +238,16 @@ mod tests {
                 .contains_key("us-gaap:StatementScenarioAxis")
         );
         assert_eq!(taxonomy.dimensions.len(), 1);
+        Ok(())
     }
 
     #[test]
-    fn test_extract_import_refs() {
-        let refs = extract_import_refs(TEST_SCHEMA, "test.xsd").unwrap();
+    fn test_extract_import_refs() -> Result<(), String> {
+        let refs = extract_import_refs(TEST_SCHEMA, "test.xsd")
+            .map_err(|error| format!("test schema imports should parse: {error}"))?;
         assert_eq!(refs.len(), 2);
         assert!(refs.iter().any(|r| r.contains("xbrl-instance")));
         assert!(refs.iter().any(|r| r.contains("xbrldt-2005")));
+        Ok(())
     }
 }
