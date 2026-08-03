@@ -28,3 +28,59 @@ jobs:
       - uses: dtolnay/rust-toolchain@387aeee55b189f024a4f6d94890c5b18d73339cc # 1.92.0
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - run: cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked --no-run
+
+  bench-baseline:
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@387aeee55b189f024a4f6d94890c5b18d73339cc # 1.92.0
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+
+      - name: Restore main benchmark baseline
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: target/criterion
+          key: criterion-baseline-main-${{ hashFiles('Cargo.lock') }}-${{ github.sha }}
+          restore-keys: |
+            criterion-baseline-main-${{ hashFiles('Cargo.lock') }}-
+
+      - name: Measure main baseline
+        if: github.ref == 'refs/heads/main'
+        run: >-
+          cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked
+          --bench taxonomy_loader --bench dts_resolution --bench validation_pipeline --
+          --save-baseline main --noplot --sample-size 10 --warm-up-time 1
+          --measurement-time 1
+
+      - name: Save main benchmark baseline
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: target/criterion
+          key: criterion-baseline-main-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+
+      - name: Compare pull request with main baseline
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          if ! find target/criterion -mindepth 2 -type d -name main -print -quit 2>/dev/null | grep -q .; then
+            echo "::warning::Criterion main baseline unavailable; comparison is unavailable, not passing"
+            cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked \
+              --bench taxonomy_loader --bench dts_resolution --bench validation_pipeline -- \
+              --save-baseline current --noplot --sample-size 10 --warm-up-time 1 --measurement-time 1
+            exit 0
+          fi
+          cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked \
+            --bench taxonomy_loader --bench dts_resolution --bench validation_pipeline -- \
+            --baseline main --noplot --sample-size 10 --warm-up-time 1 --measurement-time 1
+
+      - name: Upload benchmark comparison
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: criterion-${{ github.event_name }}-${{ github.sha }}
+          path: target/criterion
+          if-no-files-found: warn
+          retention-days: 14
