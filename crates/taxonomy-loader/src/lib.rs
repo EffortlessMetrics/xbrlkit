@@ -21,7 +21,7 @@ pub use error::TaxonomyLoaderError;
 pub use taxonomy_dimensions::DimensionTaxonomy;
 pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::time::Duration;
 
@@ -45,6 +45,7 @@ pub struct TaxonomyLoader {
     visited: std::cell::RefCell<HashSet<String>>,
     cache_hits: std::cell::RefCell<HashSet<String>>,
     loaded_schemas: std::cell::RefCell<HashSet<String>>,
+    offline_contents: Option<HashMap<String, String>>,
     http_client: Option<reqwest::blocking::Client>,
 }
 
@@ -63,6 +64,7 @@ impl TaxonomyLoader {
             visited: std::cell::RefCell::new(HashSet::new()),
             cache_hits: std::cell::RefCell::new(HashSet::new()),
             loaded_schemas: std::cell::RefCell::new(HashSet::new()),
+            offline_contents: None,
             http_client: None,
         }
     }
@@ -70,13 +72,36 @@ impl TaxonomyLoader {
     /// Creates a new taxonomy loader with a cache directory.
     #[must_use]
     pub fn with_cache_dir(path: impl Into<std::path::PathBuf>) -> Self {
-        let cache_dir = Some(path.into());
+        Self::with_cache_dir_and_offline_contents(path.into(), None)
+    }
+
+    /// Creates a loader with a cache and deterministic content for one URL.
+    ///
+    /// The configured content is used only after a cache miss and is written
+    /// to the cache. This provides an offline seam for acceptance tests while
+    /// preserving the normal HTTP path for other URLs.
+    #[must_use]
+    pub fn with_cache_dir_and_offline_content(
+        path: impl Into<std::path::PathBuf>,
+        url: impl Into<String>,
+        content: impl Into<String>,
+    ) -> Self {
+        let mut offline_contents = HashMap::new();
+        offline_contents.insert(url.into(), content.into());
+        Self::with_cache_dir_and_offline_contents(path.into(), Some(offline_contents))
+    }
+
+    fn with_cache_dir_and_offline_contents(
+        cache_dir: std::path::PathBuf,
+        offline_contents: Option<HashMap<String, String>>,
+    ) -> Self {
         let http_client = Self::build_http_client();
         Self {
-            cache_dir,
+            cache_dir: Some(cache_dir),
             visited: std::cell::RefCell::new(HashSet::new()),
             cache_hits: std::cell::RefCell::new(HashSet::new()),
             loaded_schemas: std::cell::RefCell::new(HashSet::new()),
+            offline_contents,
             http_client,
         }
     }
@@ -179,6 +204,21 @@ impl TaxonomyLoader {
                 self.cache_hits.borrow_mut().insert(url.to_string());
                 return Ok(content);
             }
+        }
+
+        if let Some(content) = self
+            .offline_contents
+            .as_ref()
+            .and_then(|contents| contents.get(url))
+        {
+            let content = content.clone();
+            if let Some(ref cache_dir) = self.cache_dir {
+                let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
+                if let Err(error) = Self::write_to_cache(&content, &cache_path) {
+                    eprintln!("Warning: Failed to write cache for {url}: {error}");
+                }
+            }
+            return Ok(content);
         }
 
         // Ensure we have an HTTP client
@@ -295,20 +335,28 @@ mod tests {
     }
 
     #[test]
-    fn test_cache_hit_tracking_records_a_successful_cache_read() {
-        let cache_dir = tempfile::tempdir().unwrap();
+    fn test_cache_hit_tracking_records_a_successful_cache_read()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let cache_dir = tempfile::tempdir()?;
         let url = "https://example.com/schema.xsd";
         let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir.path());
-        TaxonomyLoader::write_to_cache("cached schema", &cache_path).unwrap();
+        TaxonomyLoader::write_to_cache("cached schema", &cache_path)?;
 
         let loader = TaxonomyLoader::with_cache_dir(cache_dir.path());
-        assert_eq!(loader.fetch_url(url).unwrap(), "cached schema");
-        assert!(loader.cache_hits().contains(url));
+        let content = loader.fetch_url(url)?;
+        if content != "cached schema" {
+            return Err(std::io::Error::other("unexpected cached content").into());
+        }
+        if !loader.cache_hits().contains(url) {
+            return Err(std::io::Error::other("cache hit was not recorded").into());
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_loaded_schema_tracking_records_recursive_imports() {
-        let fixture_dir = tempfile::tempdir().unwrap();
+    fn test_loaded_schema_tracking_records_recursive_imports()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let fixture_dir = tempfile::tempdir()?;
         let root = fixture_dir.path().join("root.xsd");
         let imported = fixture_dir.path().join("imported.xsd");
         std::fs::write(
@@ -316,28 +364,30 @@ mod tests {
             r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
                 <xsd:import schemaLocation="imported.xsd"/>
             </xsd:schema>"#,
-        )
-        .unwrap();
+        )?;
         std::fs::write(
             &imported,
             r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>"#,
-        )
-        .unwrap();
+        )?;
 
         let loader = TaxonomyLoader::new();
-        loader.load(&root.to_string_lossy()).unwrap();
+        loader.load(&root.to_string_lossy())?;
         let loaded_paths = loader.loaded_schemas();
-        assert!(loaded_paths.iter().any(|path| path.ends_with("root.xsd")));
-        assert!(
-            loaded_paths
-                .iter()
-                .any(|path| path.ends_with("imported.xsd"))
-        );
+        if !loaded_paths.iter().any(|path| path.ends_with("root.xsd")) {
+            return Err(std::io::Error::other("root schema was not recorded").into());
+        }
+        if !loaded_paths
+            .iter()
+            .any(|path| path.ends_with("imported.xsd"))
+        {
+            return Err(std::io::Error::other("imported schema was not recorded").into());
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_reusing_loader_resolves_entrypoint_again() {
-        let fixture_dir = tempfile::tempdir().unwrap();
+    fn test_reusing_loader_resolves_entrypoint_again() -> Result<(), Box<dyn std::error::Error>> {
+        let fixture_dir = tempfile::tempdir()?;
         let schema = fixture_dir.path().join("dimension.xsd");
         std::fs::write(
             &schema,
@@ -347,12 +397,16 @@ mod tests {
                 targetNamespace="https://example.com/demo">
                 <xsd:element name="Axis" substitutionGroup="xbrldt:dimensionItem"/>
             </xsd:schema>"#,
-        )
-        .unwrap();
+        )?;
 
         let loader = TaxonomyLoader::new();
         let entrypoint = schema.to_string_lossy();
-        assert!(!loader.load(&entrypoint).unwrap().dimensions.is_empty());
-        assert!(!loader.load(&entrypoint).unwrap().dimensions.is_empty());
+        if loader.load(&entrypoint)?.dimensions.is_empty() {
+            return Err(std::io::Error::other("first taxonomy load was empty").into());
+        }
+        if loader.load(&entrypoint)?.dimensions.is_empty() {
+            return Err(std::io::Error::other("second taxonomy load was empty").into());
+        }
+        Ok(())
     }
 }

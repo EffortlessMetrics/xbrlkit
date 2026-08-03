@@ -10,6 +10,7 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::{
     Arc,
@@ -84,6 +85,7 @@ pub struct TaxonomyLoaderContext {
     pub cache_dir: Option<PathBuf>,
     pub schema_path: Option<String>,
     pub loaded: bool,
+    first_load_cache_hits: Option<HashSet<String>>,
     temporary_dirs: Vec<Arc<TaxonomyTempDir>>,
 }
 
@@ -631,12 +633,14 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
             .schema_path
             .as_deref()
             .context("taxonomy URL not configured")?;
-        let cache_file_name = schema_path.replace(['/', ':', '?', '&', '='], "_");
-        std::fs::write(cache_dir.join(cache_file_name), synthetic_schema())
-            .context("writing offline taxonomy cache fixture")?;
         world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
-        world.taxonomy_loader_context.loader =
-            Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
+        world.taxonomy_loader_context.loader = Some(
+            taxonomy_loader::TaxonomyLoader::with_cache_dir_and_offline_content(
+                &cache_dir,
+                schema_path,
+                synthetic_schema(),
+            ),
+        );
         world.taxonomy_loader_context.temporary_dirs.push(temp_dir);
         return Ok(true);
     }
@@ -1002,7 +1006,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             period: xbrl_stream::StreamingPeriod::Instant("2024-12-31".to_string()),
         }];
         // Detect missing context refs
-        let context_ids: std::collections::HashSet<_> = world
+        let context_ids: HashSet<_> = world
             .streaming_context
             .contexts_collected
             .iter()
@@ -1061,6 +1065,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                 loader.load(&schema_path)?
             };
 
+        world.taxonomy_loader_context.first_load_cache_hits = Some(loader.cache_hits());
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
         return Ok(true);
@@ -1566,6 +1571,11 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     if step.text == "subsequent loads should use the cache" {
+        let first_load_cache_hits = world
+            .taxonomy_loader_context
+            .first_load_cache_hits
+            .as_ref()
+            .context("first taxonomy load observation not captured")?;
         let loader = world
             .taxonomy_loader_context
             .loader
@@ -1576,6 +1586,9 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .schema_path
             .as_deref()
             .context("taxonomy URL not configured")?;
+        if first_load_cache_hits.contains(schema_path) {
+            anyhow::bail!("first taxonomy load unexpectedly used the cache");
+        }
         loader.load(schema_path)?;
         if !loader.cache_hits().contains(schema_path) {
             anyhow::bail!("second taxonomy load did not record a cache hit for {schema_path}");
