@@ -576,7 +576,7 @@ mod tests {
     }
 
     #[test]
-    fn selector_matching_supports_ids_and_tags() {
+    fn selector_matching_supports_ids_and_tags() -> anyhow::Result<()> {
         let grid = FeatureGrid {
             scenarios: vec![scenario_record()],
         };
@@ -603,11 +603,13 @@ mod tests {
         let tagged_grid = FeatureGrid {
             scenarios: vec![tagged],
         };
-        assert_eq!(
-            select_matching_scenarios(&tagged_grid, "@workflow-bundle").len(),
-            1
-        );
+        if select_matching_scenarios(&tagged_grid, "@workflow-bundle").len() != 1 {
+            return Err(anyhow::anyhow!(
+                "declared test tag did not select the tagged scenario"
+            ));
+        }
         assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
+        Ok(())
     }
 
     #[test]
