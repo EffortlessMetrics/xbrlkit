@@ -1,0 +1,20 @@
+feature_id: FEAT-XK-WORKFLOW-TIMING
+layer: workflow
+module: receipt-timing
+scenarios:
+  SCN-XK-WORKFLOW-007:
+    ac_id: AC-XK-WORKFLOW-005
+    req_id: REQ-XK-WORKFLOW
+    crates: [receipt-types, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    fixtures: []
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/receipt-types
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - xtask
+      - specs/features/workflow
+      - contracts/schemas
+      - tests/goldens

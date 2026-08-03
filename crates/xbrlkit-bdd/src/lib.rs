@@ -5,6 +5,7 @@ use receipt_types::{Receipt, RunResult};
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::time::Instant;
 use xbrlkit_bdd_steps::{Step, World, run_scenario};
 
 #[derive(Debug, Clone)]
@@ -33,6 +34,7 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         .collect::<BTreeMap<_, _>>();
     let mut world = World::new(repo_root.to_path_buf(), grid.clone());
     let mut receipt = Receipt::new("scenario.run", tag, RunResult::Success);
+    let execution_start = Instant::now();
     for scenario in &selected {
         let parsed = parsed_by_id
             .get(&scenario.scenario_id)
@@ -40,11 +42,15 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         world.profile_id = None;
         world.fixture_dirs.clear();
         world.execution = None;
+        let scenario_start = Instant::now();
         run_scenario(&mut world, scenario, &parsed.steps)?;
-        receipt
-            .notes
-            .push(format!("{} passed", scenario.scenario_id));
+        receipt.notes.push(format!(
+            "{} passed in {} ms",
+            scenario.scenario_id,
+            scenario_start.elapsed().as_millis()
+        ));
     }
+    receipt.set_execution_duration(execution_start.elapsed());
 
     Ok(BddRun { selected, receipt })
 }
@@ -183,36 +189,98 @@ fn parse_table_row(line: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_feature_file, parse_table_row};
+    use super::{parse_feature_file, parse_table_row, run};
+    use scenario_contract::{FeatureGrid, ScenarioRecord};
+    use std::fs;
     use std::path::Path;
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_TEMP_DIR: AtomicU64 = AtomicU64::new(0);
+
+    struct TempRoot(PathBuf);
+
+    impl Drop for TempRoot {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn temp_root() -> Result<TempRoot, String> {
+        let id = NEXT_TEMP_DIR.fetch_add(1, Ordering::Relaxed);
+        let root =
+            std::env::temp_dir().join(format!("xbrlkit-bdd-timing-{}-{id}", std::process::id()));
+        fs::create_dir_all(root.join("specs/features/workflow"))
+            .map_err(|error| error.to_string())?;
+        Ok(TempRoot(root))
+    }
 
     #[test]
-    fn parses_active_scenario_tags_and_steps() {
+    fn parses_active_scenario_tags_and_steps() -> Result<(), String> {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .and_then(|path| path.parent())
-            .expect("workspace root")
+            .ok_or_else(|| "workspace root is missing".to_string())?
             .join("specs/features/inline/ixds_assembly.feature");
-        let scenarios = parse_feature_file(&path).expect("feature file should parse");
+        let scenarios = parse_feature_file(&path).map_err(|error| error.to_string())?;
 
-        assert!(
-            scenarios
-                .iter()
-                .any(|scenario| scenario.tags.iter().any(|tag| tag == "@alpha-active"))
-        );
-        assert!(scenarios.iter().any(|scenario| {
+        if !scenarios
+            .iter()
+            .any(|scenario| scenario.tags.iter().any(|tag| tag == "@alpha-active"))
+        {
+            return Err("no active scenario tag was parsed".to_string());
+        }
+        if !scenarios.iter().any(|scenario| {
             scenario
                 .steps
                 .iter()
                 .any(|step| step.text == "I validate the filing")
-        }));
+        }) {
+            return Err("expected filing-validation step was not parsed".to_string());
+        }
+        Ok(())
     }
 
     #[test]
-    fn parses_table_rows() {
-        assert_eq!(
-            parse_table_row("| dei:DocumentType |"),
-            vec!["dei:DocumentType".to_string()]
-        );
+    fn parses_table_rows() -> Result<(), String> {
+        let parsed = parse_table_row("| dei:DocumentType |");
+        if parsed != vec!["dei:DocumentType".to_string()] {
+            return Err(format!("unexpected parsed table row: {parsed:?}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn run_records_execution_timing_and_scenario_note() -> Result<(), String> {
+        let root = temp_root()?;
+        let feature = "@REQ-XK-TEST\nFeature: Timing\n\n  @alpha-active @SCN-XK-TEST-TIMING-001\n  Scenario: Record timing\n    Given a fresh scenario run receipt\n    When I record 42 milliseconds of execution\n    Then the scenario run receipt reports 42 milliseconds\n";
+        fs::write(
+            root.0.join("specs/features/workflow/timing.feature"),
+            feature,
+        )
+        .map_err(|error| error.to_string())?;
+
+        let scenario_id = "SCN-XK-TEST-TIMING-001".to_string();
+        let grid = FeatureGrid {
+            scenarios: vec![ScenarioRecord {
+                scenario_id: scenario_id.clone(),
+                feature_file: "specs/features/workflow/timing.feature".to_string(),
+                ..ScenarioRecord::default()
+            }],
+        };
+        let bdd_run = run(&root.0, &grid, "@alpha-active").map_err(|error| error.to_string())?;
+
+        if bdd_run.receipt.execution_duration_ms.is_none() {
+            return Err("BDD run receipt did not record execution duration".to_string());
+        }
+        let note = bdd_run
+            .receipt
+            .notes
+            .first()
+            .ok_or_else(|| "BDD run receipt has no scenario timing note".to_string())?;
+        if !note.starts_with(&format!("{scenario_id} passed in ")) || !note.ends_with(" ms") {
+            return Err(format!("unexpected scenario timing note: {note}"));
+        }
+        Ok(())
     }
 }

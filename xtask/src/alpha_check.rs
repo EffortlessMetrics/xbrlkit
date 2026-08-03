@@ -229,12 +229,14 @@ pub(super) fn run() -> anyhow::Result<()> {
 fn run_bdd_count(tag: &str) -> anyhow::Result<usize> {
     let grid = super::load_grid()?;
     let path = super::repo_root().join("artifacts/runs/scenario.run.v1.json");
+    let execution_start = Instant::now();
     let run = match xbrlkit_bdd::run(&super::repo_root(), &grid, tag) {
         Ok(run) => run,
         Err(error) => {
             use receipt_types::{Receipt, RunResult};
             let mut receipt = Receipt::new("scenario.run", tag, RunResult::Error);
             receipt.notes.push(error.to_string());
+            receipt.set_execution_duration(execution_start.elapsed());
             super::write_json(&path, &receipt)?;
             return Err(error);
         }

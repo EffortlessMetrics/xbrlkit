@@ -357,6 +357,11 @@ cat artifacts/feature.grid.v1.json | jq '.scenarios[] | select(.ac_id == "AC-XK-
 cargo xtask doctor
 ```
 
+`scenario.run.v1` receipts produced by `test-ac` and `bdd` include
+`execution_duration_ms`, the wall-clock duration of the selected scenario
+execution loop. Their notes also include each scenario's elapsed milliseconds.
+Older receipts remain valid because the timing field is optional.
+
 ### Working with Fixtures
 
 ```bash

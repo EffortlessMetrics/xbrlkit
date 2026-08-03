@@ -1706,6 +1706,37 @@
       ],
       "suite": "synthetic",
       "speed": "fast"
+    },
+    {
+      "scenario_id": "SCN-XK-WORKFLOW-007",
+      "ac_id": "AC-XK-WORKFLOW-005",
+      "req_id": "REQ-XK-WORKFLOW",
+      "feature_file": "specs/features/workflow/receipt_timing.feature",
+      "sidecar_file": "specs/features/workflow/receipt_timing.meta.yaml",
+      "layer": "workflow",
+      "module": "FEAT-XK-WORKFLOW-TIMING:receipt-timing",
+      "crates": [
+        "receipt-types",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/receipt-types",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/workflow",
+        "contracts/schemas",
+        "tests/goldens"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
     }
   ]
 }

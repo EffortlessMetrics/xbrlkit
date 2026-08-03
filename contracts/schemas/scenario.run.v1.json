@@ -19,6 +19,10 @@
     "notes": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "execution_duration_ms": {
+      "type": "integer",
+      "minimum": 0
     }
   },
   "required": ["kind", "version", "subject", "result", "artifacts", "notes"],
