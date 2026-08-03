@@ -15,17 +15,12 @@ serde.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 serde_json.workspace = true
-serde_yaml.workspace = true
-walkdir.workspace = true
 chrono = { version = "0.4", features = ["serde"] }
 scenario-contract.workspace = true
 xbrlkit-feature-grid.workspace = true
 cockpit-export.workspace = true
 receipt-types.workspace = true
 xbrlkit-bdd.workspace = true
-sec-profile-types.workspace = true
-validation-run.workspace = true
-xbrl-report-types.workspace = true
 scenario-runner.workspace = true
 
 [lints]

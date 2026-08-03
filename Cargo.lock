@@ -2357,13 +2357,8 @@ dependencies = [
  "receipt-types",
  "scenario-contract",
  "scenario-runner",
- "sec-profile-types",
  "serde",
  "serde_json",
- "serde_yaml",
- "validation-run",
- "walkdir",
- "xbrl-report-types",
  "xbrlkit-bdd",
  "xbrlkit-feature-grid",
 ]
