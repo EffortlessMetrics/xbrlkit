@@ -24,10 +24,7 @@ const ACTIVE_ALPHA_ACS: &[&str] = &[
     "AC-XK-STREAM-003",
     "AC-XK-STREAM-004",
     // AC-XK-CONTEXT-001..004 require BDD step handlers and proper fixtures (tracked separately)
-    // BDD-only ACs (tested via @alpha-active, excluded from fixture-based test_ac)
-    "AC-XK-WORKFLOW-002",
-    "AC-XK-WORKFLOW-003",
-    "AC-XK-MANIFEST-001",
+    // BDD-only ACs are exercised separately through the @alpha-active tag.
 ];
 
 /// Summary of a single alpha-check step.
