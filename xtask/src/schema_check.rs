@@ -205,7 +205,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn validates_simple_schema() {
+    fn validates_simple_schema() -> Result<(), String> {
         let schema = json!({
             "type": "object",
             "additionalProperties": false,
@@ -223,7 +223,10 @@ mod tests {
             "tags": ["alpha", "engine"]
         });
 
-        validate_value(&schema, &schema, &document, "$").expect("schema should validate");
+        validate_value(&schema, &schema, &document, "$")
+            .map_err(|error| format!("schema should validate: {error:#}"))?;
+
+        Ok(())
     }
 
     #[test]
