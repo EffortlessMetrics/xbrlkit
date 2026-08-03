@@ -17,12 +17,18 @@ pub(crate) fn extract_namespaces(doc: &Document<'_>) -> HashMap<String, String> 
 ///
 /// - Absolute URLs (`http://`, `https://`) are returned as-is.
 /// - If `base_dir` is empty, the relative path is returned as-is.
-/// - Otherwise, joins with `{base_dir}/{relative}`.
+/// - Otherwise, joins with `base_dir` and `relative`, inserting a separator
+///   only when the base does not already end with one.
 pub(crate) fn resolve_path(base_dir: &str, relative: &str) -> String {
     if relative.starts_with("http://") || relative.starts_with("https://") || base_dir.is_empty() {
         relative.to_string()
     } else {
-        format!("{base_dir}/{relative}")
+        let separator = if base_dir.ends_with('/') || base_dir.ends_with('\\') {
+            ""
+        } else {
+            "/"
+        };
+        format!("{base_dir}{separator}{relative}")
     }
 }
 
@@ -72,7 +78,7 @@ mod tests {
     fn test_resolve_path_trailing_slash_base() {
         assert_eq!(
             resolve_path("/taxonomies/2024/", "imports/xbrli.xsd"),
-            "/taxonomies/2024//imports/xbrli.xsd"
+            "/taxonomies/2024/imports/xbrli.xsd"
         );
     }
 

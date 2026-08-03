@@ -256,6 +256,15 @@ fn add_domain_member(
     });
 }
 
+/// Extracts definition linkbase references from a schema.
+///
+/// The function filters `linkbaseRef` elements to definition linkbases,
+/// resolves relative `xlink:href` values against the directory containing
+/// `base_path`, and returns the resolved reference paths.
+///
+/// # Errors
+///
+/// Returns an error when `content` is not well-formed XML.
 pub fn extract_linkbase_refs(
     content: &str,
     base_path: &str,
