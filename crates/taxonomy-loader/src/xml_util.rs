@@ -46,65 +46,99 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_resolve_path_http_url_passthrough() {
-        assert_eq!(
-            resolve_path("/some/dir", "http://example.com/file.xsd"),
-            "http://example.com/file.xsd"
-        );
+    fn test_resolve_path_http_url_passthrough() -> Result<(), String> {
+        let actual = resolve_path("/some/dir", "http://example.com/file.xsd");
+        let expected = "http://example.com/file.xsd";
+        if actual != expected {
+            return Err(format!(
+                "http URL passthrough: expected {expected}, got {actual}"
+            ));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_resolve_path_https_url_passthrough() {
-        assert_eq!(
-            resolve_path("/some/dir", "https://example.com/file.xsd"),
-            "https://example.com/file.xsd"
-        );
+    fn test_resolve_path_https_url_passthrough() -> Result<(), String> {
+        let actual = resolve_path("/some/dir", "https://example.com/file.xsd");
+        let expected = "https://example.com/file.xsd";
+        if actual != expected {
+            return Err(format!(
+                "https URL passthrough: expected {expected}, got {actual}"
+            ));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_resolve_path_empty_base_dir() {
-        assert_eq!(resolve_path("", "file.xsd"), "file.xsd");
+    fn test_resolve_path_empty_base_dir() -> Result<(), String> {
+        let actual = resolve_path("", "file.xsd");
+        let expected = "file.xsd";
+        if actual != expected {
+            return Err(format!(
+                "empty base directory: expected {expected}, got {actual}"
+            ));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_resolve_path_relative() {
-        assert_eq!(
-            resolve_path("/taxonomies/2024", "imports/xbrli.xsd"),
-            "/taxonomies/2024/imports/xbrli.xsd"
-        );
+    fn test_resolve_path_relative() -> Result<(), String> {
+        let actual = resolve_path("/taxonomies/2024", "imports/xbrli.xsd");
+        let expected = "/taxonomies/2024/imports/xbrli.xsd";
+        if actual != expected {
+            return Err(format!("relative path: expected {expected}, got {actual}"));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_resolve_path_trailing_slash_base() {
-        assert_eq!(
-            resolve_path("/taxonomies/2024/", "imports/xbrli.xsd"),
-            "/taxonomies/2024/imports/xbrli.xsd"
-        );
+    fn test_resolve_path_trailing_slash_base() -> Result<(), String> {
+        let actual = resolve_path("/taxonomies/2024/", "imports/xbrli.xsd");
+        let expected = "/taxonomies/2024/imports/xbrli.xsd";
+        if actual != expected {
+            return Err(format!(
+                "trailing slash base directory: expected {expected}, got {actual}"
+            ));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_base_dir_from_path_with_parent() {
-        assert_eq!(
-            base_dir_from_path("/taxonomies/2024/main.xsd"),
-            "/taxonomies/2024"
-        );
+    fn test_base_dir_from_path_with_parent() -> Result<(), String> {
+        let actual = base_dir_from_path("/taxonomies/2024/main.xsd");
+        let expected = "/taxonomies/2024";
+        if actual != expected {
+            return Err(format!(
+                "parent directory: expected {expected}, got {actual}"
+            ));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_base_dir_from_path_no_parent() {
-        assert_eq!(base_dir_from_path("main.xsd"), "");
+    fn test_base_dir_from_path_no_parent() -> Result<(), String> {
+        let actual = base_dir_from_path("main.xsd");
+        if !actual.is_empty() {
+            return Err(format!("path without parent: expected empty, got {actual}"));
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_extract_namespaces_basic() {
+    fn test_extract_namespaces_basic() -> Result<(), String> {
         let xml =
             r#"<root xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://default.ns"/>"#;
-        let doc = Document::parse(xml).unwrap();
+        let doc =
+            Document::parse(xml).map_err(|error| format!("parse namespace fixture: {error}"))?;
         let ns = extract_namespaces(&doc);
-        assert_eq!(
-            ns.get("xsd"),
-            Some(&"http://www.w3.org/2001/XMLSchema".to_string())
-        );
-        assert_eq!(ns.get(""), Some(&"http://default.ns".to_string()));
+        let xsd_uri = ns.get("xsd").map(String::as_str);
+        if xsd_uri != Some("http://www.w3.org/2001/XMLSchema") {
+            return Err(format!("xsd namespace: got {xsd_uri:?}"));
+        }
+        let default_uri = ns.get("").map(String::as_str);
+        if default_uri != Some("http://default.ns") {
+            return Err(format!("default namespace: got {default_uri:?}"));
+        }
+        Ok(())
     }
 }
