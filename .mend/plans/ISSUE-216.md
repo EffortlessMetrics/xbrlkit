@@ -21,6 +21,8 @@ credentials in query strings or user filesystem details into logs.
 - `taxonomy-loader` emits a structured warning instead of writing directly to
   stderr.
 - Cache-write failure remains non-fatal and the fetched content is returned.
+- Scenario `AC-XK-TAX-LOAD-009` exercises the warning and non-fatal return path
+  with deterministic fetched content and an unwritable cache fixture.
 - The workspace manifest, lockfile, and crate manifest remain consistent.
 - A focused source test/gate proves the affected crate and its consumers still
   compile and pass their existing behavior tests.
@@ -34,6 +36,8 @@ cargo test -p taxonomy-loader -p xbrlkit-bdd-steps -p xbrlkit-cli --locked --off
 cargo clippy --workspace --all-targets --locked --offline -- -D warnings
 cargo xtask alpha-check
 cargo xtask package-check
+cargo xtask bdd --tags @SCN-XK-TAX-LOAD-009
+cargo xtask feature-grid
 ```
 
 These checks establish the affected crate behavior, workspace lint, active

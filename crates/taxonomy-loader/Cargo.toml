@@ -8,6 +8,9 @@ authors.workspace = true
 repository.workspace = true
 description = "XBRL taxonomy loading from XSD and linkbase files"
 
+[features]
+scenario-support = []
+
 [dependencies]
 roxmltree = "0.20"
 thiserror.workspace = true
