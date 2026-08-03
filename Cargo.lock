@@ -2345,6 +2345,7 @@ dependencies = [
  "scenario-runner",
  "sec-profile-types",
  "serde_json",
+ "sha2",
  "taxonomy-dimensions",
  "taxonomy-loader",
  "walkdir",

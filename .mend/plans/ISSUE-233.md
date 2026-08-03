@@ -22,16 +22,19 @@ filesystem path.
 
 ## Acceptance criteria
 
-- [ ] Distinct URLs that previously collided produce distinct cache paths.
-- [ ] The same URL produces the same path on repeated calls.
-- [ ] Cache filenames are exactly 64 lowercase hexadecimal characters.
-- [ ] Cache read and write call sites use the same helper without API changes.
-- [ ] Existing taxonomy-loader behavior remains green under focused and
+- [x] Distinct URLs that previously collided produce distinct cache paths.
+- [x] The same URL produces the same path on repeated calls.
+- [x] Cache filenames are exactly 64 lowercase hexadecimal characters.
+- [x] Cache read and write call sites use the same helper without API changes.
+- [x] A fixture-backed BDD scenario loads both formerly colliding URLs through
+  the cache and verifies that each retains its own taxonomy content.
+- [x] Existing taxonomy-loader behavior remains green under focused and
   workspace checks.
 
 ## Dependency and migration boundary
 
-Add the direct `sha2 = "0.10"` dependency and update `Cargo.lock` through Cargo.
+Add the direct `sha2 = "0.10"` dependency to the loader and its no-network BDD
+fixture harness, and update `Cargo.lock` through Cargo.
 No separate hex-encoding dependency is needed because the digest implements
 lowercase hexadecimal formatting. Existing delimiter-based cache files are
 not migrated; they are ephemeral and may already contain collision-ambiguous
@@ -47,7 +50,15 @@ cargo test --workspace --locked
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo xtask doctor
 cargo xtask feature-grid
-cargo xtask impact --changed crates/taxonomy-loader/src/lib.rs --changed crates/taxonomy-loader/Cargo.toml --changed Cargo.lock
+cargo xtask bdd --tags @AC-XK-TAX-LOAD-009
+cargo xtask alpha-check
+cargo xtask impact --changed crates/taxonomy-loader/src/lib.rs
+cargo xtask impact --changed crates/taxonomy-loader/Cargo.toml
+cargo xtask impact --changed crates/xbrlkit-bdd-steps/src/lib.rs
+cargo xtask impact --changed specs/features/taxonomy/taxonomy_loader.feature
+cargo xtask impact --changed specs/features/taxonomy/taxonomy_loader.meta.yaml
+cargo xtask impact --changed specs/spec_ledger.yaml
+cargo xtask impact --changed Cargo.lock
 git diff --check
 ```
 
