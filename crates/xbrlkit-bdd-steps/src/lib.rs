@@ -1199,6 +1199,13 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 observation.warning_message
             );
         }
+        let warning_error = observation
+            .warning_error
+            .as_deref()
+            .context("taxonomy cache warning did not include an I/O error")?;
+        if warning_error.is_empty() {
+            anyhow::bail!("taxonomy cache warning included an empty I/O error");
+        }
         return Ok(());
     }
 
