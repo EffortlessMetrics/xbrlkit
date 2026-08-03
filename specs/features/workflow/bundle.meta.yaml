@@ -5,7 +5,7 @@ scenarios:
   SCN-XK-WORKFLOW-002:
     ac_id: AC-XK-WORKFLOW-002
     req_id: REQ-XK-WORKFLOW
-    crates: [scenario-contract, xbrlkit-feature-grid, xtask]
+    crates: [scenario-contract, xbrlkit-feature-grid, xbrlkit-bdd-steps, xtask]
     fixtures: []
     receipts: [bundle.manifest.v1, scenario.run.v1]
     suite: synthetic
@@ -13,12 +13,13 @@ scenarios:
     allowed_edit_roots:
       - crates/scenario-contract
       - crates/xbrlkit-feature-grid
+      - crates/xbrlkit-bdd-steps
       - xtask
       - specs/features/workflow
   SCN-XK-WORKFLOW-004:
     ac_id: AC-XK-WORKFLOW-002
     req_id: REQ-XK-WORKFLOW
-    crates: [scenario-contract, xbrlkit-feature-grid, xtask]
+    crates: [scenario-contract, xbrlkit-feature-grid, xbrlkit-bdd-steps, xtask]
     fixtures: []
     receipts: [bundle.manifest.v1, scenario.run.v1]
     suite: synthetic
@@ -26,5 +27,6 @@ scenarios:
     allowed_edit_roots:
       - crates/scenario-contract
       - crates/xbrlkit-feature-grid
+      - crates/xbrlkit-bdd-steps
       - xtask
       - specs/features/workflow
