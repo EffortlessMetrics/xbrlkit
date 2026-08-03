@@ -44,3 +44,34 @@ impl Receipt {
         }
     }
 }
+
+/// Creates the warning receipt emitted by oracle-comparison lanes.
+#[must_use]
+pub fn oracle_comparison_receipt(subject: &str) -> Receipt {
+    Receipt::new("oracle.compare", subject, RunResult::Warning)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::oracle_comparison_receipt;
+
+    #[test]
+    fn oracle_comparison_receipt_preserves_the_contract() -> Result<(), String> {
+        let receipt = oracle_comparison_receipt("filing-001");
+
+        if receipt.kind != "oracle.compare" {
+            return Err(format!("unexpected receipt kind: {}", receipt.kind));
+        }
+        if receipt.version != "v1" {
+            return Err(format!("unexpected receipt version: {}", receipt.version));
+        }
+        if receipt.subject != "filing-001" {
+            return Err(format!("unexpected receipt subject: {}", receipt.subject));
+        }
+        if receipt.result != super::RunResult::Warning {
+            return Err(format!("unexpected receipt result: {:?}", receipt.result));
+        }
+
+        Ok(())
+    }
+}
