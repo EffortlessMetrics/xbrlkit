@@ -18,6 +18,7 @@ validation-run.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
+tempfile = "3"
 
 [lints]
 workspace = true

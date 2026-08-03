@@ -2,20 +2,14 @@
 
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::fmt::Write as _;
-use std::path::PathBuf;
 use taxonomy_loader::TaxonomyLoader;
+use tempfile::TempDir;
 
 const XLINK_NAMESPACE: &str = "http://www.w3.org/1999/xlink";
 
 struct TaxonomyFixture {
-    directory: PathBuf,
+    _directory: TempDir,
     entrypoint: String,
-}
-
-impl Drop for TaxonomyFixture {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.directory);
-    }
 }
 
 fn schema_document(index: usize, schema_count: usize, groups: usize) -> String {
@@ -114,35 +108,32 @@ fn definition_linkbase(index: usize, groups: usize) -> String {
 }
 
 fn prepare_fixture(schema_count: usize, groups: usize) -> Option<TaxonomyFixture> {
-    let directory = std::env::temp_dir().join(format!(
-        "xbrlkit-bench-taxonomy-{}-{schema_count}-{groups}",
-        std::process::id()
-    ));
-    let _ = std::fs::remove_dir_all(&directory);
-    if let Err(error) = std::fs::create_dir_all(&directory) {
-        eprintln!("benchmark fixture setup failed: {error}");
-        return None;
-    }
+    let directory = match TempDir::new() {
+        Ok(directory) => directory,
+        Err(error) => {
+            eprintln!("benchmark fixture directory setup failed: {error}");
+            return None;
+        }
+    };
+    let directory_path = directory.path();
 
     for index in 0..schema_count {
         let prefix = format!("bench{index}");
-        let schema_path = directory.join(format!("{prefix}.xsd"));
-        let linkbase_path = directory.join(format!("{prefix}_def.xml"));
+        let schema_path = directory_path.join(format!("{prefix}.xsd"));
+        let linkbase_path = directory_path.join(format!("{prefix}_def.xml"));
         if let Err(error) =
             std::fs::write(&schema_path, schema_document(index, schema_count, groups))
         {
             eprintln!("benchmark schema setup failed: {error}");
-            let _ = std::fs::remove_dir_all(&directory);
             return None;
         }
         if let Err(error) = std::fs::write(&linkbase_path, definition_linkbase(index, groups)) {
             eprintln!("benchmark linkbase setup failed: {error}");
-            let _ = std::fs::remove_dir_all(&directory);
             return None;
         }
     }
 
-    let entrypoint = directory.join("bench0.xsd");
+    let entrypoint = directory_path.join("bench0.xsd");
     let entrypoint = entrypoint.to_string_lossy().into_owned();
     let taxonomy = TaxonomyLoader::new().load(&entrypoint);
     let expected_relationships = schema_count * groups;
@@ -160,7 +151,7 @@ fn prepare_fixture(schema_count: usize, groups: usize) -> Option<TaxonomyFixture
                     .all(|domain| !domain.members.is_empty()) =>
         {
             Some(TaxonomyFixture {
-                directory,
+                _directory: directory,
                 entrypoint,
             })
         }
@@ -171,12 +162,10 @@ fn prepare_fixture(schema_count: usize, groups: usize) -> Option<TaxonomyFixture
                 taxonomy.dimension_domains.len(),
                 taxonomy.domains.len()
             );
-            let _ = std::fs::remove_dir_all(&directory);
             None
         }
         Err(error) => {
             eprintln!("benchmark fixture validation failed: {error}");
-            let _ = std::fs::remove_dir_all(&directory);
             None
         }
     }
@@ -186,8 +175,14 @@ fn bench_taxonomy_loader(c: &mut Criterion) {
     let mut group = c.benchmark_group("taxonomy_loader");
     let fixtures = [(2, 20), (4, 50), (8, 100)]
         .into_iter()
-        .filter_map(|(schema_count, groups)| {
-            prepare_fixture(schema_count, groups).map(|fixture| (schema_count, groups, fixture))
+        .map(|(schema_count, groups)| {
+            let fixture = prepare_fixture(schema_count, groups).unwrap_or_else(|| {
+                eprintln!(
+                    "benchmark fixture setup failed for {schema_count} schemas and {groups} groups"
+                );
+                std::process::exit(1);
+            });
+            (schema_count, groups, fixture)
         })
         .collect::<Vec<_>>();
 

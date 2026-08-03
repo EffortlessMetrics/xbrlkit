@@ -2504,6 +2504,7 @@ dependencies = [
  "taxonomy-dts",
  "taxonomy-loader",
  "taxonomy-types",
+ "tempfile",
  "validation-run",
 ]
 

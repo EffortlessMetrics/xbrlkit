@@ -61,7 +61,9 @@ fn bench_validation_pipeline(c: &mut Criterion) {
         let html = inline_html(size);
         let members = vec![("member-a.html", html.as_str())];
         group.bench_function(format!("validate_html_members_{size}_facts"), |benchmark| {
-            benchmark.iter(|| validate_html_members(black_box(&members), black_box(&profile)));
+            benchmark.iter_with_large_drop(|| {
+                validate_html_members(black_box(&members), black_box(&profile))
+            });
         });
     }
 
@@ -70,7 +72,7 @@ fn bench_validation_pipeline(c: &mut Criterion) {
         group.bench_function(
             format!("validate_contexts_{context_count}_contexts"),
             |benchmark| {
-                benchmark.iter(|| validate_contexts(black_box(&xml)));
+                benchmark.iter_with_large_drop(|| validate_contexts(black_box(&xml)));
             },
         );
     }
