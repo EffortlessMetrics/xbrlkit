@@ -237,6 +237,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         .strip_prefix("a context with unknown dimension \"")
     {
         world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
+        world.dimension_context.member = Some("custom:UnknownMember".to_string());
         return Ok(true);
     }
 
