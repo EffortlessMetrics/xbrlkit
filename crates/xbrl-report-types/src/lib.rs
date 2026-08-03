@@ -55,4 +55,34 @@ mod tests {
     fn period_defaults_to_forever() {
         assert_eq!(Period::default(), Period::Forever);
     }
+
+    #[test]
+    fn period_serializes_to_stable_contract_variants() -> Result<(), String> {
+        let cases = [
+            (
+                Period::Instant("2024-12-31".to_string()),
+                serde_json::json!({"Instant": "2024-12-31"}),
+            ),
+            (
+                Period::Duration {
+                    start: "2024-01-01".to_string(),
+                    end: "2024-12-31".to_string(),
+                },
+                serde_json::json!({
+                    "Duration": {"start": "2024-01-01", "end": "2024-12-31"}
+                }),
+            ),
+            (Period::Forever, serde_json::json!("Forever")),
+            (Period::Unknown, serde_json::json!("Unknown")),
+        ];
+
+        for (period, expected) in cases {
+            let actual = serde_json::to_value(period).map_err(|error| error.to_string())?;
+            if actual != expected {
+                return Err(format!("expected {expected}, got {actual}"));
+            }
+        }
+
+        Ok(())
+    }
 }

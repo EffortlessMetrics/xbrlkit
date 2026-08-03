@@ -30,6 +30,8 @@ pub struct World {
     pub dimension_context: DimensionContext,
     pub context_completeness_context: ContextCompletenessContext,
     pub streaming_context: StreamingContext,
+    pub period_model_context: Option<Period>,
+    pub period_model_stream: Option<xbrl_stream::StreamingPeriod>,
     pub taxonomy_loader_context: TaxonomyLoaderContext,
     pub bundle_manifest: Option<BundleManifest>,
     pub validation_receipt: Option<receipt_types::Receipt>,
@@ -92,6 +94,8 @@ impl World {
             dimension_context: DimensionContext::default(),
             context_completeness_context: ContextCompletenessContext::default(),
             streaming_context: StreamingContext::default(),
+            period_model_context: None,
+            period_model_stream: None,
             taxonomy_loader_context: TaxonomyLoaderContext::default(),
             bundle_manifest: None,
             validation_receipt: None,
@@ -224,6 +228,11 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
     if step.text == "the taxonomy has hypercube definitions" {
         // Stub - implement actual taxonomy loading when needed
+        return Ok(true);
+    }
+
+    if step.text == "an instant period from the context API" {
+        world.period_model_context = Some(Period::Instant("2024-12-31".to_string()));
         return Ok(true);
     }
 
@@ -685,6 +694,16 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I pass the context period to the streaming API" {
+        let context_period = world
+            .period_model_context
+            .as_ref()
+            .context("context period was not initialized")?
+            .clone();
+        world.period_model_stream = Some(pass_period_to_streaming(context_period));
+        return Ok(true);
+    }
+
     // Feature grid When steps
     if step.text == "I compile the feature grid" {
         world.compiled_grid = Some(xbrlkit_feature_grid::compile(&world.repo_root)?);
@@ -1049,6 +1068,23 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
             anyhow::bail!(
                 "expected validation to pass but got findings: {:?}",
                 world.dimension_context.validation_findings
+            );
+        }
+        return Ok(());
+    }
+
+    if step.text == "the parsed and streaming periods should be equal" {
+        let context_period = world
+            .period_model_context
+            .as_ref()
+            .context("context period was not initialized")?;
+        let streaming_period = world
+            .period_model_stream
+            .as_ref()
+            .context("streaming period was not initialized")?;
+        if context_period != streaming_period {
+            anyhow::bail!(
+                "shared period aliases diverged: context={context_period:?}, streaming={streaming_period:?}"
             );
         }
         return Ok(());
@@ -1622,4 +1658,8 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+fn pass_period_to_streaming(period: Period) -> xbrl_stream::StreamingPeriod {
+    period
 }

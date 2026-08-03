@@ -18,6 +18,9 @@ the existing crate-local names as public re-exports:
 - `Forever` remains the default for compatibility with `xbrl-contexts`.
 - `Unknown` is retained for streaming's incomplete/invalid-period state and
   becomes an available shared variant; context parsing does not emit it.
+- The Serde JSON representation is recorded in the versioned
+  `contracts/schemas/period.v1.json` contract.
+- Scenario `AC-XK-PERIOD-001` passes a period through both public aliases.
 
 ## Acceptance criteria
 
@@ -27,6 +30,11 @@ the existing crate-local names as public re-exports:
 - The shared type retains debug/equality and serde behavior, with `Forever` as
   its default.
 - A focused test proves the shared model's default contract.
+- A focused serialization test covers all four versioned wire variants.
+- A deterministic BDD scenario proves the public context and streaming aliases
+  accept the same period value.
+- The scenario runner accepts fixture-free BDD contracts while continuing to
+  reject fixture-free execution contracts that declare runner-owned receipts.
 - A plan artifact records the scope, proof, non-goals, and rollback path.
 
 ## Proof
@@ -37,17 +45,26 @@ Run from the isolated issue worktree with a task-specific target directory:
 cargo test -p xbrl-report-types -p xbrl-contexts -p xbrl-stream -p xbrlkit-bdd-steps --locked --offline
 cargo clippy -p xbrl-report-types -p xbrl-contexts -p xbrl-stream -p xbrlkit-bdd-steps --all-targets --locked --offline -- -D warnings
 cargo fmt --all --check
+cargo xtask test-ac AC-XK-PERIOD-001
+cargo xtask bdd --tags @SCN-XK-PERIOD-001
+cargo xtask feature-grid
+cargo xtask schema-check
+cargo test --workspace --locked --offline
+cargo check --workspace --locked --offline
+cargo clippy --workspace --all-targets --locked --offline -- -D warnings
+cargo xtask alpha-check
 ```
 
-The proof establishes package tests, lint cleanliness, and formatting for the
-affected ingestion/model surfaces. It does not establish a full workspace or
-hosted CI result.
+The proof establishes package and workspace tests, lint cleanliness, formatting,
+the fixture-free acceptance path, the tagged BDD alias scenario, and the active
+alpha gate. It does not establish a hosted CI result.
 
 ## Non-goals
 
 - No parser validation, date normalization, or semantic change.
 - No migration of unrelated context or streaming structs.
 - No new conversion API or public crate support promise.
+- No change to the existing Serde representation of the moved variants.
 - No merge or release action.
 
 ## Rollback
