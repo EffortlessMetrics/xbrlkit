@@ -296,6 +296,37 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-DIM-012",
+      "ac_id": "AC-XK-DIM-012",
+      "req_id": "REQ-XK-DIMENSIONS",
+      "feature_file": "specs/features/taxonomy/dimensions.feature",
+      "sidecar_file": "specs/features/taxonomy/dimensions.meta.yaml",
+      "layer": "taxonomy",
+      "module": "FEAT-XK-DIMENSIONS:dimensions",
+      "crates": [
+        "dimensional-rules",
+        "xbrl-contexts",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": "sec/efm-77/opco",
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/dimensional-rules",
+        "crates/xbrl-contexts",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "xtask",
+        "specs/features/taxonomy"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-DUPLICATES-001",
       "ac_id": "AC-XK-DUPLICATES-001",
       "req_id": "REQ-XK-DUPLICATES",
