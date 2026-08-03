@@ -105,7 +105,11 @@ fn main() -> anyhow::Result<()> {
                 Ok(context_set) => {
                     if json {
                         let contexts: Vec<&xbrl_contexts::Context> = context_set.iter().collect();
-                        println!("{}", serde_json::to_string_pretty(&contexts).unwrap());
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(&contexts)
+                                .context("serializing contexts json")?
+                        );
                     } else {
                         println!("contexts: {}", context_set.len());
                         for context in context_set.iter() {
@@ -142,7 +146,11 @@ fn main() -> anyhow::Result<()> {
             match taxonomy_loader::load_taxonomy(&entrypoint) {
                 Ok(taxonomy) => {
                     if json {
-                        println!("{}", serde_json::to_string_pretty(&taxonomy).unwrap());
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(&taxonomy)
+                                .context("serializing taxonomy json")?
+                        );
                     } else {
                         print_taxonomy_summary(&taxonomy);
                     }
