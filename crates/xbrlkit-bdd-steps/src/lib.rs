@@ -184,22 +184,35 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
                         fixture_root.display()
                     );
                 }
-                let resolved_fixture_root = fs::canonicalize(&fixture_root).with_context(|| {
-                    format!("resolving repository fixture root {}", fixture_root.display())
-                })?;
-                let resolved_path = fs::canonicalize(path).with_context(|| {
-                    format!("resolving fixture path {}", path.display())
-                })?;
-                if !resolved_path.starts_with(&resolved_fixture_root) {
-                    anyhow::bail!(
-                        "fixture path {} is outside repository fixture root {}",
-                        path.display(),
-                        fixture_root.display()
-                    );
-                }
                 Ok(relative.to_string_lossy().replace('\\', "/"))
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
+        let resolved_repo_root = fs::canonicalize(&world.repo_root)
+            .with_context(|| format!("resolving repository root {}", world.repo_root.display()))?;
+        let resolved_fixture_root = fs::canonicalize(&fixture_root).with_context(|| {
+            format!(
+                "resolving repository fixture root {}",
+                fixture_root.display()
+            )
+        })?;
+        if !resolved_fixture_root.starts_with(&resolved_repo_root) {
+            anyhow::bail!(
+                "repository fixture root {} resolves outside repository root {}",
+                fixture_root.display(),
+                world.repo_root.display()
+            );
+        }
+        for path in &world.fixture_dirs {
+            let resolved_path = fs::canonicalize(path)
+                .with_context(|| format!("resolving fixture path {}", path.display()))?;
+            if !resolved_path.starts_with(&resolved_fixture_root) {
+                anyhow::bail!(
+                    "fixture path {} is outside repository fixture root {}",
+                    path.display(),
+                    fixture_root.display()
+                );
+            }
+        }
         if declared != scenario.fixtures {
             anyhow::bail!("declared fixture directories do not match scenario metadata");
         }
@@ -1793,6 +1806,32 @@ mod tests {
         };
         if !error.contains("outside repository fixture root") {
             return Err(format!("unexpected symlink escape error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn fixture_root_symlink_escape_returns_error() -> Result<(), String> {
+        let repo = temp_dir()?;
+        let outside = temp_dir()?;
+        fs::create_dir_all(outside.0.join("linked")).map_err(|error| error.to_string())?;
+        symlink_dir(&outside.0, &repo.0.join("fixtures"))?;
+
+        let mut world = World::new(repo.0.clone(), FeatureGrid::default());
+        world
+            .fixture_dirs
+            .push(repo.0.join("fixtures").join("linked"));
+        let scenario = ScenarioRecord {
+            fixtures: vec!["linked".to_string()],
+            ..ScenarioRecord::default()
+        };
+
+        let error = match assert_declared_inputs_match(&world, &scenario) {
+            Ok(()) => return Err("fixture-root symlink escape should be rejected".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("fixture root") || !error.contains("outside repository root") {
+            return Err(format!("unexpected fixture-root symlink error: {error}"));
         }
         Ok(())
     }
