@@ -101,6 +101,7 @@ fn parse_feature_file(path: &Path) -> anyhow::Result<Vec<ParsedScenario>> {
         std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     let mut feature_tags = Vec::<String>::new();
     let mut pending_tags = Vec::<String>::new();
+    let mut background_steps = Vec::<Step>::new();
     let mut scenarios = Vec::<ParsedScenario>::new();
     let mut current: Option<ParsedScenario> = None;
     let mut feature_header_seen = false;
@@ -144,7 +145,7 @@ fn parse_feature_file(path: &Path) -> anyhow::Result<Vec<ParsedScenario>> {
             current = Some(ParsedScenario {
                 scenario_id,
                 tags,
-                steps: Vec::new(),
+                steps: background_steps.clone(),
             });
             continue;
         }
@@ -158,14 +159,22 @@ fn parse_feature_file(path: &Path) -> anyhow::Result<Vec<ParsedScenario>> {
                     text: step_text,
                     table: Vec::new(),
                 });
+            } else {
+                background_steps.push(Step {
+                    text: step_text,
+                    table: Vec::new(),
+                });
             }
             continue;
         }
-        if line.starts_with('|')
-            && let Some(scenario) = &mut current
-            && let Some(step) = scenario.steps.last_mut()
-        {
-            step.table.push(parse_table_row(line));
+        if line.starts_with('|') {
+            if let Some(scenario) = &mut current {
+                if let Some(step) = scenario.steps.last_mut() {
+                    step.table.push(parse_table_row(line));
+                }
+            } else if let Some(step) = background_steps.last_mut() {
+                step.table.push(parse_table_row(line));
+            }
         }
     }
 
@@ -227,6 +236,33 @@ mod tests {
             parse_table_row("| dei:DocumentType |"),
             vec!["dei:DocumentType".to_string()]
         );
+    }
+
+    #[test]
+    fn includes_background_steps_in_each_scenario() -> anyhow::Result<()> {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(|path| path.parent())
+            .ok_or_else(|| anyhow::anyhow!("workspace root"))?
+            .join("specs/features/performance/streaming_parser.feature");
+        let scenarios = parse_feature_file(&path)?;
+
+        ensure!(
+            scenarios.len() == 4,
+            "expected four streaming scenarios, got {}",
+            scenarios.len()
+        );
+        for scenario in &scenarios {
+            ensure!(
+                scenario
+                    .steps
+                    .first()
+                    .is_some_and(|step| { step.text == "the xbrl-stream crate is available" }),
+                "background step missing from {}",
+                scenario.scenario_id
+            );
+        }
+        Ok(())
     }
 
     #[test]
