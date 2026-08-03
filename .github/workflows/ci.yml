@@ -61,7 +61,7 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
-          if [ ! -d target/criterion/main ]; then
+          if ! find target/criterion -mindepth 2 -type d -name main -print -quit 2>/dev/null | grep -q .; then
             echo "::warning::Criterion main baseline unavailable; comparison is unavailable, not passing"
             cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked \
               --bench taxonomy_loader --bench dts_resolution --bench validation_pipeline -- \
