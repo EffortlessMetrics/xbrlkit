@@ -75,6 +75,7 @@ jobs:
           cargo llvm-cov nextest \
             --workspace \
             --locked \
+            --profile ci \
             --no-report
           cargo llvm-cov report --json --output-path coverage.json
           cargo llvm-cov report --lcov --output-path lcov.info

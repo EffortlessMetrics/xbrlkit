@@ -14,9 +14,10 @@ help:
 # Quick gate: format, clippy, test (fast feedback)
 quick:
 	@echo "=== Running quick quality gates ==="
-	cargo fmt --check
-	cargo clippy --workspace -- -D warnings
-	cargo test --workspace
+	cargo fmt --all --check
+	cargo clippy --workspace --all-targets -- -D warnings
+	cargo nextest run --workspace --locked
+	cargo test --workspace --doc --locked
 	@echo "=== Quick gate passed ==="
 
 # Full gate: alpha-check (complete validation)
