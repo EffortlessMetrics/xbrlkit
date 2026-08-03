@@ -1,6 +1,6 @@
 //! Benchmarks for profile-aware DTS construction and entry-point checks.
 
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use criterion::{BatchSize, Criterion, black_box, criterion_group, criterion_main};
 use sec_profile_types::{AcceptedTaxonomies, ProfilePack};
 use taxonomy_dts::{build_dts, mixed_taxonomy_years, nonstandard_entry_points};
 use taxonomy_types::NamespaceMapping;
@@ -42,7 +42,11 @@ fn bench_dts_resolution(c: &mut Criterion) {
         let profile = synthetic_profile(size);
         let points = entry_points(size);
         group.bench_function(format!("build_dts_{size}_entry_points"), |benchmark| {
-            benchmark.iter(|| build_dts(black_box(&profile), black_box(points.clone())));
+            benchmark.iter_batched(
+                || points.clone(),
+                |entry_points| build_dts(black_box(&profile), black_box(entry_points)),
+                BatchSize::SmallInput,
+            );
         });
 
         let dts = build_dts(&profile, points);
