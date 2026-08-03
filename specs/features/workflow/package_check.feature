@@ -5,6 +5,7 @@ Feature: Package check
 
   @AC-XK-WORKFLOW-004
   @SCN-XK-WORKFLOW-006
+  @alpha-active
   @speed.fast
   Scenario: Verify publishable crates package for crates.io
     Given the publishable workspace crates declare crates.io-compatible manifests

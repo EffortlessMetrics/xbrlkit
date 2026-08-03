@@ -5,13 +5,14 @@ scenarios:
   SCN-XK-WORKFLOW-006:
     ac_id: AC-XK-WORKFLOW-004
     req_id: REQ-XK-WORKFLOW
-    crates: [xtask, xbrlkit-core]
+    crates: [xtask, xbrlkit-bdd-steps]
     fixtures: []
     receipts: [scenario.run.v1]
     suite: synthetic
     speed: fast
     allowed_edit_roots:
       - Cargo.toml
+      - Cargo.lock
       - CHANGELOG.md
       - crates
       - docs/how-to
