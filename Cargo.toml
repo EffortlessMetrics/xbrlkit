@@ -70,6 +70,7 @@ serde_json = "1.0.140"
 serde_yaml = "0.9.34"
 thiserror = "2.0.12"
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros", "sync"] }
+tracing = "0.1.44"
 walkdir = "2.5.0"
 archive-zip = { version = "0.1.0-alpha.1", path = "crates/archive-zip" }
 calc11 = { version = "0.1.0-alpha.1", path = "crates/calc11" }

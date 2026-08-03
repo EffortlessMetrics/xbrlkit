@@ -202,8 +202,11 @@ impl TaxonomyLoader {
         if let Some(ref cache_dir) = self.cache_dir {
             let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
             if let Err(e) = Self::write_to_cache(&content, &cache_path) {
-                // Cache write failure is non-fatal, just log it
-                eprintln!("Warning: Failed to write cache for {url}: {e}");
+                tracing::warn!(
+                    operation = "taxonomy_cache_write",
+                    error = %e,
+                    "failed to write taxonomy cache; continuing without cached content"
+                );
             }
         }
 
