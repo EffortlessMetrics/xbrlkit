@@ -1589,12 +1589,15 @@ fn parse_quoted_strings(text: &str) -> Option<Vec<String>> {
 }
 
 fn parse_fact_concept_and_context(text: &str) -> Option<(String, String)> {
-    if !text.contains("\" with context \"") {
+    let remainder = text.strip_prefix("a fact referencing concept \"")?;
+    let (concept, remainder) = remainder.split_once("\" with context \"")?;
+    let context_ref = remainder.strip_suffix('"')?;
+
+    if concept.contains('"') || context_ref.contains('"') {
         return None;
     }
 
-    let quoted = parse_quoted_strings(text)?;
-    (quoted.len() == 2).then(|| (quoted[0].clone(), quoted[1].clone()))
+    Some((concept.to_string(), context_ref.to_string()))
 }
 
 /// Select scenarios matching a selector (`scenario_id`, `ac_id`, `req_id`, or tag)
@@ -1643,16 +1646,26 @@ mod tests {
 
     #[test]
     fn parse_fact_concept_and_context_requires_exact_step_shape() -> Result<(), String> {
-        let valid = parse_fact_concept_and_context("concept \"Revenue\" with context \"ctx-1\"")
-            .ok_or_else(|| "valid fact shape was rejected".to_string())?;
+        let valid = parse_fact_concept_and_context(
+            "a fact referencing concept \"Revenue\" with context \"ctx-1\"",
+        )
+        .ok_or_else(|| "valid fact shape was rejected".to_string())?;
         if valid != ("Revenue".to_string(), "ctx-1".to_string()) {
             return Err(format!("unexpected parsed fact: {valid:?}"));
         }
 
-        let malformed = "concept \"Revenue\" with unit \"usd\" with context \"ctx-1\"";
+        let malformed =
+            "a fact referencing concept \"Revenue\" with unit \"usd\" with context \"ctx-1\"";
         if parse_fact_concept_and_context(malformed).is_some() {
             return Err("fact shape with an extra quoted field was accepted".to_string());
         }
+
+        let trailing_text =
+            "a fact referencing concept \"Revenue\" with context \"ctx-1\" trailing garbage";
+        if parse_fact_concept_and_context(trailing_text).is_some() {
+            return Err("fact shape with trailing text was accepted".to_string());
+        }
+
         Ok(())
     }
 }
