@@ -31,22 +31,31 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         .into_iter()
         .map(|scenario| (scenario.scenario_id.clone(), scenario))
         .collect::<BTreeMap<_, _>>();
-    let mut world = World::new(repo_root.to_path_buf(), grid.clone());
+    let receipt = run_selected_scenarios(repo_root, grid, &selected, &parsed_by_id, tag)?;
+
+    Ok(BddRun { selected, receipt })
+}
+
+fn run_selected_scenarios(
+    repo_root: &Path,
+    grid: &FeatureGrid,
+    selected: &[ScenarioRecord],
+    parsed_by_id: &BTreeMap<String, ParsedScenario>,
+    tag: &str,
+) -> anyhow::Result<Receipt> {
     let mut receipt = Receipt::new("scenario.run", tag, RunResult::Success);
-    for scenario in &selected {
+    for scenario in selected {
         let parsed = parsed_by_id
             .get(&scenario.scenario_id)
             .with_context(|| format!("missing parsed feature for {}", scenario.scenario_id))?;
-        world.execution.profile_id = None;
-        world.execution.fixture_dirs.clear();
-        world.execution.execution = None;
+        let mut world = World::new(repo_root.to_path_buf(), grid.clone());
         run_scenario(&mut world, scenario, &parsed.steps)?;
         receipt
             .notes
             .push(format!("{} passed", scenario.scenario_id));
     }
 
-    Ok(BddRun { selected, receipt })
+    Ok(receipt)
 }
 
 fn select_by_tag(grid: &FeatureGrid, parsed: &[ParsedScenario], tag: &str) -> Vec<ScenarioRecord> {
@@ -183,8 +192,12 @@ fn parse_table_row(line: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_feature_file, parse_table_row};
+    use super::{ParsedScenario, parse_feature_file, parse_table_row, run_selected_scenarios};
+    use anyhow::ensure;
+    use scenario_contract::{FeatureGrid, ScenarioRecord};
+    use std::collections::BTreeMap;
     use std::path::Path;
+    use xbrlkit_bdd_steps::Step;
 
     #[test]
     fn parses_active_scenario_tags_and_steps() {
@@ -214,5 +227,63 @@ mod tests {
             parse_table_row("| dei:DocumentType |"),
             vec!["dei:DocumentType".to_string()]
         );
+    }
+
+    #[test]
+    fn does_not_reuse_world_state_between_selected_scenarios() -> anyhow::Result<()> {
+        let first = test_scenario("SCN-XK-TEST-001");
+        let second = test_scenario("SCN-XK-TEST-002");
+        let grid = FeatureGrid {
+            scenarios: vec![first.clone(), second.clone()],
+        };
+        let parsed = BTreeMap::from([
+            (
+                first.scenario_id.clone(),
+                ParsedScenario {
+                    scenario_id: first.scenario_id.clone(),
+                    tags: Vec::new(),
+                    steps: vec![
+                        Step {
+                            text: "a validation report receipt".to_string(),
+                            table: Vec::new(),
+                        },
+                        Step {
+                            text: "I package the receipt for cockpit".to_string(),
+                            table: Vec::new(),
+                        },
+                    ],
+                },
+            ),
+            (
+                second.scenario_id.clone(),
+                ParsedScenario {
+                    scenario_id: second.scenario_id.clone(),
+                    tags: Vec::new(),
+                    steps: vec![Step {
+                        text: "the sensor report is emitted".to_string(),
+                        table: Vec::new(),
+                    }],
+                },
+            ),
+        ]);
+
+        let result =
+            run_selected_scenarios(Path::new("."), &grid, &[first, second], &parsed, "@test");
+        ensure!(
+            result.is_err(),
+            "a scenario must not observe output created by an earlier scenario"
+        );
+        Ok(())
+    }
+
+    fn test_scenario(scenario_id: &str) -> ScenarioRecord {
+        ScenarioRecord {
+            scenario_id: scenario_id.to_string(),
+            feature_file: "test.feature".to_string(),
+            sidecar_file: "test.meta.yaml".to_string(),
+            layer: "test".to_string(),
+            module: "test".to_string(),
+            ..ScenarioRecord::default()
+        }
     }
 }
