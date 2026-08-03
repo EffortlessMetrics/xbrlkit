@@ -13,6 +13,7 @@ path = "src/lib.rs"
 roxmltree = "0.20"
 serde = { workspace = true }
 thiserror = { workspace = true }
+xbrl-report-types.workspace = true
 
 [lints]
 workspace = true

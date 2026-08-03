@@ -10,6 +10,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+pub use xbrl_report_types::Period;
+
 /// Normalized context identifier.
 #[must_use]
 pub fn normalize_context_id(raw: &str) -> String {
@@ -21,18 +23,6 @@ pub fn normalize_context_id(raw: &str) -> String {
 pub struct EntityIdentifier {
     pub scheme: String,
     pub value: String,
-}
-
-/// Time period for a context.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub enum Period {
-    /// A specific instant in time (e.g., 2024-12-31)
-    Instant(String),
-    /// A duration with start and end dates
-    Duration { start: String, end: String },
-    /// Forever (rarely used)
-    #[default]
-    Forever,
 }
 
 /// A dimensional member reference.
