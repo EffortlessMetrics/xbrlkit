@@ -20,10 +20,15 @@ make full
 
 **What it runs:**
 ```bash
-cargo fmt --check          # Verify code formatting
-cargo clippy --workspace -- -D warnings  # Lint all crates
-cargo test --workspace     # Run all unit tests
+cargo fmt --all --check                         # Verify code formatting
+cargo clippy --workspace --all-targets -- -D warnings  # Lint all crates
+cargo nextest run --workspace --locked          # Run workspace tests
+cargo test --workspace --doc --locked           # Preserve doctest coverage
 ```
+
+If `cargo nextest` is not installed, run `cargo install cargo-nextest --locked`
+once. The nextest timeout profiles are documented in
+[`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
 **When to use:**
 - During active development for rapid feedback
