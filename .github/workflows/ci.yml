@@ -45,7 +45,8 @@ jobs:
       - name: Measure main baseline
         if: github.ref == 'refs/heads/main'
         run: >-
-          cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked --
+          cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked
+          --bench taxonomy_loader --bench dts_resolution --bench validation_pipeline --
           --save-baseline main --noplot --sample-size 10 --warm-up-time 1
           --measurement-time 1
 
@@ -62,11 +63,13 @@ jobs:
         run: |
           if [ ! -d target/criterion/main ]; then
             echo "::warning::Criterion main baseline unavailable; comparison is unavailable, not passing"
-            cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked -- \
+            cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked \
+              --bench taxonomy_loader --bench dts_resolution --bench validation_pipeline -- \
               --save-baseline current --noplot --sample-size 10 --warm-up-time 1 --measurement-time 1
             exit 0
           fi
-          cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked -- \
+          cargo bench --manifest-path crates/xbrlkit-bench/Cargo.toml --locked \
+            --bench taxonomy_loader --bench dts_resolution --bench validation_pipeline -- \
             --baseline main --noplot --sample-size 10 --warm-up-time 1 --measurement-time 1
 
       - name: Upload benchmark comparison
