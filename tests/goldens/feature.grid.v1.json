@@ -1471,6 +1471,7 @@
         "scenario-runner",
         "xbrlkit-bdd",
         "xbrlkit-bdd-steps",
+        "xbrlkit-cli",
         "xtask"
       ],
       "fixtures": [
@@ -1484,7 +1485,8 @@
         "crates/taxonomy-loader",
         "crates/scenario-runner",
         "crates/xbrlkit-bdd",
-        "crates/xbrlkit-bdd-steps"
+        "crates/xbrlkit-bdd-steps",
+        "crates/xbrlkit-cli"
       ],
       "suite": "synthetic",
       "speed": "fast"

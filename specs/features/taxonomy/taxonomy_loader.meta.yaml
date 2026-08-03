@@ -119,7 +119,7 @@ scenarios:
   SCN-XK-TAX-LOAD-009:
     ac_id: AC-XK-TAX-LOAD-009
     req_id: REQ-XK-TAXONOMY-LOADER
-    crates: [taxonomy-loader, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
+    crates: [taxonomy-loader, scenario-runner, xbrlkit-bdd, xbrlkit-bdd-steps, xbrlkit-cli, xtask]
     fixtures: [synthetic/taxonomy/standard-location-01]
     profile_pack: sec/efm-77/opco
     receipts: [scenario.run.v1]
@@ -130,3 +130,4 @@ scenarios:
       - crates/scenario-runner
       - crates/xbrlkit-bdd
       - crates/xbrlkit-bdd-steps
+      - crates/xbrlkit-cli
