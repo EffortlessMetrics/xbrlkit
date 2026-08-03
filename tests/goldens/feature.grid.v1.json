@@ -1575,6 +1575,7 @@
       "crates": [
         "scenario-contract",
         "xbrlkit-feature-grid",
+        "xbrlkit-bdd-steps",
         "xtask"
       ],
       "fixtures": [],
@@ -1586,6 +1587,7 @@
       "allowed_edit_roots": [
         "crates/scenario-contract",
         "crates/xbrlkit-feature-grid",
+        "crates/xbrlkit-bdd-steps",
         "xtask",
         "specs/features/workflow"
       ],
@@ -1631,6 +1633,7 @@
       "crates": [
         "scenario-contract",
         "xbrlkit-feature-grid",
+        "xbrlkit-bdd-steps",
         "xtask"
       ],
       "fixtures": [],
@@ -1642,6 +1645,7 @@
       "allowed_edit_roots": [
         "crates/scenario-contract",
         "crates/xbrlkit-feature-grid",
+        "crates/xbrlkit-bdd-steps",
         "xtask",
         "specs/features/workflow"
       ],
