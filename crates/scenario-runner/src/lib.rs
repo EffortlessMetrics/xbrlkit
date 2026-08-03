@@ -91,11 +91,19 @@ pub fn execute_scenario(
         .iter()
         .any(|receipt| receipt == "ixds.assembly.v1")
         .then(|| ixds_assembly_receipt(&validation_run.report));
-    let export_receipt = scenario
+    let export_receipt = if scenario
         .receipts
         .iter()
         .any(|receipt| receipt == "export.report.v1")
-        .then(|| export_run::export_json(&validation_run.report).1);
+    {
+        Some(
+            export_run::export_json(&validation_run.report)
+                .context("serializing canonical report JSON")?
+                .1,
+        )
+    } else {
+        None
+    };
     Ok(ScenarioExecution {
         validation_run: Some(validation_run),
         taxonomy_resolution: None,

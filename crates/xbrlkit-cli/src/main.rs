@@ -77,7 +77,8 @@ fn main() -> anyhow::Result<()> {
                 .collect::<Vec<_>>();
             let run = validate_html_members(&members, &profile);
             if json {
-                let (json_output, _) = export_run::export_json(&run.report);
+                let (json_output, _) = export_run::export_json(&run.report)
+                    .context("serializing canonical report JSON")?;
                 println!("{}", render_json::format_json(&json_output));
             } else {
                 print_validation_summary(&profile, &run);
