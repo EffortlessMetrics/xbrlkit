@@ -152,11 +152,14 @@ fn impact(changed: &[String]) -> anyhow::Result<()> {
 fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     let grid = load_grid()?;
     let scenarios = select_matching_scenarios(&grid, ac_id);
+    let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
     if scenarios.is_empty() {
-        anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
+        let error = anyhow::anyhow!("test-ac: selector matched no scenarios: {ac_id}");
+        let receipt = test_ac_error_receipt(ac_id, &error);
+        write_json(&receipt_path, &receipt)?;
+        return Err(error);
     }
 
-    let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
     let result = match resolve_test_mode(&scenarios) {
         Ok(TestMode::Bdd) => run_bdd_scenarios(ac_id, &grid, &scenarios),
         Ok(TestMode::ScenarioRunner) => run_direct_scenarios(ac_id, &scenarios),
@@ -301,8 +304,7 @@ fn bdd(tag: &str) -> anyhow::Result<()> {
     let run = match xbrlkit_bdd::run(&repo_root(), &grid, tag) {
         Ok(run) => run,
         Err(error) => {
-            let mut receipt = Receipt::new("scenario.run", tag, RunResult::Error);
-            receipt.notes.push(error.to_string());
+            let receipt = test_ac_error_receipt(tag, &error);
             write_json(&path, &receipt)?;
             return Err(error);
         }
