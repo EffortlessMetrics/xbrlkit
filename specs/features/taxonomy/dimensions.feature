@@ -104,7 +104,7 @@ Feature: XBRL Dimensional Validation
   @alpha-active @SCN-XK-DIM-012 @AC-XK-DIM-012
   Scenario: Invalid typed date value fails validation
     Given a context with typed dimension "dim:ReportDateAxis" of type "xs:date"
-    And the typed member value "15-03-2024"
+    And the typed member value "2024-02-31"
     When I validate the typed dimension value
     Then the validation should fail
     And an "XBRL.DIMENSION.INVALID_TYPED_VALUE" finding should be reported
