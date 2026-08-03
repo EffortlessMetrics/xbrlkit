@@ -69,7 +69,7 @@ Verify and document the status of 5 legacy PRs (#11-#15) identified for cleanup.
 ## Deliverables
 
 1. **Documentation:** `.mend/notes/legacy-pr-cleanup-summary.md` — comprehensive verification summary
-2. **Plan:** `.mend/plans/ISSUE-101.md` — this file
+2. **Plan:** `.mend/plans/archive/2026-08-03/ISSUE-101.md` — this file
 3. **Issue Action:** Close #101 with summary comment
 
 ---
