@@ -437,6 +437,7 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
     scenario.scenario_id == selector
         || scenario.ac_id.as_deref() == Some(selector)
         || scenario.req_id.as_deref() == Some(selector)
+        || scenario.test_tag.as_deref() == Some(selector)
         || format!("@{}", scenario.scenario_id) == selector
         || scenario
             .ac_id
@@ -592,6 +593,16 @@ mod tests {
         );
         assert_eq!(
             select_matching_scenarios(&grid, "@SCN-XK-WORKFLOW-002").len(),
+            1
+        );
+
+        let mut tagged = scenario_record();
+        tagged.test_tag = Some("@workflow-bundle".to_string());
+        let tagged_grid = FeatureGrid {
+            scenarios: vec![tagged],
+        };
+        assert_eq!(
+            select_matching_scenarios(&tagged_grid, "@workflow-bundle").len(),
             1
         );
         assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
