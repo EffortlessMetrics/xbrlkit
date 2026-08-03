@@ -1,6 +1,7 @@
 //! SEC profile pack DTOs.
 
 use anyhow::Context;
+use corpus_fs::read_to_string;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use taxonomy_types::NamespaceMapping;
@@ -103,14 +104,12 @@ fn read_yaml<T>(path: &Path) -> anyhow::Result<T>
 where
     T: for<'de> Deserialize<'de> + Default,
 {
-    let bytes =
-        std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let bytes = read_to_string(path)?;
     serde_yaml::from_str(&bytes).with_context(|| format!("parsing {}", path.display()))
 }
 
 fn read_standard_taxonomy_uris(path: &Path) -> anyhow::Result<Vec<String>> {
-    let xml =
-        std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let xml = read_to_string(path)?;
     Ok(extract_attribute_values(&xml, "namespace"))
 }
 

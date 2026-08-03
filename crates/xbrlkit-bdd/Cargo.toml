@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow.workspace = true
+corpus-fs.workspace = true
 walkdir.workspace = true
 scenario-contract.workspace = true
 receipt-types.workspace = true

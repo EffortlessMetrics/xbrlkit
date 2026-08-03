@@ -1,6 +1,7 @@
 //! Minimal BDD runner for the active alpha scenarios.
 
 use anyhow::Context;
+use corpus_fs::read_to_string;
 use receipt_types::{Receipt, RunResult};
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use std::collections::BTreeMap;
@@ -88,8 +89,7 @@ fn parse_feature_scenarios(repo_root: &Path) -> anyhow::Result<Vec<ParsedScenari
 }
 
 fn parse_feature_file(path: &Path) -> anyhow::Result<Vec<ParsedScenario>> {
-    let content =
-        std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let content = read_to_string(path)?;
     let mut feature_tags = Vec::<String>::new();
     let mut pending_tags = Vec::<String>::new();
     let mut scenarios = Vec::<ParsedScenario>::new();
