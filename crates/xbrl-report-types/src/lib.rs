@@ -52,8 +52,11 @@ mod tests {
     use super::Period;
 
     #[test]
-    fn period_defaults_to_forever() {
-        assert_eq!(Period::default(), Period::Forever);
+    fn period_defaults_to_forever() -> Result<(), String> {
+        if Period::default() != Period::Forever {
+            return Err("Period::default() is not Forever".to_string());
+        }
+        Ok(())
     }
 
     #[test]

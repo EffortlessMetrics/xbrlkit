@@ -26,7 +26,8 @@ the existing crate-local names as public re-exports:
 
 - Only one `Period` enum definition exists in the three affected crates.
 - Existing context and streaming parsing behavior remains unchanged.
-- Existing public names compile without downstream call-site changes.
+- Existing public names remain available; exhaustive matches must handle the
+  newly shared variants described in the migration note below.
 - The shared type retains debug/equality and serde behavior, with `Forever` as
   its default.
 - A focused test proves the shared model's default contract.
@@ -59,6 +60,23 @@ The proof establishes package and workspace tests, lint cleanliness, formatting,
 the fixture-free acceptance path, the tagged BDD alias scenario, and the active
 alpha gate. It does not establish a hosted CI result.
 
+## Compatibility and migration
+
+This is an alpha API compatibility break for exhaustive matches. The public
+aliases remain available, but sharing the two former enums requires both
+aliases to expose the union of their variants:
+
+- Context callers matching `xbrl_contexts::Period` must add an
+  `xbrl_contexts::Period::Unknown` arm. Context parsing itself still emits only
+  `Instant`, `Duration`, or `Forever`.
+- Streaming callers matching `xbrl_stream::StreamingPeriod` must add a
+  `xbrl_stream::StreamingPeriod::Forever` arm. Streaming parsing continues to
+  use `Unknown` when the period cannot be determined.
+
+The in-repository CLI match is updated in `crates/xbrlkit-cli/src/main.rs`.
+Downstream consumers should add the corresponding arm before upgrading to
+this shared model.
+
 ## Non-goals
 
 - No parser validation, date normalization, or semantic change.
@@ -69,6 +87,6 @@ alpha gate. It does not establish a hosted CI result.
 
 ## Rollback
 
-Revert the bounded source, manifest, test, and plan changes. Existing public
-crate-local names remain the compatibility boundary, so rollback does not
-require downstream edits.
+Revert the bounded source, manifest, test, and plan changes. The public aliases
+remain the compatibility boundary; consumers that adopted the shared model
+must remove the additional match arms only when rolling back the type move.
