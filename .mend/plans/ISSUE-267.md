@@ -1,7 +1,7 @@
 # Plan: Offline-by-default taxonomy loading with opt-in HTTP
 
-**Issue:** #267  
-**Selected slice:** feature-gate the existing synchronous HTTP path  
+**Issue:** #267
+**Selected slice:** feature-gate the existing synchronous HTTP path
 **Status:** Ready for review
 
 ## Objective
