@@ -43,6 +43,8 @@ pub fn load_taxonomy(entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoad
 pub struct TaxonomyLoader {
     cache_dir: Option<std::path::PathBuf>,
     visited: std::cell::RefCell<HashSet<String>>,
+    cache_hits: std::cell::RefCell<HashSet<String>>,
+    loaded_schemas: std::cell::RefCell<HashSet<String>>,
     http_client: Option<reqwest::blocking::Client>,
 }
 
@@ -59,6 +61,8 @@ impl TaxonomyLoader {
         Self {
             cache_dir: None,
             visited: std::cell::RefCell::new(HashSet::new()),
+            cache_hits: std::cell::RefCell::new(HashSet::new()),
+            loaded_schemas: std::cell::RefCell::new(HashSet::new()),
             http_client: None,
         }
     }
@@ -71,6 +75,8 @@ impl TaxonomyLoader {
         Self {
             cache_dir,
             visited: std::cell::RefCell::new(HashSet::new()),
+            cache_hits: std::cell::RefCell::new(HashSet::new()),
+            loaded_schemas: std::cell::RefCell::new(HashSet::new()),
             http_client,
         }
     }
@@ -90,6 +96,9 @@ impl TaxonomyLoader {
     ///
     /// Returns an error if the taxonomy cannot be loaded or parsed.
     pub fn load(&self, entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoaderError> {
+        // `visited` belongs to one resolution pass; a loader can be reused for
+        // a later load and should resolve the entrypoint again from its cache.
+        self.visited.borrow_mut().clear();
         let mut taxonomy = DimensionTaxonomy::new();
 
         // Load the entrypoint schema
@@ -127,6 +136,8 @@ impl TaxonomyLoader {
             self.load_schema_recursive(&import_ref, taxonomy)?;
         }
 
+        self.loaded_schemas.borrow_mut().insert(path.to_string());
+
         Ok(())
     }
 
@@ -162,9 +173,11 @@ impl TaxonomyLoader {
         if let Some(ref cache_dir) = self.cache_dir {
             let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
             if cache_path.exists() {
-                return std::fs::read_to_string(&cache_path).map_err(|e| {
+                let content = std::fs::read_to_string(&cache_path).map_err(|e| {
                     TaxonomyLoaderError::Io(cache_path.to_string_lossy().to_string(), e)
-                });
+                })?;
+                self.cache_hits.borrow_mut().insert(url.to_string());
+                return Ok(content);
             }
         }
 
@@ -227,6 +240,18 @@ impl TaxonomyLoader {
         let filename = url.replace(['/', ':', '?', '&', '='], "_");
         cache_dir.join(filename)
     }
+
+    /// Returns the URLs served from the local cache by this loader.
+    #[must_use]
+    pub fn cache_hits(&self) -> HashSet<String> {
+        self.cache_hits.borrow().clone()
+    }
+
+    /// Returns the schemas successfully resolved by this loader.
+    #[must_use]
+    pub fn loaded_schemas(&self) -> HashSet<String> {
+        self.loaded_schemas.borrow().clone()
+    }
 }
 
 #[cfg(test)]
@@ -267,5 +292,67 @@ mod tests {
             result.unwrap_err(),
             TaxonomyLoaderError::UnsupportedUrl(_)
         ));
+    }
+
+    #[test]
+    fn test_cache_hit_tracking_records_a_successful_cache_read() {
+        let cache_dir = tempfile::tempdir().unwrap();
+        let url = "https://example.com/schema.xsd";
+        let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir.path());
+        TaxonomyLoader::write_to_cache("cached schema", &cache_path).unwrap();
+
+        let loader = TaxonomyLoader::with_cache_dir(cache_dir.path());
+        assert_eq!(loader.fetch_url(url).unwrap(), "cached schema");
+        assert!(loader.cache_hits().contains(url));
+    }
+
+    #[test]
+    fn test_loaded_schema_tracking_records_recursive_imports() {
+        let fixture_dir = tempfile::tempdir().unwrap();
+        let root = fixture_dir.path().join("root.xsd");
+        let imported = fixture_dir.path().join("imported.xsd");
+        std::fs::write(
+            &root,
+            r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                <xsd:import schemaLocation="imported.xsd"/>
+            </xsd:schema>"#,
+        )
+        .unwrap();
+        std::fs::write(
+            &imported,
+            r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>"#,
+        )
+        .unwrap();
+
+        let loader = TaxonomyLoader::new();
+        loader.load(&root.to_string_lossy()).unwrap();
+        let loaded_paths = loader.loaded_schemas();
+        assert!(loaded_paths.iter().any(|path| path.ends_with("root.xsd")));
+        assert!(
+            loaded_paths
+                .iter()
+                .any(|path| path.ends_with("imported.xsd"))
+        );
+    }
+
+    #[test]
+    fn test_reusing_loader_resolves_entrypoint_again() {
+        let fixture_dir = tempfile::tempdir().unwrap();
+        let schema = fixture_dir.path().join("dimension.xsd");
+        std::fs::write(
+            &schema,
+            r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                xmlns:xbrldt="http://xbrl.org/2005/xbrldt"
+                xmlns:demo="https://example.com/demo"
+                targetNamespace="https://example.com/demo">
+                <xsd:element name="Axis" substitutionGroup="xbrldt:dimensionItem"/>
+            </xsd:schema>"#,
+        )
+        .unwrap();
+
+        let loader = TaxonomyLoader::new();
+        let entrypoint = schema.to_string_lossy();
+        assert!(!loader.load(&entrypoint).unwrap().dimensions.is_empty());
+        assert!(!loader.load(&entrypoint).unwrap().dimensions.is_empty());
     }
 }

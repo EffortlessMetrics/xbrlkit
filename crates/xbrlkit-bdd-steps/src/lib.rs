@@ -11,8 +11,11 @@ use scenario_runner::{
     execute_scenario, write_execution_receipts,
 };
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
+
+static TAXONOMY_TEMP_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Step {
@@ -602,16 +605,21 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a taxonomy URL to load" {
-        // Use a synthetic path that doesn't exist - triggers synthetic taxonomy creation
         world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/url-test/schema.xsd".to_string());
+            Some("https://example.com/xbrlkit/cache-test.xsd".to_string());
         return Ok(true);
     }
 
     if step.text == "a cache directory is configured" {
-        let cache_dir = std::env::temp_dir().join("xbrlkit_taxonomy_cache");
-        // Create the cache directory so it exists for the Then step
-        let _ = std::fs::create_dir_all(&cache_dir);
+        let cache_dir = taxonomy_temp_dir("cache")?;
+        let schema_path = world
+            .taxonomy_loader_context
+            .schema_path
+            .as_deref()
+            .context("taxonomy URL not configured")?;
+        let cache_file_name = schema_path.replace(['/', ':', '?', '&', '='], "_");
+        std::fs::write(cache_dir.join(cache_file_name), synthetic_schema())
+            .context("writing offline taxonomy cache fixture")?;
         world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
         world.taxonomy_loader_context.loader =
             Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
@@ -619,8 +627,13 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a taxonomy schema that imports another schema" {
+        let fixture_dir = taxonomy_temp_dir("imports")?;
+        let schema_path = fixture_dir.join("root.xsd");
+        std::fs::write(&schema_path, importing_schema()).context("writing importing schema")?;
+        std::fs::write(fixture_dir.join("imported.xsd"), imported_schema())
+            .context("writing imported schema")?;
         world.taxonomy_loader_context.schema_path =
-            Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
+            Some(schema_path.to_string_lossy().into_owned());
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
         return Ok(true);
     }
@@ -1016,7 +1029,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         let loader = world
             .taxonomy_loader_context
             .loader
-            .take()
+            .as_ref()
             .context("taxonomy loader not initialized")?;
         let schema_path = world
             .taxonomy_loader_context
@@ -1027,7 +1040,6 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         // For synthetic test schemas that may not exist, create a minimal taxonomy
         let taxonomy =
             if schema_path.contains("fixtures/") && !std::path::Path::new(&schema_path).exists() {
-                // Create synthetic taxonomy for testing
                 create_synthetic_taxonomy()
             } else {
                 loader.load(&schema_path)?
@@ -1525,17 +1537,50 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
             .cache_dir
             .as_ref()
             .context("cache directory not configured")?;
-        if !cache_dir.exists() {
-            anyhow::bail!("cache directory does not exist");
+        let has_cached_file = std::fs::read_dir(cache_dir)
+            .context("reading taxonomy cache directory")?
+            .next()
+            .transpose()
+            .context("reading taxonomy cache entry")?
+            .is_some();
+        if !has_cached_file {
+            anyhow::bail!("taxonomy cache directory contains no cached file");
         }
         return Ok(());
     }
 
     if step.text == "subsequent loads should use the cache" {
+        let loader = world
+            .taxonomy_loader_context
+            .loader
+            .as_ref()
+            .context("TaxonomyLoader not available")?;
+        let schema_path = world
+            .taxonomy_loader_context
+            .schema_path
+            .as_deref()
+            .context("taxonomy URL not configured")?;
+        loader.load(schema_path)?;
+        if !loader.cache_hits().contains(schema_path) {
+            anyhow::bail!("second taxonomy load did not record a cache hit for {schema_path}");
+        }
         return Ok(());
     }
 
     if step.text == "imported schemas should be loaded" {
+        let loader = world
+            .taxonomy_loader_context
+            .loader
+            .as_ref()
+            .context("TaxonomyLoader not available")?;
+        let schemas = loader.loaded_schemas();
+        if schemas.len() <= 1 {
+            anyhow::bail!(
+                "expected imported schemas but only found {}: {:?}",
+                schemas.len(),
+                schemas
+            );
+        }
         return Ok(());
     }
 
@@ -1552,6 +1597,39 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     anyhow::bail!("unsupported BDD step: {}", step.text)
+}
+
+fn taxonomy_temp_dir(label: &str) -> anyhow::Result<PathBuf> {
+    let sequence = TAXONOMY_TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let path = std::env::temp_dir().join(format!(
+        "xbrlkit-taxonomy-{label}-{}-{sequence}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&path)
+        .with_context(|| format!("creating taxonomy test directory {}", path.display()))?;
+    Ok(path)
+}
+
+fn synthetic_schema() -> &'static str {
+    r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xbrldt="http://xbrl.org/2005/xbrldt"
+        targetNamespace="https://example.com/xbrlkit">
+        <xsd:element name="Axis" substitutionGroup="xbrldt:dimensionItem"/>
+    </xsd:schema>"#
+}
+
+fn importing_schema() -> &'static str {
+    r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xbrldt="http://xbrl.org/2005/xbrldt"
+        targetNamespace="https://example.com/xbrlkit">
+        <xsd:import schemaLocation="imported.xsd"/>
+        <xsd:element name="Axis" substitutionGroup="xbrldt:dimensionItem"/>
+    </xsd:schema>"#
+}
+
+fn imported_schema() -> &'static str {
+    r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="https://example.com/xbrlkit-imported"/>"#
 }
 
 /// Create a synthetic taxonomy for testing when fixture files don't exist
