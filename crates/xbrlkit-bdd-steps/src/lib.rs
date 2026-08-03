@@ -161,30 +161,22 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
         anyhow::bail!("declared profile pack does not match scenario metadata");
     }
 
-    if !world.fixture_dirs.is_empty() {
+    if !world.fixture_dirs.is_empty() || !scenario.fixtures.is_empty() {
         let fixture_root = world.repo_root.join("fixtures");
+        let scenario_paths = scenario
+            .fixtures
+            .iter()
+            .map(|fixture| fixture_root.join(fixture))
+            .collect::<Vec<_>>();
+        for path in &scenario_paths {
+            relative_fixture_path(path, &fixture_root)?;
+        }
         let declared = world
             .fixture_dirs
             .iter()
             .map(|path| {
-                let relative = path.strip_prefix(&fixture_root).with_context(|| {
-                    format!(
-                        "fixture path {} is outside repository fixture root {}",
-                        path.display(),
-                        fixture_root.display()
-                    )
-                })?;
-                if relative
-                    .components()
-                    .any(|component| component == Component::ParentDir)
-                {
-                    anyhow::bail!(
-                        "fixture path {} contains parent-directory traversal outside repository fixture root {}",
-                        path.display(),
-                        fixture_root.display()
-                    );
-                }
-                Ok(relative.to_string_lossy().replace('\\', "/"))
+                relative_fixture_path(path, &fixture_root)
+                    .map(|relative| relative.to_string_lossy().replace('\\', "/"))
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
         let resolved_repo_root = fs::canonicalize(&world.repo_root)
@@ -202,22 +194,53 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
                 world.repo_root.display()
             );
         }
-        for path in &world.fixture_dirs {
-            let resolved_path = canonicalize_existing_path(path)?;
-            if !resolved_path.starts_with(&resolved_fixture_root) {
-                anyhow::bail!(
-                    "fixture path {} is outside repository fixture root {}",
-                    path.display(),
-                    fixture_root.display()
-                );
-            }
+        for path in scenario_paths.iter().chain(world.fixture_dirs.iter()) {
+            validate_fixture_path(path, &fixture_root, &resolved_fixture_root)?;
         }
-        if declared != scenario.fixtures {
+        if !world.fixture_dirs.is_empty() && declared != scenario.fixtures {
             anyhow::bail!("declared fixture directories do not match scenario metadata");
         }
     }
 
     Ok(())
+}
+
+fn validate_fixture_path(
+    path: &Path,
+    fixture_root: &Path,
+    resolved_fixture_root: &Path,
+) -> anyhow::Result<()> {
+    relative_fixture_path(path, fixture_root)?;
+    let resolved_path = canonicalize_existing_path(path)?;
+    if !resolved_path.starts_with(resolved_fixture_root) {
+        anyhow::bail!(
+            "fixture path {} is outside repository fixture root {}",
+            path.display(),
+            fixture_root.display()
+        );
+    }
+    Ok(())
+}
+
+fn relative_fixture_path<'a>(path: &'a Path, fixture_root: &Path) -> anyhow::Result<&'a Path> {
+    let relative = path.strip_prefix(fixture_root).with_context(|| {
+        format!(
+            "fixture path {} is outside repository fixture root {}",
+            path.display(),
+            fixture_root.display()
+        )
+    })?;
+    if relative
+        .components()
+        .any(|component| component == Component::ParentDir)
+    {
+        anyhow::bail!(
+            "fixture path {} contains parent-directory traversal outside repository fixture root {}",
+            path.display(),
+            fixture_root.display()
+        );
+    }
+    Ok(relative)
 }
 
 fn canonicalize_existing_path(path: &Path) -> anyhow::Result<PathBuf> {
@@ -1794,6 +1817,26 @@ mod tests {
         };
         if !error.contains("parent-directory traversal") {
             return Err(format!("unexpected traversal error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn scenario_fixture_metadata_without_given_path_returns_error() -> Result<(), String> {
+        let repo = temp_dir()?;
+        fs::create_dir_all(repo.0.join("fixtures")).map_err(|error| error.to_string())?;
+        let world = World::new(repo.0.clone(), FeatureGrid::default());
+        let scenario = ScenarioRecord {
+            fixtures: vec!["../outside".to_string()],
+            ..ScenarioRecord::default()
+        };
+
+        let error = match assert_declared_inputs_match(&world, &scenario) {
+            Ok(()) => return Err("metadata-only traversal should be rejected".to_string()),
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("parent-directory traversal") {
+            return Err(format!("unexpected metadata traversal error: {error}"));
         }
         Ok(())
     }
