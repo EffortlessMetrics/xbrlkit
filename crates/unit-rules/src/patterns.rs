@@ -2,6 +2,15 @@
 
 use regex::Regex;
 use std::collections::HashMap;
+use std::sync::LazyLock;
+
+static MONETARY_PATTERNS: LazyLock<Result<[Regex; 3], regex::Error>> = LazyLock::new(|| {
+    Ok([
+        Regex::new(r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*")?,
+        Regex::new(r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*")?,
+        Regex::new(r"(?i).*(balance|amount|value|gain|proceed).*")?,
+    ])
+});
 
 /// Expected unit type for a concept
 #[derive(Debug, Clone, PartialEq)]
@@ -104,14 +113,12 @@ impl ConceptUnitPatterns {
     /// This is a heuristic based on common naming patterns.
     /// For more accuracy, use explicit configuration or taxonomy type info.
     pub fn is_likely_monetary(&self, concept: &str) -> bool {
-        let monetary_patterns = [
-            r"(?i).*(revenue|sales|income|profit|loss|expense|cost|asset|liabilit).*",
-            r"(?i).*(cash|debt|equity|capital|dividend|payment|price).*",
-            r"(?i).*(balance|amount|value|gain|proceed).*",
-        ];
+        let Ok(monetary_patterns) = MONETARY_PATTERNS.as_ref() else {
+            return false;
+        };
 
-        for pattern in &monetary_patterns {
-            if Regex::new(pattern).unwrap().is_match(concept) {
+        for pattern in monetary_patterns {
+            if pattern.is_match(concept) {
                 // But exclude share-related concepts
                 if !concept.to_lowercase().contains("share") {
                     return true;
@@ -166,5 +173,28 @@ mod tests {
         assert!(patterns.is_likely_monetary("us-gaap:Revenue"));
         assert!(patterns.is_likely_monetary("us-gaap:Assets"));
         assert!(!patterns.is_likely_monetary("us-gaap:CommonStockSharesOutstanding"));
+    }
+
+    #[test]
+    fn test_monetary_heuristic_reuses_compiled_patterns() -> Result<(), String> {
+        let patterns = ConceptUnitPatterns::new();
+        let cases = [
+            ("us-gaap:Revenue", true),
+            ("us-gaap:CommonStockSharesOutstanding", false),
+            ("us-gaap:EmployeeCount", false),
+        ];
+
+        for _ in 0..100 {
+            for (concept, expected) in cases {
+                let actual = patterns.is_likely_monetary(concept);
+                if actual != expected {
+                    return Err(format!(
+                        "monetary heuristic mismatch for {concept}: expected {expected}, got {actual}"
+                    ));
+                }
+            }
+        }
+
+        Ok(())
     }
 }
