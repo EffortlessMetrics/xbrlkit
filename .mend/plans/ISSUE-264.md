@@ -13,12 +13,13 @@ the public APIs or the profile-specific error messages.
 
 ## Current scope
 
-Fresh inspection of `origin/main` found four exact duplicate call sites in
-three consuming crates:
+Fresh inspection of `origin/main` found seven exact duplicate call sites in
+four consuming crates:
 
 - `sec-profile-types`: `read_yaml` and `read_standard_taxonomy_uris`;
 - `xbrlkit-bdd`: `parse_feature_file`;
 - `xbrlkit-feature-grid`: sidecar loading.
+- `scenario-runner`: report fixtures, HTML members, and entry-point fixtures.
 
 The profile loader's `reading profile pack {profile_id}` message and the
 `xbrlkit-bdd-steps` submission-specific message are intentionally out of scope.
@@ -26,11 +27,11 @@ The issue's older seven-call-site count included stale or non-matching sites.
 
 ## Acceptance criteria
 
-- [ ] All four exact duplicate reads use `corpus_fs::read_to_string`.
-- [ ] The consuming crates declare the existing `corpus-fs` workspace dependency.
-- [ ] Profile-specific and submission-specific error messages remain unchanged.
-- [ ] Focused package tests, formatting, Clippy, and workspace tests pass.
-- [ ] No runtime behavior or public API changes are introduced.
+- [x] All seven exact duplicate reads use `corpus_fs::read_to_string`.
+- [x] The consuming crates declare the existing `corpus-fs` workspace dependency.
+- [x] Profile-specific and submission-specific error messages remain unchanged.
+- [x] Focused package tests, formatting, Clippy, and workspace tests pass.
+- [x] No runtime behavior or public API changes are introduced.
 
 ## Proof
 

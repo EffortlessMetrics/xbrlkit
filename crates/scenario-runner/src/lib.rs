@@ -1,6 +1,7 @@
 //! Shared scenario execution for repo-local developer flows.
 
 use anyhow::Context;
+use corpus_fs::read_to_string;
 use receipt_types::{Receipt, RunResult};
 use scenario_contract::ScenarioRecord;
 use sec_profile_types::{ProfilePack, load_profile_from_workspace};
@@ -108,8 +109,7 @@ pub fn load_fixture_facts(fixture_dirs: &[PathBuf]) -> anyhow::Result<CanonicalR
     let mut report = CanonicalReport::default();
     for fixture_dir in fixture_dirs {
         let path = fixture_dir.join("report.yaml");
-        let content = std::fs::read_to_string(&path)
-            .with_context(|| format!("reading {}", path.display()))?;
+        let content = read_to_string(&path)?;
         let fixture: ReportFixture = serde_yaml::from_str(&content)
             .with_context(|| format!("parsing {}", path.display()))?;
         report.members.push(fixture_dir.display().to_string());
@@ -132,8 +132,7 @@ pub fn load_html_members(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<(String
             .collect::<Vec<_>>();
         html_paths.sort();
         for path in html_paths {
-            let html = std::fs::read_to_string(&path)
-                .with_context(|| format!("reading {}", path.display()))?;
+            let html = read_to_string(&path)?;
             let member_name = path
                 .file_name()
                 .and_then(|name| name.to_str())
@@ -470,8 +469,7 @@ fn load_entry_points(fixture_dirs: &[PathBuf]) -> anyhow::Result<Vec<String>> {
     let mut entry_points = Vec::new();
     for fixture_dir in fixture_dirs {
         let path = fixture_dir.join("entrypoints.yaml");
-        let content = std::fs::read_to_string(&path)
-            .with_context(|| format!("reading {}", path.display()))?;
+        let content = read_to_string(&path)?;
         let fixture: EntryPointsFixture = serde_yaml::from_str(&content)
             .with_context(|| format!("parsing {}", path.display()))?;
         entry_points.extend(fixture.entry_points);
