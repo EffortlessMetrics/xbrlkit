@@ -16,6 +16,17 @@ This directory contains my operational tracking for the xbrlkit project — my d
 | `decisions/` | ADRs and decision records specific to my work |
 | `research/` | Deep-dive research spikes |
 
+## Plan lifecycle
+
+- Active implementation plans live in .mend/plans/ and use the
+  ISSUE-{number}.md naming convention.
+- When the issue is closed or the plan is superseded, move the plan into a
+  dated directory under .mend/plans/archive/ instead of deleting it.
+- Archive directories preserve historical context; they are not an active
+  work queue.
+- Meta or cleanup plans are archived as the final cleanup step before their
+  issue is closed.
+
 ## Philosophy
 
 - **Lightweight:** These files can be messy. They're for me.

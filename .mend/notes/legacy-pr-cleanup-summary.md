@@ -150,6 +150,6 @@ All 5 legacy PRs (#11-15) have been verified:
 
 ## References
 
-- **Plan:** `.mend/plans/ISSUE-101.md`
+- **Plan:** `.mend/plans/archive/2026-08-03/ISSUE-101.md`
 - **This Document:** `.mend/notes/legacy-pr-cleanup-summary.md`
 - **Related PRs:** #11, #12, #13, #14, #15, #44 (supersedes #12)
