@@ -511,8 +511,8 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
                 String::from_utf8_lossy(&output.stderr)
             );
         }
-        let metadata: CargoMetadata = serde_json::from_slice(&output.stdout)
-            .context("parsing cargo metadata output")?;
+        let metadata: CargoMetadata =
+            serde_json::from_slice(&output.stdout).context("parsing cargo metadata output")?;
         let packages: Vec<String> = metadata
             .packages
             .into_iter()
@@ -962,13 +962,20 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
     if step.text == "I run the package readiness check" {
         for package in &world.package_check_publishable_crates {
             let output = std::process::Command::new("cargo")
-                .args(["package", "-p", package, "--allow-dirty", "--locked", "--list"])
+                .args([
+                    "package",
+                    "-p",
+                    package,
+                    "--allow-dirty",
+                    "--locked",
+                    "--list",
+                ])
                 .current_dir(&world.repo_root)
                 .output()
                 .with_context(|| format!("packaging {package}"))?;
             let success = output.status.success();
             let details = if success {
-                format!("packaged {} successfully", package)
+                format!("packaged {package} successfully")
             } else {
                 format!(
                     "cargo package failed for {}\nstdout:\n{}\nstderr:\n{}",
@@ -977,7 +984,9 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
                     String::from_utf8_lossy(&output.stderr)
                 )
             };
-            world.package_check_results.push((package.clone(), success, details));
+            world
+                .package_check_results
+                .push((package.clone(), success, details));
         }
         return Ok(true);
     }
@@ -1281,7 +1290,7 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
             if !failures.is_empty() {
                 let details = failures
                     .iter()
-                    .map(|(name, _, detail)| format!("  - {}: {}", name, detail))
+                    .map(|(name, _, detail)| format!("  - {name}: {detail}"))
                     .collect::<Vec<_>>()
                     .join("\n");
                 anyhow::bail!(
@@ -1691,5 +1700,3 @@ struct CargoMetadataPackage {
     name: String,
     publish: Option<Vec<String>>,
 }
-
-

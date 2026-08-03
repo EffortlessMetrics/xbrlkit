@@ -54,6 +54,7 @@ impl ScenarioRecord {
     /// - Bare `ac_id` (e.g. `AC-XK-WORKFLOW-002`)
     /// - `@`-prefixed `ac_id` (e.g. `@AC-XK-WORKFLOW-002`)
     /// - Bare `req_id` (e.g. `REQ-XK-WORKFLOW`)
+    #[must_use]
     pub fn matches_selector(&self, selector: &str) -> bool {
         self.scenario_id == selector
             || self.ac_id.as_deref() == Some(selector)
@@ -68,6 +69,7 @@ impl ScenarioRecord {
 
 impl FeatureGrid {
     /// Select all scenarios matching the given selector.
+    #[must_use]
     pub fn select_by_selector(&self, selector: &str) -> Vec<ScenarioRecord> {
         self.scenarios
             .iter()
@@ -94,10 +96,7 @@ mod tests {
             fixtures: Vec::new(),
             profile_pack: None,
             receipts: vec!["bundle.manifest.v1".to_string()],
-            allowed_edit_roots: vec![
-                "specs/features/workflow".to_string(),
-                "xtask".to_string(),
-            ],
+            allowed_edit_roots: vec!["specs/features/workflow".to_string(), "xtask".to_string()],
             suite: Some("synthetic".to_string()),
             speed: Some("fast".to_string()),
         }

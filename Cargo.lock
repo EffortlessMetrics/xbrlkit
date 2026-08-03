@@ -2258,6 +2258,7 @@ dependencies = [
  "scenario-contract",
  "scenario-runner",
  "sec-profile-types",
+ "serde",
  "serde_json",
  "taxonomy-dimensions",
  "taxonomy-loader",
