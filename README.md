@@ -28,7 +28,7 @@ This workspace is designed as a governed foundation for a validating processor a
 - `profiles/` – versioned SEC profile packs
 - `fixtures/` – tiny synthetic inputs and goldens
 - `corpus/` – imported suites and pinned real filings
-- `crates/` – engine crates, semantic leaves, use-case crates, adapters, facade, CLI
+- `crates/` – engine crates, semantic leaves, use-case crates, adapters, facade, CLI; see the [crate status map](crates/README.md)
 - `xtask/` – repo-local developer automation for feature-grid, bundle, impact, schema-check, and focused AC runs
 
 ## Supported surface
