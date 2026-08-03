@@ -11,7 +11,10 @@ use scenario_runner::{
     execute_scenario, write_execution_receipts,
 };
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
+};
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -81,6 +84,16 @@ pub struct TaxonomyLoaderContext {
     pub cache_dir: Option<PathBuf>,
     pub schema_path: Option<String>,
     pub loaded: bool,
+    temporary_dirs: Vec<Arc<TaxonomyTempDir>>,
+}
+
+#[derive(Debug)]
+struct TaxonomyTempDir(PathBuf);
+
+impl Drop for TaxonomyTempDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
 }
 
 impl World {
@@ -611,7 +624,8 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a cache directory is configured" {
-        let cache_dir = taxonomy_temp_dir("cache")?;
+        let temp_dir = taxonomy_temp_dir("cache")?;
+        let cache_dir = temp_dir.0.clone();
         let schema_path = world
             .taxonomy_loader_context
             .schema_path
@@ -623,18 +637,20 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
         world.taxonomy_loader_context.loader =
             Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
+        world.taxonomy_loader_context.temporary_dirs.push(temp_dir);
         return Ok(true);
     }
 
     if step.text == "a taxonomy schema that imports another schema" {
-        let fixture_dir = taxonomy_temp_dir("imports")?;
-        let schema_path = fixture_dir.join("root.xsd");
+        let temp_dir = taxonomy_temp_dir("imports")?;
+        let schema_path = temp_dir.0.join("root.xsd");
         std::fs::write(&schema_path, importing_schema()).context("writing importing schema")?;
-        std::fs::write(fixture_dir.join("imported.xsd"), imported_schema())
+        std::fs::write(temp_dir.0.join("imported.xsd"), imported_schema())
             .context("writing imported schema")?;
         world.taxonomy_loader_context.schema_path =
             Some(schema_path.to_string_lossy().into_owned());
         world.taxonomy_loader_context.loader = Some(taxonomy_loader::TaxonomyLoader::new());
+        world.taxonomy_loader_context.temporary_dirs.push(temp_dir);
         return Ok(true);
     }
 
@@ -1599,7 +1615,7 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     anyhow::bail!("unsupported BDD step: {}", step.text)
 }
 
-fn taxonomy_temp_dir(label: &str) -> anyhow::Result<PathBuf> {
+fn taxonomy_temp_dir(label: &str) -> anyhow::Result<Arc<TaxonomyTempDir>> {
     let sequence = TAXONOMY_TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
     let path = std::env::temp_dir().join(format!(
         "xbrlkit-taxonomy-{label}-{}-{sequence}",
@@ -1607,7 +1623,7 @@ fn taxonomy_temp_dir(label: &str) -> anyhow::Result<PathBuf> {
     ));
     std::fs::create_dir_all(&path)
         .with_context(|| format!("creating taxonomy test directory {}", path.display()))?;
-    Ok(path)
+    Ok(Arc::new(TaxonomyTempDir(path)))
 }
 
 fn synthetic_schema() -> &'static str {
@@ -1700,4 +1716,25 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::taxonomy_temp_dir;
+
+    #[test]
+    fn taxonomy_temp_dir_is_removed_when_dropped() -> anyhow::Result<()> {
+        let path = {
+            let temp_dir = taxonomy_temp_dir("cleanup-test")?;
+            let path = temp_dir.0.clone();
+            anyhow::ensure!(path.is_dir(), "temporary directory was not created");
+            path
+        };
+
+        anyhow::ensure!(
+            !path.exists(),
+            "temporary directory still exists after its owner was dropped"
+        );
+        Ok(())
+    }
 }
