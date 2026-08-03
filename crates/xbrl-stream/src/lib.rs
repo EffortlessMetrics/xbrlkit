@@ -35,6 +35,8 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use std::io::BufRead;
 
+pub use xbrl_report_types::Period as StreamingPeriod;
+
 /// A streaming XBRL fact as extracted from the XML.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StreamingFact {
@@ -61,17 +63,6 @@ pub struct StreamingContext {
     pub entity_value: Option<String>,
     /// Period type (instant or duration)
     pub period: StreamingPeriod,
-}
-
-/// Period definition for streaming contexts.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum StreamingPeriod {
-    /// Instant period with date
-    Instant(String),
-    /// Duration period with start and end dates
-    Duration { start: String, end: String },
-    /// Period not yet determined or invalid
-    Unknown,
 }
 
 /// A streaming XBRL unit definition.

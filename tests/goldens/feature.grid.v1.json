@@ -476,6 +476,42 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-PERIOD-001",
+      "ac_id": "AC-XK-PERIOD-001",
+      "req_id": "REQ-XK-PERIOD-MODEL",
+      "feature_file": "specs/features/foundation/period_model.feature",
+      "sidecar_file": "specs/features/foundation/period_model.meta.yaml",
+      "layer": "foundation",
+      "module": "FEAT-XK-PERIOD-MODEL:shared-period-model",
+      "crates": [
+        "xbrl-report-types",
+        "xbrl-contexts",
+        "xbrl-stream",
+        "xbrlkit-bdd",
+        "xbrlkit-bdd-steps",
+        "scenario-runner",
+        "xtask"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "contracts/schemas",
+        "crates/xbrl-report-types",
+        "crates/xbrl-contexts",
+        "crates/xbrl-stream",
+        "crates/scenario-runner",
+        "crates/xbrlkit-bdd",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/foundation",
+        "specs/spec_ledger.yaml"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-SEC-DECIMAL-001",
       "ac_id": "AC-XK-SEC-DECIMAL-001",
       "req_id": "REQ-XK-SEC-DECIMAL",

@@ -1,0 +1,22 @@
+feature_id: FEAT-XK-PERIOD-MODEL
+layer: foundation
+module: shared-period-model
+scenarios:
+  SCN-XK-PERIOD-001:
+    ac_id: AC-XK-PERIOD-001
+    req_id: REQ-XK-PERIOD-MODEL
+    crates: [xbrl-report-types, xbrl-contexts, xbrl-stream, xbrlkit-bdd, xbrlkit-bdd-steps, scenario-runner, xtask]
+    fixtures: []
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - contracts/schemas
+      - crates/xbrl-report-types
+      - crates/xbrl-contexts
+      - crates/xbrl-stream
+      - crates/scenario-runner
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - specs/features/foundation
+      - specs/spec_ledger.yaml

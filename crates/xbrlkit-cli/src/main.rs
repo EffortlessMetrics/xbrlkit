@@ -120,6 +120,7 @@ fn main() -> anyhow::Result<()> {
                                     println!("  period: {start} to {end}");
                                 }
                                 Period::Forever => println!("  period: forever"),
+                                Period::Unknown => println!("  period: unknown"),
                             }
                             let dims = get_dimensional_members(context);
                             if !dims.is_empty() {

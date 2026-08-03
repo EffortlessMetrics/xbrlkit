@@ -2214,6 +2214,7 @@ dependencies = [
  "roxmltree",
  "serde",
  "thiserror 2.0.18",
+ "xbrl-report-types",
 ]
 
 [[package]]
@@ -2229,6 +2230,7 @@ name = "xbrl-report-types"
 version = "0.1.0-alpha.1"
 dependencies = [
  "serde",
+ "serde_json",
 ]
 
 [[package]]

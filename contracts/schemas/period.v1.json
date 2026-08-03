@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://effortlessmetrics.com/xbrlkit/schemas/period.v1.json",
+  "title": "period.v1",
+  "description": "The Serde JSON representation of the shared XBRL period model.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Instant": { "type": "string" }
+      },
+      "required": ["Instant"]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Duration": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": { "type": "string" },
+            "end": { "type": "string" }
+          },
+          "required": ["start", "end"]
+        }
+      },
+      "required": ["Duration"]
+    },
+    {
+      "type": "string",
+      "enum": ["Forever", "Unknown"]
+    }
+  ]
+}

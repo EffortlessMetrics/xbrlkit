@@ -126,6 +126,15 @@ stories:
               - type: bdd
                 tag: "@AC-XK-CONTEXT-004"
                 file: "specs/features/foundation/context_completeness.feature"
+      - id: REQ-XK-PERIOD-MODEL
+        title: Share one serializable period model across parsed and streaming APIs
+        acceptance_criteria:
+          - id: AC-XK-PERIOD-001
+            title: Parsed and streaming periods share one model
+            tests:
+              - type: bdd
+                tag: "@AC-XK-PERIOD-001"
+                file: "specs/features/foundation/period_model.feature"
       - id: REQ-XK-SEC-DECIMAL
         title: Enforce decimal precision rules for numeric facts
         acceptance_criteria:

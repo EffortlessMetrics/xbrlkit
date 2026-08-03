@@ -43,6 +43,9 @@ pub fn execute_scenario(
         .map(|fixture| repo_root.join("fixtures").join(fixture))
         .collect::<Vec<_>>();
     if fixture_dirs.is_empty() {
+        if is_fixture_free_bdd_scenario(scenario) {
+            return Ok(ScenarioExecution::default());
+        }
         anyhow::bail!("scenario {} has no fixtures", scenario.scenario_id);
     }
 
@@ -258,6 +261,12 @@ pub fn assert_scenario_outcome(
             Ok(())
         }
 
+        // Shared period model
+        Some("AC-XK-PERIOD-001") => {
+            // The cross-crate alias assertion runs in the BDD step definitions.
+            Ok(())
+        }
+
         // Scenarios without AC ID use BDD step definitions
         None => Ok(()),
 
@@ -266,6 +275,22 @@ pub fn assert_scenario_outcome(
             scenario.scenario_id
         ),
     }
+}
+
+fn is_fixture_free_bdd_scenario(scenario: &ScenarioRecord) -> bool {
+    scenario
+        .receipts
+        .iter()
+        .any(|receipt| receipt == "scenario.run.v1")
+        && !scenario.receipts.iter().any(|receipt| {
+            matches!(
+                receipt.as_str(),
+                "validation.report.v1"
+                    | "taxonomy.resolve.v1"
+                    | "ixds.assembly.v1"
+                    | "export.report.v1"
+            )
+        })
 }
 
 /// Helper: Check validation report contains expected rule
@@ -487,4 +512,43 @@ fn write_json(path: &Path, value: &impl serde::Serialize) -> anyhow::Result<()> 
     let bytes = serde_json::to_vec_pretty(value).context("serializing json")?;
     std::fs::write(path, bytes).with_context(|| format!("writing {}", path.display()))?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{assert_scenario_outcome, execute_scenario};
+    use scenario_contract::ScenarioRecord;
+    use std::path::Path;
+
+    fn fixture_free_scenario(receipts: &[&str]) -> ScenarioRecord {
+        ScenarioRecord {
+            scenario_id: "SCN-TEST-FIXTURE-FREE".to_string(),
+            ac_id: Some("AC-XK-PERIOD-001".to_string()),
+            receipts: receipts.iter().map(ToString::to_string).collect(),
+            ..ScenarioRecord::default()
+        }
+    }
+
+    #[test]
+    fn fixture_free_bdd_scenario_is_a_runner_noop() -> anyhow::Result<()> {
+        let scenario = fixture_free_scenario(&["scenario.run.v1"]);
+        let execution = execute_scenario(Path::new("missing-repo"), &scenario)?;
+        if execution.validation_run.is_some()
+            || execution.taxonomy_resolution.is_some()
+            || execution.ixds_receipt.is_some()
+            || execution.export_receipt.is_some()
+        {
+            anyhow::bail!("fixture-free BDD scenario unexpectedly produced execution output");
+        }
+        assert_scenario_outcome(&scenario, &execution)
+    }
+
+    #[test]
+    fn fixture_free_scenario_with_runner_receipt_still_requires_fixtures() -> anyhow::Result<()> {
+        let scenario = fixture_free_scenario(&["validation.report.v1", "scenario.run.v1"]);
+        if execute_scenario(Path::new("missing-repo"), &scenario).is_ok() {
+            anyhow::bail!("validation scenario without fixtures unexpectedly passed");
+        }
+        Ok(())
+    }
 }
