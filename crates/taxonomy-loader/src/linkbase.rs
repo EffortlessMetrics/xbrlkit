@@ -7,7 +7,6 @@
 //! - `all`/`notAll` → Closed vs open hypercubes
 
 use crate::error::TaxonomyLoaderError;
-use crate::util::{extract_namespaces, resolve_path};
 use roxmltree::{Document, Node};
 use std::collections::HashMap;
 use taxonomy_dimensions::{Domain, DomainMember, Hypercube};
@@ -256,6 +255,18 @@ fn add_domain_member(
     });
 }
 
+/// Extracts namespace mappings from the document.
+fn extract_namespaces(doc: &Document<'_>) -> HashMap<String, String> {
+    let mut ns_map = HashMap::new();
+
+    for ns in doc.root_element().namespaces() {
+        let prefix = ns.name().unwrap_or("");
+        ns_map.insert(prefix.to_string(), ns.uri().to_string());
+    }
+
+    ns_map
+}
+
 /// Extracts linkbase references from a schema.
 pub fn extract_linkbase_refs(
     content: &str,
@@ -301,6 +312,16 @@ pub fn extract_linkbase_refs(
         }
     }
     Ok(refs)
+}
+
+/// Resolves a relative path against a base directory.
+fn resolve_path(base_dir: &str, relative: &str) -> String {
+    if (relative.starts_with("http://") || relative.starts_with("https://")) || base_dir.is_empty()
+    {
+        relative.to_string()
+    } else {
+        format!("{base_dir}/{relative}")
+    }
 }
 
 #[cfg(test)]

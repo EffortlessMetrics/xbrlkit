@@ -1,4 +1,4 @@
-# Issue 309: Extract duplicated utility functions
+# Issue 309: Reconcile duplicated utility work
 
 ## Current state
 
@@ -8,51 +8,44 @@ Issue #309 identifies three duplicated helpers:
 - `resolve_path` in the same two files;
 - `sanitize_for_rule_id` in `numeric-rules` and `efm-rules`.
 
-The first two helpers are byte-for-byte equivalent apart from formatting and
-have one clear same-crate owner. The sanitizer is a separate cross-crate
-boundary and is intentionally not part of the first implementation slice.
+The taxonomy-loader pair is already owned by PR #319, whose current head
+(`855253fdc04666cf05ee736293123de730963720`) extracts the helpers into
+`xml_util.rs` and adds broader URL and cross-platform path coverage. This
+document records that reconciliation so issue #309 does not spawn a duplicate
+implementation lane.
 
 ## Selected PR slice
 
-This PR creates `taxonomy-loader/src/util.rs`, moves `extract_namespaces` and
-`resolve_path` there, and updates both parser modules to use the shared
-implementations. It adds focused tests at the new utility seam while retaining
-the existing parser tests as call-site regression coverage.
+This PR is docs-only. It records that the taxonomy-loader portion belongs to
+PR #319 and narrows the remaining implementation candidate to the
+cross-crate `sanitize_for_rule_id` utility.
 
 ## Acceptance criteria
 
-- AC-309-001: `extract_namespaces` has one implementation in
-  `taxonomy-loader` and both schema and linkbase parsing use it.
-- AC-309-002: `resolve_path` has one implementation in `taxonomy-loader` and
-  both import and linkbase-reference extraction use it.
-- AC-309-003: The shared helpers preserve current behavior for namespace
-  collection, HTTP URLs, empty base directories, and relative paths.
-- AC-309-004: Focused utility tests and the affected crate test suite pass.
-- AC-309-005: No cross-crate dependency or public API is introduced by this
-  slice.
+- AC-309-001: The issue plan links the taxonomy-loader duplication to PR #319
+  and does not propose a competing implementation.
+- AC-309-002: The plan records that #319 owns namespace extraction and path
+  resolution, including its cross-platform follow-up coverage.
+- AC-309-003: The remaining sanitizer duplication is explicitly separate work
+  with its own dependency and API decision.
+- AC-309-004: This docs-only lane changes no production code or public API.
 
 ## Proof
 
 ```text
-cargo test -p taxonomy-loader --locked --offline
-cargo clippy -p taxonomy-loader --all-targets --locked --offline -- -D warnings
-cargo fmt --all -- --check
 git diff --check
-cargo xtask doctor
-cargo xtask impact --changed crates/taxonomy-loader/src/util.rs
-cargo xtask impact --changed crates/taxonomy-loader/src/schema.rs
-cargo xtask impact --changed crates/taxonomy-loader/src/linkbase.rs
+git status --short
 ```
 
 ## Follow-up
 
 The `sanitize_for_rule_id` duplication remains a separate candidate slice.
 Before implementing it, recheck current dependency topology and decide whether
-an existing lightweight crate is an appropriate host; do not widen this PR's
-same-crate parser refactor.
+an existing lightweight crate is an appropriate host. Do not modify the
+taxonomy-loader seam unless #319 is superseded with explicit evidence.
 
 ## Non-goals and rollback
 
-This slice does not change parsing behavior, path normalization, dependency
+This lane does not change parsing behavior, path normalization, dependency
 topology, public exports, or the cross-crate rule-ID utility. Rollback is the
-single commit that adds `util.rs`, updates the two imports, and adds this plan.
+single docs-only commit that adds this reconciliation plan.
