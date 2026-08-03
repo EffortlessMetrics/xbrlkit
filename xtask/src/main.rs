@@ -376,7 +376,7 @@ mod tests {
     }
 
     #[test]
-    fn selector_matching_supports_ids_and_tags() {
+    fn selector_matching_supports_ids_and_tags() -> anyhow::Result<()> {
         let mut scenario = scenario_record();
         scenario.tags = vec!["@alpha-active".to_string()];
         let grid = FeatureGrid {
@@ -399,8 +399,13 @@ mod tests {
             select_matching_scenarios(&grid, "@SCN-XK-WORKFLOW-002").len(),
             1
         );
-        assert_eq!(select_matching_scenarios(&grid, "@alpha-active").len(), 1);
+        if select_matching_scenarios(&grid, "@alpha-active").len() != 1 {
+            return Err(anyhow::anyhow!(
+                "feature-tag selector should match the tagged scenario"
+            ));
+        }
         assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
+        Ok(())
     }
 
     #[test]
