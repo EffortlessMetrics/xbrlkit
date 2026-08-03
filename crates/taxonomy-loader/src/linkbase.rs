@@ -256,7 +256,6 @@ fn add_domain_member(
     });
 }
 
-
 pub fn extract_linkbase_refs(
     content: &str,
     base_path: &str,
@@ -299,7 +298,6 @@ pub fn extract_linkbase_refs(
     }
     Ok(refs)
 }
-
 
 #[cfg(test)]
 mod tests {

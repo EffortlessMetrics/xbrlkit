@@ -37,7 +37,6 @@ pub fn parse_schema(
     Ok(())
 }
 
-
 fn parse_element(
     node: Node<'_, '_>,
     target_ns: &str,
@@ -153,7 +152,6 @@ pub fn extract_import_refs(
 
     Ok(refs)
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -91,10 +91,14 @@ mod tests {
 
     #[test]
     fn test_extract_namespaces_basic() {
-        let xml = r#"<root xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://default.ns"/>"#;
+        let xml =
+            r#"<root xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://default.ns"/>"#;
         let doc = Document::parse(xml).unwrap();
         let ns = extract_namespaces(&doc);
-        assert_eq!(ns.get("xsd"), Some(&"http://www.w3.org/2001/XMLSchema".to_string()));
+        assert_eq!(
+            ns.get("xsd"),
+            Some(&"http://www.w3.org/2001/XMLSchema".to_string())
+        );
         assert_eq!(ns.get(""), Some(&"http://default.ns".to_string()));
     }
 }
