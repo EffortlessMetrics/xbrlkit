@@ -1,5 +1,7 @@
 //! Minimal step execution for the active BDD slices.
 
+#![warn(missing_docs)]
+
 use anyhow::Context;
 use dimensional_rules::validate_context_dimensions;
 use scenario_contract::{BundleManifest, FeatureGrid, ScenarioRecord};
@@ -15,72 +17,124 @@ use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// A parsed BDD step and its optional data table.
 pub struct Step {
+    /// The human-readable step text after the Gherkin keyword is removed.
     pub text: String,
+    /// Rows of tabular data attached to the step, in source order.
     pub table: Vec<Vec<String>>,
 }
 
 #[derive(Debug, Clone)]
+/// Mutable state shared by the steps in one BDD scenario.
 pub struct World {
+    /// Repository root used to resolve fixtures and write scenario artifacts.
     pub repo_root: PathBuf,
+    /// Compiled feature grid used to validate and select scenarios.
     pub grid: FeatureGrid,
+    /// Profile pack declared by the scenario, when one is active.
     pub profile_id: Option<String>,
+    /// Fixture directories declared by the scenario's Given steps.
     pub fixture_dirs: Vec<PathBuf>,
+    /// Result of the scenario execution, when a When step runs one.
     pub execution: Option<ScenarioExecution>,
+    /// State used by dimension validation steps.
     pub dimension_context: DimensionContext,
+    /// Context, fact, and finding state used by completeness steps.
     pub context_completeness_context: ContextCompletenessContext,
+    /// Measurements and collected values used by streaming steps.
     pub streaming_context: StreamingContext,
+    /// Loader, taxonomy, and path state used by taxonomy steps.
     pub taxonomy_loader_context: TaxonomyLoaderContext,
+    /// Bundle produced by a selector step, when present.
     pub bundle_manifest: Option<BundleManifest>,
+    /// Validation receipt produced by a validation step, when present.
     pub validation_receipt: Option<receipt_types::Receipt>,
+    /// Sensor report produced for cockpit export, when present.
     pub sensor_report: Option<serde_json::Value>,
+    /// Filing manifest produced from the active fixture, when present.
     pub filing_manifest: Option<edgar_attachments::FilingManifest>,
+    /// Filing receipt produced from the active fixture, when present.
     pub filing_receipt: Option<receipt_types::Receipt>,
+    /// Feature grid compiled during the scenario, when present.
     pub compiled_grid: Option<FeatureGrid>,
+    /// Human-readable CLI output captured by a CLI step.
     pub cli_output: Option<String>,
+    /// Parsed JSON output captured by a CLI step.
     pub cli_json_output: Option<serde_json::Value>,
+    /// Exit code captured by a CLI step.
     pub cli_exit_code: Option<i32>,
 }
 
 #[derive(Debug, Clone, Default)]
+/// State used by dimension and member validation steps.
 pub struct DimensionContext {
+    /// Qualified name of the dimension under test.
     pub dimension: Option<String>,
+    /// Qualified name of the member under test.
     pub member: Option<String>,
+    /// Concept associated with the active fact.
     pub concept: Option<String>,
+    /// Dimension required by the active concept.
     pub required_dimension: Option<String>,
+    /// Rule identifiers reported by dimension validation.
     pub validation_findings: Vec<String>,
-    pub typed_value_type: Option<String>, // Added for typed value validation
+    /// XML Schema type used by a typed-dimension scenario.
+    pub typed_value_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
+/// State used by context-completeness validation steps.
 pub struct ContextCompletenessContext {
+    /// Contexts assembled for the active scenario.
     pub contexts: Vec<xbrl_contexts::Context>,
+    /// Facts assembled for the active scenario.
     pub facts: Vec<xbrl_report_types::Fact>,
+    /// Validation findings produced for the assembled contexts and facts.
     pub findings: Vec<xbrl_report_types::ValidationFinding>,
 }
 
 #[derive(Debug, Clone, Default)]
+/// State used by streaming-parser scenarios.
 pub struct StreamingContext {
+    /// Approximate input size in megabytes.
     pub file_size_mb: Option<f64>,
+    /// Expected or observed fact count.
     pub fact_count: Option<usize>,
+    /// Observed peak memory in megabytes.
     pub memory_peak_mb: Option<f64>,
+    /// Facts collected by the streaming parser.
     pub facts_processed: Vec<xbrl_stream::StreamingFact>,
+    /// Contexts collected by the streaming parser.
     pub contexts_collected: Vec<xbrl_stream::StreamingContext>,
+    /// Units collected by the streaming parser.
     pub units_collected: Vec<xbrl_stream::StreamingUnit>,
+    /// Whether streaming execution is selected for the scenario.
     pub use_streaming: bool,
+    /// Context references observed without a matching context.
     pub missing_context_refs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default)]
+/// State used by taxonomy-loader scenarios.
 pub struct TaxonomyLoaderContext {
+    /// Loader instance used by the active scenario.
     pub loader: Option<taxonomy_loader::TaxonomyLoader>,
+    /// Taxonomy loaded by the active scenario.
     pub taxonomy: Option<DimensionTaxonomy>,
+    /// Cache directory selected for taxonomy loading.
     pub cache_dir: Option<PathBuf>,
+    /// Schema path selected for taxonomy loading.
     pub schema_path: Option<String>,
+    /// Whether the active taxonomy load completed successfully.
     pub loaded: bool,
 }
 
 impl World {
+    /// Creates an empty scenario world rooted at `repo_root`.
+    ///
+    /// The supplied feature grid is retained for scenario selection and
+    /// validation; all per-scenario execution state starts empty.
     #[must_use]
     pub fn new(repo_root: PathBuf, grid: FeatureGrid) -> Self {
         Self {
@@ -106,6 +160,11 @@ impl World {
     }
 }
 
+/// Executes the supplied BDD steps against a scenario world.
+///
+/// Steps run in source order. The scenario must already be present in the
+/// world's feature grid, and any scenario execution result is checked against
+/// the scenario's declared outcome before this function returns.
 pub fn run_scenario(
     world: &mut World,
     scenario: &ScenarioRecord,
