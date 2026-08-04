@@ -227,25 +227,23 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
-    if let Some(dimension) = step.text.strip_prefix("a context with dimension \"") {
-        world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
-        return Ok(true);
-    }
-
     if let Some(dimension) = step
         .text
-        .strip_prefix("a context with unknown dimension \"")
+        .strip_prefix("a context with dimension \"")
+        .or_else(|| {
+            step.text
+                .strip_prefix("a context with unknown dimension \"")
+        })
     {
         world.dimension_context.dimension = Some(dimension.trim_end_matches('"').to_string());
         return Ok(true);
     }
 
-    if let Some(member) = step.text.strip_prefix("the member \"") {
-        world.dimension_context.member = Some(member.trim_end_matches('"').to_string());
-        return Ok(true);
-    }
-
-    if let Some(member) = step.text.strip_prefix("an invalid member \"") {
+    if let Some(member) = step
+        .text
+        .strip_prefix("the member \"")
+        .or_else(|| step.text.strip_prefix("an invalid member \""))
+    {
         world.dimension_context.member = Some(member.trim_end_matches('"').to_string());
         return Ok(true);
     }
