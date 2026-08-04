@@ -1621,3 +1621,61 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn equivalent_dimension_and_member_prefixes_update_the_same_context_fields()
+    -> anyhow::Result<()> {
+        let scenario = ScenarioRecord::default();
+        let mut world = World::new(PathBuf::from("."), FeatureGrid::default());
+
+        for (text, expected) in [
+            ("a context with dimension \"us-gaap:Axis\"", "us-gaap:Axis"),
+            (
+                "a context with unknown dimension \"us-gaap:UnknownAxis\"",
+                "us-gaap:UnknownAxis",
+            ),
+        ] {
+            let handled = handle_given(
+                &mut world,
+                &scenario,
+                &Step {
+                    text: text.to_string(),
+                    table: Vec::new(),
+                },
+            )?;
+            anyhow::ensure!(handled, "dimension step was not handled: {text}");
+            anyhow::ensure!(
+                world.dimension_context.dimension.as_deref() == Some(expected),
+                "dimension step stored the wrong value for {text}"
+            );
+        }
+
+        for (text, expected) in [
+            ("the member \"us-gaap:Member\"", "us-gaap:Member"),
+            (
+                "an invalid member \"us-gaap:InvalidMember\"",
+                "us-gaap:InvalidMember",
+            ),
+        ] {
+            let handled = handle_given(
+                &mut world,
+                &scenario,
+                &Step {
+                    text: text.to_string(),
+                    table: Vec::new(),
+                },
+            )?;
+            anyhow::ensure!(handled, "member step was not handled: {text}");
+            anyhow::ensure!(
+                world.dimension_context.member.as_deref() == Some(expected),
+                "member step stored the wrong value for {text}"
+            );
+        }
+
+        Ok(())
+    }
+}
