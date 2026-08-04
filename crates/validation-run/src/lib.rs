@@ -219,7 +219,7 @@ pub fn validate_dimensions(
 
 /// Validate context completeness using streaming parser for large files.
 ///
-/// For files >100MB, uses SAX-style streaming to avoid DOM memory overhead.
+/// Uses SAX-style streaming to avoid DOM memory overhead.
 /// Collects facts and validates context references in a single pass.
 ///
 /// # Arguments
