@@ -102,18 +102,27 @@ mod tests {
     fn filters_unsupported_fragments_and_falls_back_for_missing_names() -> Result<(), String> {
         let report = assemble(&[(
             "member-a",
-            r#"<ix:tuple>ignored</ix:tuple><ix:nonNumeric contextRef="ctx-a">Some <b>value</b></ix:nonNumeric>"#,
+            r#"<ix:tuple>ignored</ix:tuple><ix:nonNumeric contextRef="ctx-a">Some <b>value</b></ix:nonNumeric><ix:nonFraction name="us-gaap:Assets" unitRef="iso4217:USD">100</ix:nonFraction>"#,
         )]);
 
         require(
             &report.facts,
-            &vec![Fact {
-                concept: "ix:nonNumeric".to_string(),
-                context_ref: "ctx-a".to_string(),
-                value: "Some value".to_string(),
-                member: "member-a".to_string(),
-                ..Fact::default()
-            }],
+            &vec![
+                Fact {
+                    concept: "ix:nonNumeric".to_string(),
+                    context_ref: "ctx-a".to_string(),
+                    value: "Some value".to_string(),
+                    member: "member-a".to_string(),
+                    ..Fact::default()
+                },
+                Fact {
+                    concept: "us-gaap:Assets".to_string(),
+                    unit_ref: Some("iso4217:USD".to_string()),
+                    value: "100".to_string(),
+                    member: "member-a".to_string(),
+                    ..Fact::default()
+                },
+            ],
             "supported fact filtering and fallback",
         )
     }
