@@ -116,11 +116,12 @@ scenarios:
       - crates/dimensional-rules
       - crates/xbrlkit-bdd
       - crates/xbrlkit-bdd-steps
-  SCN-XK-TAX-LOAD-009:
-    ac_id: AC-XK-TAX-LOAD-009
+  SCN-XK-TAX-LOAD-010:
+    ac_id: AC-XK-TAX-LOAD-010
     req_id: REQ-XK-TAXONOMY-LOADER
     crates: [taxonomy-loader, xbrlkit-bdd, xbrlkit-bdd-steps, xtask]
     fixtures: [synthetic/taxonomy/cache-write-failure-01]
+    profile_pack: sec/efm-77/opco
     receipts: [scenario.run.v1]
     suite: synthetic
     speed: fast

@@ -77,7 +77,7 @@ Feature: Taxonomy Loader
     Then the validation should fail
     And an "XBRL.DIMENSION.INVALID_MEMBER" finding should be reported
 
-  @alpha-active @SCN-XK-TAX-LOAD-009 @AC-XK-TAX-LOAD-009
+  @alpha-active @SCN-XK-TAX-LOAD-010 @AC-XK-TAX-LOAD-010
   @speed.fast
   Scenario: Preserve fetched taxonomy when cache write fails
     Given a fetched taxonomy with an unwritable cache

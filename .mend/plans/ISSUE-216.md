@@ -21,7 +21,7 @@ credentials in query strings or user filesystem details into logs.
 - `taxonomy-loader` emits a structured warning instead of writing directly to
   stderr.
 - Cache-write failure remains non-fatal and the fetched content is returned.
-- Scenario `AC-XK-TAX-LOAD-009` exercises the warning and non-fatal return path
+- Scenario `AC-XK-TAX-LOAD-010` exercises the warning and non-fatal return path
   with deterministic fetched content and an unwritable cache fixture.
 - The workspace manifest, lockfile, and crate manifest remain consistent.
 - A focused source test/gate proves the affected crate and its consumers still
@@ -43,6 +43,13 @@ cargo xtask feature-grid
 These checks establish the affected crate behavior, workspace lint, active
 alpha, and package gates. They do not replace hosted CI or prove that an
 application has installed a tracing subscriber.
+
+On the current `main` harness, `cargo xtask test-ac AC-XK-TAX-LOAD-010` is not
+the proof command for this BDD-only scenario: after the metadata is valid, the
+fixture-oriented path fails because the taxonomy fixture has no HTML members.
+The declared BDD dispatch in PR #389 is the prerequisite for canonical AC
+execution. Until that contract lands, the exact tagged BDD command above is
+the authoritative behavioral witness for this slice.
 
 ## Non-goals
 

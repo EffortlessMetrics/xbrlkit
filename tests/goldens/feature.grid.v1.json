@@ -1459,8 +1459,8 @@
       "speed": "fast"
     },
     {
-      "scenario_id": "SCN-XK-TAX-LOAD-009",
-      "ac_id": "AC-XK-TAX-LOAD-009",
+      "scenario_id": "SCN-XK-TAX-LOAD-010",
+      "ac_id": "AC-XK-TAX-LOAD-010",
       "req_id": "REQ-XK-TAXONOMY-LOADER",
       "feature_file": "specs/features/taxonomy/taxonomy_loader.feature",
       "sidecar_file": "specs/features/taxonomy/taxonomy_loader.meta.yaml",
@@ -1475,7 +1475,7 @@
       "fixtures": [
         "synthetic/taxonomy/cache-write-failure-01"
       ],
-      "profile_pack": null,
+      "profile_pack": "sec/efm-77/opco",
       "receipts": [
         "scenario.run.v1"
       ],
