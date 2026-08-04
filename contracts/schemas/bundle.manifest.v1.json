@@ -24,6 +24,10 @@
         "sidecar_file": { "type": "string" },
         "layer": { "type": "string" },
         "module": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
         "crates": {
           "type": "array",
           "items": { "type": "string" }

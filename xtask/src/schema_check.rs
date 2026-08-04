@@ -202,7 +202,7 @@ fn resolve_ref<'a>(root_schema: &'a Value, reference: &str) -> anyhow::Result<&'
 #[cfg(test)]
 mod tests {
     use super::validate_value;
-    use serde_json::json;
+    use serde_json::{Value, json};
 
     #[test]
     fn validates_simple_schema() {
@@ -241,5 +241,45 @@ mod tests {
             validate_value(&schema, &schema, &document, "$").expect_err("validation should fail");
 
         assert!(error.to_string().contains("missing required property"));
+    }
+
+    #[test]
+    fn v1_schemas_accept_legacy_scenario_without_tags() -> Result<(), String> {
+        let scenario = json!({
+            "scenario_id": "SCN-XK-LEGACY-001",
+            "ac_id": null,
+            "req_id": null,
+            "feature_file": "specs/features/legacy.feature",
+            "sidecar_file": "specs/features/legacy.meta.yaml",
+            "layer": "foundation",
+            "module": "FEAT-XK-LEGACY:legacy",
+            "crates": [],
+            "fixtures": [],
+            "profile_pack": null,
+            "receipts": [],
+            "allowed_edit_roots": [],
+            "suite": null,
+            "speed": null
+        });
+        let fixtures = [
+            (
+                "feature.grid.v1",
+                include_str!("../../contracts/schemas/feature.grid.v1.json"),
+                json!({"scenarios": [scenario.clone()]}),
+            ),
+            (
+                "bundle.manifest.v1",
+                include_str!("../../contracts/schemas/bundle.manifest.v1.json"),
+                json!({"selector": "SCN-XK-LEGACY-001", "scenarios": [scenario]}),
+            ),
+        ];
+
+        for (name, schema_text, document) in fixtures {
+            let schema: Value =
+                serde_json::from_str(schema_text).map_err(|error| error.to_string())?;
+            validate_value(&schema, &schema, &document, "$")
+                .map_err(|error| format!("{name}: {error}"))?;
+        }
+        Ok(())
     }
 }

@@ -322,6 +322,7 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+        || scenario.tags.iter().any(|tag| tag == selector)
 }
 
 fn normalize_repo_path(path: &str) -> String {
@@ -363,6 +364,7 @@ mod tests {
             sidecar_file: "specs/features/workflow/bundle.meta.yaml".to_string(),
             layer: "workflow".to_string(),
             module: "bundle".to_string(),
+            tags: Vec::new(),
             crates: vec!["xtask".to_string()],
             fixtures: Vec::new(),
             profile_pack: None,
@@ -374,28 +376,33 @@ mod tests {
     }
 
     #[test]
-    fn selector_matching_supports_ids_and_tags() {
+    fn selector_matching_supports_ids_and_tags() -> anyhow::Result<()> {
+        let mut scenario = scenario_record();
+        scenario.tags = vec!["@alpha-active".to_string()];
         let grid = FeatureGrid {
-            scenarios: vec![scenario_record()],
+            scenarios: vec![scenario],
         };
 
-        assert_eq!(
-            select_matching_scenarios(&grid, "AC-XK-WORKFLOW-002").len(),
-            1
+        for selector in [
+            "AC-XK-WORKFLOW-002",
+            "SCN-XK-WORKFLOW-002",
+            "@AC-XK-WORKFLOW-002",
+            "@SCN-XK-WORKFLOW-002",
+            "@alpha-active",
+        ] {
+            let matches = select_matching_scenarios(&grid, selector);
+            anyhow::ensure!(
+                matches.len() == 1,
+                "selector {selector:?} should match one scenario, found {}",
+                matches.len()
+            );
+        }
+
+        anyhow::ensure!(
+            select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty(),
+            "unknown selector should match no scenarios"
         );
-        assert_eq!(
-            select_matching_scenarios(&grid, "SCN-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "@AC-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "@SCN-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
+        Ok(())
     }
 
     #[test]

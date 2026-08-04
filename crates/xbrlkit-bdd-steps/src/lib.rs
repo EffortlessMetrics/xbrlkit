@@ -1304,6 +1304,28 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         return Ok(());
     }
 
+    if let Some(assertion) = step.text.strip_prefix("scenario \"")
+        && let Some((scenario_id, tag)) = assertion.split_once("\" has tag \"")
+    {
+        let tag = tag.trim_end_matches('"');
+        let grid = world
+            .compiled_grid
+            .as_ref()
+            .context("feature grid tag assertion requires a prior compile operation")?;
+        let scenario = grid
+            .scenarios
+            .iter()
+            .find(|scenario| scenario.scenario_id == scenario_id)
+            .with_context(|| format!("scenario {scenario_id} not found in feature grid"))?;
+        if !scenario.tags.iter().any(|candidate| candidate == tag) {
+            anyhow::bail!(
+                "scenario {scenario_id} does not contain tag {tag}; found {:?}",
+                scenario.tags
+            );
+        }
+        return Ok(());
+    }
+
     // Context completeness Then steps
     if let Some(context_ref) = step
         .text
@@ -1622,4 +1644,5 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+        || scenario.tags.iter().any(|tag| tag == selector)
 }

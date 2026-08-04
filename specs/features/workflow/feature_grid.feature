@@ -11,3 +11,4 @@ Feature: Feature grid
     Given the repo has feature sidecars
     When I compile the feature grid
     Then the feature grid contains scenario "SCN-XK-IXDS-002"
+    And scenario "SCN-XK-IXDS-002" has tag "@alpha-active"

@@ -5,12 +5,15 @@ scenarios:
   SCN-XK-WORKFLOW-001:
     ac_id: AC-XK-WORKFLOW-001
     req_id: REQ-XK-WORKFLOW
-    crates: [xbrlkit-feature-grid, xtask]
+    crates: [scenario-contract, xbrlkit-feature-grid, xbrlkit-bdd-steps, xtask]
     fixtures: []
     receipts: [feature.grid.v1, scenario.run.v1]
     suite: synthetic
     speed: fast
     allowed_edit_roots:
       - crates/xbrlkit-feature-grid
+      - crates/scenario-contract
+      - crates/xbrlkit-bdd-steps
       - xtask
+      - contracts/schemas
       - specs/features/workflow
