@@ -354,6 +354,37 @@ mod tests {
     }
 
     #[test]
+    fn test_cache_miss_writes_offline_content_without_recording_a_hit()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let cache_dir = tempfile::tempdir()?;
+        let url = "https://example.com/schema.xsd";
+        let loader = TaxonomyLoader::with_cache_dir_and_offline_content(
+            cache_dir.path(),
+            url,
+            "offline schema",
+        );
+
+        let content = loader.fetch_url(url)?;
+        if content != "offline schema" {
+            return Err(std::io::Error::other("unexpected offline content").into());
+        }
+        if !loader.cache_hits().is_empty() {
+            return Err(
+                std::io::Error::other("cache miss was incorrectly recorded as a hit").into(),
+            );
+        }
+
+        let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir.path());
+        if !cache_path.is_file() {
+            return Err(std::io::Error::other("cache miss did not write a cache file").into());
+        }
+        if std::fs::read_to_string(cache_path)? != "offline schema" {
+            return Err(std::io::Error::other("cache file contains unexpected content").into());
+        }
+        Ok(())
+    }
+
+    #[test]
     fn test_loaded_schema_tracking_records_recursive_imports()
     -> Result<(), Box<dyn std::error::Error>> {
         let fixture_dir = tempfile::tempdir()?;
