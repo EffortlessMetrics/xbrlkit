@@ -90,6 +90,12 @@ stories:
               - type: bdd
                 tag: "@AC-XK-WORKFLOW-004"
                 file: "specs/features/workflow/package_check.feature"
+          - id: AC-XK-WORKFLOW-005
+            title: Reject fixture paths outside the repository root
+            tests:
+              - type: bdd
+                tag: "@AC-XK-WORKFLOW-005"
+                file: "specs/features/workflow/fixture_boundaries.feature"
       - id: REQ-XK-CLI
         title: Provide CLI commands for profile and report introspection
         acceptance_criteria:

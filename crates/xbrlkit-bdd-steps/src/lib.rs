@@ -143,7 +143,7 @@ fn run_step(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow
     if handle_when(world, scenario, step)? {
         return Ok(());
     }
-    handle_then(world, step)
+    handle_then(world, scenario, step)
 }
 
 fn execution(world: &World) -> anyhow::Result<&ScenarioExecution> {
@@ -173,6 +173,16 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
                         fixture_root.display()
                     )
                 })?;
+                if relative
+                    .components()
+                    .any(|component| matches!(component, std::path::Component::ParentDir))
+                {
+                    anyhow::bail!(
+                        "fixture path {} is outside repository fixture root {}",
+                        path.display(),
+                        fixture_root.display()
+                    );
+                }
                 Ok(relative.to_string_lossy().replace('\\', "/"))
             })
             .collect::<anyhow::Result<Vec<_>>>()?;
@@ -1047,7 +1057,20 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 }
 
 #[allow(clippy::too_many_lines)]
-fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
+fn handle_then(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<()> {
+    if step.text == "the fixture path is rejected outside the repository root" {
+        let error = assert_declared_inputs_match(world, scenario)
+            .err()
+            .context("an escaping fixture path unexpectedly passed validation")?;
+        if !error
+            .to_string()
+            .contains("outside repository fixture root")
+        {
+            anyhow::bail!("unexpected fixture validation error: {error}");
+        }
+        return Ok(());
+    }
+
     // Dimension-related Then steps
     if step.text == "the validation should pass" {
         if !world.dimension_context.validation_findings.is_empty() {
@@ -1662,6 +1685,31 @@ mod tests {
         let error = assert_declared_inputs_match(&world, &scenario)
             .err()
             .context("an external fixture path unexpectedly passed validation")?;
+        ensure!(
+            error
+                .to_string()
+                .contains("outside repository fixture root"),
+            "unexpected fixture validation error: {error}"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn declared_fixture_with_parent_component_returns_error() -> anyhow::Result<()> {
+        let repo_root = PathBuf::from("repo-root");
+        let fixture = "../outside/fixture-01";
+        let mut world = World::new(repo_root.clone(), FeatureGrid::default());
+        world
+            .fixture_dirs
+            .push(repo_root.join("fixtures").join(fixture));
+        let scenario = ScenarioRecord {
+            fixtures: vec![fixture.to_string()],
+            ..ScenarioRecord::default()
+        };
+
+        let error = assert_declared_inputs_match(&world, &scenario)
+            .err()
+            .context("a parent-directory fixture path unexpectedly passed validation")?;
         ensure!(
             error
                 .to_string()

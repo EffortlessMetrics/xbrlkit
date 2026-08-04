@@ -1,0 +1,17 @@
+feature_id: FEAT-XK-WORKFLOW-FIXTURE-BOUNDARY
+layer: workflow
+module: fixture-boundary
+scenarios:
+  SCN-XK-WORKFLOW-007:
+    ac_id: AC-XK-WORKFLOW-005
+    req_id: REQ-XK-WORKFLOW
+    crates: [xbrlkit-bdd, xbrlkit-bdd-steps, scenario-contract]
+    fixtures: [../outside/fixture-01]
+    receipts: [scenario.run.v1]
+    suite: synthetic
+    speed: fast
+    allowed_edit_roots:
+      - crates/xbrlkit-bdd
+      - crates/xbrlkit-bdd-steps
+      - specs
+      - tests/goldens
