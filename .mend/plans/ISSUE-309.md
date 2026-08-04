@@ -8,23 +8,25 @@ Issue #309 identifies three duplicated helpers:
 - `resolve_path` in the same two files;
 - `sanitize_for_rule_id` in `numeric-rules` and `efm-rules`.
 
-The taxonomy-loader pair is already owned by PR #319, whose current head
-(`855253fdc04666cf05ee736293123de730963720`) extracts the helpers into
-`xml_util.rs` and adds broader URL and cross-platform path coverage. This
-document records that reconciliation so issue #309 does not spawn a duplicate
-implementation lane.
+The taxonomy-loader pair is owned by the canonical replacement [PR #435](https://github.com/EffortlessMetrics/xbrlkit/pull/435),
+whose current head (`93e4c8b18a63353a690ce7a916aca0824a476cd1`) extracts the
+helpers into `xml_util.rs` and carries the broader URL and cross-platform path
+coverage. PR #319 is closed and unmerged; its head
+(`855253fdc04666cf05ee736293123de730963720`) is historical source material,
+not the live owner. This document records that reconciliation so issue #309
+does not spawn a duplicate implementation lane.
 
 ## Selected PR slice
 
 This PR is docs-only. It records that the taxonomy-loader portion belongs to
-PR #319 and narrows the remaining implementation candidate to the
+PR #435 and narrows the remaining implementation candidate to the
 cross-crate `sanitize_for_rule_id` utility.
 
 ## Acceptance criteria
 
-- AC-309-001: The issue plan links the taxonomy-loader duplication to PR #319
+- AC-309-001: The issue plan links the taxonomy-loader duplication to PR #435
   and does not propose a competing implementation.
-- AC-309-002: The plan records that #319 owns namespace extraction and path
+- AC-309-002: The plan records that #435 owns namespace extraction and path
   resolution, including its cross-platform follow-up coverage.
 - AC-309-003: The remaining sanitizer duplication is explicitly separate work
   with its own dependency and API decision.
@@ -42,7 +44,7 @@ git status --short
 The `sanitize_for_rule_id` duplication remains a separate candidate slice.
 Before implementing it, recheck current dependency topology and decide whether
 an existing lightweight crate is an appropriate host. Do not modify the
-taxonomy-loader seam unless #319 is superseded with explicit evidence.
+taxonomy-loader seam unless #435 is superseded with explicit evidence.
 
 ## Non-goals and rollback
 
