@@ -254,12 +254,17 @@ mod tests {
             scenarios.len()
         );
         for scenario in &scenarios {
+            let step = scenario.steps.first().ok_or_else(|| {
+                anyhow::anyhow!("background step missing from {}", scenario.scenario_id)
+            })?;
             ensure!(
-                scenario
-                    .steps
-                    .first()
-                    .is_some_and(|step| { step.text == "the xbrl-stream crate is available" }),
+                step.text == "the xbrl-stream crate is available",
                 "background step missing from {}",
+                scenario.scenario_id
+            );
+            ensure!(
+                step.table == vec![vec!["capability".to_string(), "streaming".to_string()]],
+                "background table missing from {}",
                 scenario.scenario_id
             );
         }
