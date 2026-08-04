@@ -42,24 +42,26 @@ mod tests {
 
         let report = to_sensor_report("xbrlkit", &receipt);
 
+        require(&report["kind"], &json!("sensor.report"), "envelope kind")?;
+        require(&report["version"], &json!("v1"), "envelope version")?;
         require(
-            &report,
+            &report["subject"],
+            &json!("workspace-validation"),
+            "envelope subject",
+        )?;
+        require(&report["result"], &json!("success"), "envelope result")?;
+        require(&report["sensor_id"], &json!("xbrlkit"), "sensor id")?;
+        require(
+            &report["inner_receipt"],
             &json!({
-                "kind": "sensor.report",
+                "kind": "validation.report",
                 "version": "v1",
                 "subject": "workspace-validation",
                 "result": "success",
-                "sensor_id": "xbrlkit",
-                "inner_receipt": {
-                    "kind": "validation.report",
-                    "version": "v1",
-                    "subject": "workspace-validation",
-                    "result": "success",
-                    "artifacts": [],
-                    "notes": []
-                }
+                "artifacts": [],
+                "notes": []
             }),
-            "sensor report",
+            "inner receipt",
         )
     }
 
