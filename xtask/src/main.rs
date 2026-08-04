@@ -5,7 +5,7 @@ mod schema_check;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
-use receipt_types::{Receipt, RunResult};
+use receipt_types::{Receipt, RunResult, ScenarioRunReceipt};
 use scenario_contract::{BundleManifest, FeatureGrid, ImpactReport, ScenarioRecord};
 use scenario_runner::{assert_scenario_outcome, execute_scenario, write_execution_receipts};
 use std::path::{Path, PathBuf};
@@ -155,12 +155,16 @@ fn test_ac(ac_id: &str) -> anyhow::Result<()> {
         anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
     }
 
-    let mut scenario_receipt = Receipt::new("scenario.run", ac_id, RunResult::Success);
+    let mut scenario_receipt = ScenarioRunReceipt::new(ac_id, RunResult::Success);
     for scenario in &scenarios {
+        let started = std::time::Instant::now();
         let execution = execute_scenario(&repo_root(), scenario)?;
+        let duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+        scenario_receipt.push_timing(scenario.scenario_id.clone(), duration_ms);
         write_execution_receipts(&repo_root(), &execution)?;
         assert_scenario_outcome(scenario, &execution)?;
         scenario_receipt
+            .receipt
             .notes
             .push(format!("{} passed", scenario.scenario_id));
     }
@@ -181,8 +185,8 @@ fn bdd(tag: &str) -> anyhow::Result<()> {
     let run = match xbrlkit_bdd::run(&repo_root(), &grid, tag) {
         Ok(run) => run,
         Err(error) => {
-            let mut receipt = Receipt::new("scenario.run", tag, RunResult::Error);
-            receipt.notes.push(error.to_string());
+            let mut receipt = ScenarioRunReceipt::new(tag, RunResult::Error);
+            receipt.receipt.notes.push(error.to_string());
             write_json(&path, &receipt)?;
             return Err(error);
         }

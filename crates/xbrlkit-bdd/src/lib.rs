@@ -1,7 +1,7 @@
 //! Minimal BDD runner for the active alpha scenarios.
 
 use anyhow::Context;
-use receipt_types::{Receipt, RunResult};
+use receipt_types::{RunResult, ScenarioRunReceipt};
 use scenario_contract::{FeatureGrid, ScenarioRecord};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -10,7 +10,7 @@ use xbrlkit_bdd_steps::{Step, World, run_scenario};
 #[derive(Debug, Clone)]
 pub struct BddRun {
     pub selected: Vec<ScenarioRecord>,
-    pub receipt: Receipt,
+    pub receipt: ScenarioRunReceipt,
 }
 
 #[derive(Debug, Clone)]
@@ -32,7 +32,7 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         .map(|scenario| (scenario.scenario_id.clone(), scenario))
         .collect::<BTreeMap<_, _>>();
     let mut world = World::new(repo_root.to_path_buf(), grid.clone());
-    let mut receipt = Receipt::new("scenario.run", tag, RunResult::Success);
+    let mut receipt = ScenarioRunReceipt::new(tag, RunResult::Success);
     for scenario in &selected {
         let parsed = parsed_by_id
             .get(&scenario.scenario_id)
@@ -40,8 +40,12 @@ pub fn run(repo_root: &Path, grid: &FeatureGrid, tag: &str) -> anyhow::Result<Bd
         world.profile_id = None;
         world.fixture_dirs.clear();
         world.execution = None;
+        let started = std::time::Instant::now();
         run_scenario(&mut world, scenario, &parsed.steps)?;
+        let duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+        receipt.push_timing(scenario.scenario_id.clone(), duration_ms);
         receipt
+            .receipt
             .notes
             .push(format!("{} passed", scenario.scenario_id));
     }

@@ -19,6 +19,10 @@
     "notes": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "timings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scenarioTiming" }
     }
   },
   "required": ["kind", "version", "subject", "result", "artifacts", "notes"],
@@ -31,6 +35,15 @@
         "sha256": { "type": ["string", "null"] }
       },
       "required": ["path", "sha256"]
+    },
+    "scenarioTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scenario_id": { "type": "string" },
+        "duration_ms": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["scenario_id", "duration_ms"]
     }
   }
 }
