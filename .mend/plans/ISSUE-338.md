@@ -12,9 +12,10 @@ review and parallel-edit threshold.
 1. Extract typed-dimension value validators into `typed_values.rs` while
    preserving private visibility and all public APIs. Completed by [PR #395](https://github.com/EffortlessMetrics/xbrlkit/pull/395).
 2. Extract the result model and summary aggregation into `result.rs`, while
-   preserving the crate-root public API. This is the current stacked slice.
-3. Extract context and dimension validation orchestration into a dedicated
-   module after the production result seam is reviewed.
+   preserving the crate-root public API. Completed by [PR #422](https://github.com/EffortlessMetrics/xbrlkit/pull/422), stacked on PR #395.
+3. Extract context and dimension validation orchestration into `validate.rs`,
+   while preserving the crate-root public API. This is the current stacked
+   slice.
 4. Reconcile finding construction only where a clear, tested responsibility
    boundary remains.
 5. Partition tests by responsibility after the production seams stabilize.
@@ -28,20 +29,20 @@ shape, public symbol, dependency, or scenario contract changes.
 
 ## Current slice
 
-Move `DimensionalValidationResult`, `DimensionalSummary`, `collect_findings`,
-and `summarize_results` into the private `result.rs` module. Re-export those
-items from `lib.rs` so callers continue to resolve the same crate-root public
-symbols. Keep the existing test location and validation orchestration in this
-slice; test partitioning and orchestration extraction remain separate.
+Move `validate_context_dimensions`, its private `validate_dimension_member`
+helper, and `is_descendant_member` into the private `validate.rs` module.
+Re-export the two public functions from `lib.rs` so callers continue to
+resolve the same crate-root public symbols. Keep report-level
+`validate_fact_dimensions`, result aggregation, finding construction, and the
+existing test location outside this slice.
 
 ## Acceptance criteria
 
 - Existing dimensional validation behavior remains unchanged.
-- The typed-value helpers and result/summary responsibilities each have one
-  focused private module with no duplicate implementation in `lib.rs`.
-- `DimensionalValidationResult`, `DimensionalSummary`, `collect_findings`, and
-  `summarize_results` remain available at the crate root with unchanged public
-  names, signatures, and field visibility.
+- The typed-value, result/summary, and context-validation responsibilities each
+  have one focused private module with no duplicate implementation in `lib.rs`.
+- `validate_context_dimensions` and `is_descendant_member` remain available at
+  the crate root with unchanged public names and signatures.
 - Package tests, Clippy, formatting, and workspace compilation pass.
 
 ## Proof
@@ -58,7 +59,7 @@ slice; test partitioning and orchestration extraction remain separate.
 
 - No validation behavior changes or new dimensional rules.
 - No public module promotion or public API redesign.
-- No context/dimension orchestration extraction, broad test relocation, or
+- No report-level orchestration, result aggregation, broad test relocation, or
   finding-construction refactor.
 
 ## Rollback
