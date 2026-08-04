@@ -29,6 +29,7 @@ pub struct World {
     pub execution: Option<ScenarioExecution>,
     pub dimension_context: DimensionContext,
     pub context_completeness_context: ContextCompletenessContext,
+    pub numeric_validation_context: NumericValidationContext,
     pub streaming_context: StreamingContext,
     pub taxonomy_loader_context: TaxonomyLoaderContext,
     pub bundle_manifest: Option<BundleManifest>,
@@ -57,6 +58,17 @@ pub struct ContextCompletenessContext {
     pub contexts: Vec<xbrl_contexts::Context>,
     pub facts: Vec<xbrl_report_types::Fact>,
     pub findings: Vec<xbrl_report_types::ValidationFinding>,
+}
+
+#[derive(Debug, Clone, Default)]
+/// State used by fixture-free BDD steps that exercise numeric validation.
+pub struct NumericValidationContext {
+    /// Synthetic facts supplied by the current scenario.
+    pub facts: Vec<xbrl_report_types::Fact>,
+    /// Findings produced by validating the synthetic facts.
+    pub findings: Vec<xbrl_report_types::ValidationFinding>,
+    /// Finding selected by the most recent finding assertion.
+    pub current_finding: Option<xbrl_report_types::ValidationFinding>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -91,6 +103,7 @@ impl World {
             execution: None,
             dimension_context: DimensionContext::default(),
             context_completeness_context: ContextCompletenessContext::default(),
+            numeric_validation_context: NumericValidationContext::default(),
             streaming_context: StreamingContext::default(),
             taxonomy_loader_context: TaxonomyLoaderContext::default(),
             bundle_manifest: None,
@@ -189,6 +202,25 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
             );
         }
         world.profile_id = Some(profile_id);
+        return Ok(true);
+    }
+
+    if step.text.starts_with("an inline XBRL document with fact ") {
+        let (concept, value) = parse_inline_fact_step(&step.text)?;
+        world.numeric_validation_context.facts.clear();
+        world.numeric_validation_context.findings.clear();
+        world.numeric_validation_context.current_finding = None;
+        world
+            .numeric_validation_context
+            .facts
+            .push(xbrl_report_types::Fact {
+                concept,
+                context_ref: "ctx-1".to_string(),
+                unit_ref: None,
+                decimals: None,
+                value,
+                member: String::new(),
+            });
         return Ok(true);
     }
 
@@ -666,6 +698,14 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
 
 #[allow(clippy::too_many_lines)]
 fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
+    if step.text == "the document is validated" {
+        assert_declared_inputs_match(world, scenario)?;
+        world.numeric_validation_context.findings =
+            numeric_rules::validate_negative_values(&world.numeric_validation_context.facts, &[]);
+        world.numeric_validation_context.current_finding = None;
+        return Ok(true);
+    }
+
     if matches!(
         step.text.as_str(),
         "I validate the filing" | "I validate duplicate facts" | "I resolve the DTS"
@@ -1071,6 +1111,21 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    if step.text == "the validation report has no findings with severity \"error\"" {
+        if world
+            .numeric_validation_context
+            .findings
+            .iter()
+            .any(|finding| finding.severity == "error")
+        {
+            anyhow::bail!(
+                "expected no error findings but got: {:?}",
+                world.numeric_validation_context.findings
+            );
+        }
+        return Ok(());
+    }
+
     if let Some(finding) = step.text.strip_prefix("an \"") {
         let expected_finding = finding.trim_end_matches("\" finding should be reported");
         if !world
@@ -1219,7 +1274,60 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
 }
 
 #[allow(clippy::too_many_lines)]
-fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<()> {
+fn handle_parameterized_assertion(world: &mut World, step: &Step) -> anyhow::Result<()> {
+    if let Some(rule_id) = step
+        .text
+        .strip_prefix("the validation report contains a finding with rule ID containing \"")
+    {
+        let expected = rule_id.trim_end_matches('"');
+        let finding = world
+            .numeric_validation_context
+            .findings
+            .iter()
+            .find(|finding| finding.rule_id.contains(expected))
+            .cloned()
+            .with_context(|| {
+                format!(
+                    "expected a finding with rule ID containing {expected}, got {:?}",
+                    world.numeric_validation_context.findings
+                )
+            })?;
+        world.numeric_validation_context.current_finding = Some(finding);
+        return Ok(());
+    }
+
+    if let Some(severity) = step.text.strip_prefix("the finding severity is \"") {
+        let expected = severity.trim_end_matches('"');
+        let finding = world
+            .numeric_validation_context
+            .current_finding
+            .as_ref()
+            .context("finding severity assertion requires a prior finding assertion")?;
+        if finding.severity != expected {
+            anyhow::bail!(
+                "expected finding severity {expected}, got {}",
+                finding.severity
+            );
+        }
+        return Ok(());
+    }
+
+    if let Some(subject) = step.text.strip_prefix("the finding subject is \"") {
+        let expected = subject.trim_end_matches('"');
+        let finding = world
+            .numeric_validation_context
+            .current_finding
+            .as_ref()
+            .context("finding subject assertion requires a prior finding assertion")?;
+        if finding.subject.as_deref() != Some(expected) {
+            anyhow::bail!(
+                "expected finding subject {expected}, got {:?}",
+                finding.subject
+            );
+        }
+        return Ok(());
+    }
+
     if let Some(rule_id) = step
         .text
         .strip_prefix("the validation report contains rule \"")
@@ -1554,6 +1662,33 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     anyhow::bail!("unsupported BDD step: {}", step.text)
 }
 
+/// Parse one inline-fact Given step into its concept and lexical value.
+fn parse_inline_fact_step(step: &str) -> anyhow::Result<(String, String)> {
+    let remainder = step
+        .strip_prefix("an inline XBRL document with fact ")
+        .context("inline fact step has an invalid prefix")?;
+    let (concept, value) = remainder
+        .split_once("\" valued \"")
+        .context("inline fact step must contain a quoted concept and value")?;
+    let concept = concept
+        .strip_prefix('"')
+        .context("inline fact concept must be quoted")?;
+    let value = value
+        .strip_suffix('"')
+        .context("inline fact value must be quoted")?;
+    if concept.is_empty() || value.is_empty() || concept.contains('"') || value.contains('"') {
+        anyhow::bail!(
+            "inline fact step must contain exactly one quoted concept and one quoted value"
+        );
+    }
+    if remainder.matches('"').count() != 4 {
+        anyhow::bail!(
+            "inline fact step must contain exactly one quoted concept and one quoted value"
+        );
+    }
+    Ok((concept.to_string(), value.to_string()))
+}
+
 /// Create a synthetic taxonomy for testing when fixture files don't exist
 fn create_synthetic_taxonomy() -> DimensionTaxonomy {
     let mut taxonomy = DimensionTaxonomy::new();
@@ -1622,4 +1757,176 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scenario(scenario_id: &str, ac_id: &str) -> ScenarioRecord {
+        ScenarioRecord {
+            scenario_id: scenario_id.to_string(),
+            ac_id: Some(ac_id.to_string()),
+            profile_pack: Some("sec/efm-77/opco".to_string()),
+            ..ScenarioRecord::default()
+        }
+    }
+
+    fn step(text: &str) -> Step {
+        Step {
+            text: text.to_string(),
+            table: Vec::new(),
+        }
+    }
+
+    fn run_steps(
+        scenario: &ScenarioRecord,
+        fact: &str,
+        final_assertion: &str,
+        finding_assertions: &[&str],
+    ) -> anyhow::Result<()> {
+        let mut steps = [
+            step("the profile pack \"sec/efm-77/opco\""),
+            step(fact),
+            step("the document is validated"),
+        ]
+        .into_iter()
+        .chain(finding_assertions.iter().copied().map(step))
+        .collect::<Vec<_>>();
+        if !final_assertion.is_empty() {
+            steps.push(step(final_assertion));
+        }
+        let grid = FeatureGrid {
+            scenarios: vec![scenario.clone()],
+        };
+        let mut world = World::new(PathBuf::from("."), grid);
+        run_scenario(&mut world, scenario, &steps)
+    }
+
+    #[test]
+    fn negative_value_scenarios_execute_through_bdd_handlers() -> anyhow::Result<()> {
+        let negative_cases = [
+            (
+                "SCN-XK-SEC-NEGATIVE-001",
+                "AC-XK-SEC-NEGATIVE-001",
+                "dei:EntityCommonStockSharesOutstanding",
+                "-1000",
+                &[
+                    "the validation report contains a finding with rule ID containing \"NEGATIVE_VALUE\"",
+                    "the finding severity is \"error\"",
+                    "the finding subject is \"dei:EntityCommonStockSharesOutstanding\"",
+                ][..],
+            ),
+            (
+                "SCN-XK-SEC-NEGATIVE-003",
+                "AC-XK-SEC-NEGATIVE-003",
+                "dei:EntityNumberOfEmployees",
+                "-50",
+                &[
+                    "the validation report contains a finding with rule ID containing \"NEGATIVE_VALUE\"",
+                    "the finding subject is \"dei:EntityNumberOfEmployees\"",
+                ][..],
+            ),
+            (
+                "SCN-XK-SEC-NEGATIVE-004",
+                "AC-XK-SEC-NEGATIVE-004",
+                "dei:EntityCommonStockSharesOutstanding",
+                "(1000)",
+                &[
+                    "the validation report contains a finding with rule ID containing \"NEGATIVE_VALUE\"",
+                ][..],
+            ),
+        ];
+        for (scenario_id, ac_id, concept, value, assertions) in negative_cases {
+            let scenario = scenario(scenario_id, ac_id);
+            let fact =
+                format!("an inline XBRL document with fact \"{concept}\" valued \"{value}\"");
+            run_steps(&scenario, &fact, "", assertions)?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn negative_value_scenarios_allow_negative_losses_and_positive_counts() -> anyhow::Result<()> {
+        for (scenario_id, ac_id, concept, value) in [
+            (
+                "SCN-XK-SEC-NEGATIVE-002",
+                "AC-XK-SEC-NEGATIVE-002",
+                "dei:EntityCommonStockSharesOutstanding",
+                "1000000",
+            ),
+            (
+                "SCN-XK-SEC-NEGATIVE-005",
+                "AC-XK-SEC-NEGATIVE-005",
+                "us-gaap:NetIncomeLoss",
+                "-5000000",
+            ),
+        ] {
+            let scenario = scenario(scenario_id, ac_id);
+            let fact =
+                format!("an inline XBRL document with fact \"{concept}\" valued \"{value}\"");
+            run_steps(
+                &scenario,
+                &fact,
+                "the validation report has no findings with severity \"error\"",
+                &[],
+            )?;
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn inline_fact_step_rejects_missing_quoted_value() -> anyhow::Result<()> {
+        let scenario = scenario("SCN-XK-SEC-NEGATIVE-001", "AC-XK-SEC-NEGATIVE-001");
+        let grid = FeatureGrid {
+            scenarios: vec![scenario.clone()],
+        };
+        let mut world = World::new(PathBuf::from("."), grid);
+        let error = match run_scenario(
+            &mut world,
+            &scenario,
+            &[step(
+                "an inline XBRL document with fact \"dei:EntityCommonStockSharesOutstanding\"",
+            )],
+        ) {
+            Ok(()) => {
+                return Err(anyhow::anyhow!("malformed inline fact unexpectedly passed"));
+            }
+            Err(error) => error,
+        };
+        if !error.to_string().contains("quoted concept and value") {
+            return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn inline_fact_step_rejects_trailing_quoted_field() -> anyhow::Result<()> {
+        let scenario = scenario("SCN-XK-SEC-NEGATIVE-001", "AC-XK-SEC-NEGATIVE-001");
+        let grid = FeatureGrid {
+            scenarios: vec![scenario.clone()],
+        };
+        let mut world = World::new(PathBuf::from("."), grid);
+        let error = match run_scenario(
+            &mut world,
+            &scenario,
+            &[step(
+                "an inline XBRL document with fact \"dei:EntityCommonStockSharesOutstanding\" valued \"-1000\" \"unexpected\"",
+            )],
+        ) {
+            Ok(()) => {
+                return Err(anyhow::anyhow!(
+                    "trailing inline fact field unexpectedly passed"
+                ));
+            }
+            Err(error) => error,
+        };
+        if !error
+            .to_string()
+            .contains("exactly one quoted concept and one quoted value")
+        {
+            return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
 }
