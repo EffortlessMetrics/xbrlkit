@@ -1,0 +1,13 @@
+[package]
+name = "xbrlkit-utils"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Small cross-cutting utilities for xbrlkit"
+
+[lib]
+path = "src/lib.rs"
+
+[lints]
+workspace = true

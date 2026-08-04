@@ -5,6 +5,7 @@
 //! and decimal precision validation per SEC EFM 6.5.37.
 
 use xbrl_report_types::{Fact, ValidationFinding};
+use xbrlkit_utils::sanitize_for_rule_id;
 
 pub mod decimal_precision;
 
@@ -108,20 +109,6 @@ fn concept_prohibits_negative(concept: &str, prohibited_concepts: &[String]) -> 
     }
 
     false
-}
-
-/// Sanitizes a concept name for use in a rule ID.
-fn sanitize_for_rule_id(value: &str) -> String {
-    value
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() {
-                ch.to_ascii_uppercase()
-            } else {
-                '_'
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]

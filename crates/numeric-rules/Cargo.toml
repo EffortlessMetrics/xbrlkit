@@ -7,5 +7,6 @@ description = "Numeric validation rules for XBRL reports"
 
 [dependencies]
 xbrl-report-types.workspace = true
+xbrlkit-utils.workspace = true
 
 [dev-dependencies]

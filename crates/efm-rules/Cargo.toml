@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 xbrl-report-types.workspace = true
+xbrlkit-utils.workspace = true
 sec-profile-types.workspace = true
 ixhtml-scan.workspace = true
 taxonomy-dts.workspace = true

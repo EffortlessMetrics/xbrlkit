@@ -7,6 +7,7 @@ members = [
   "crates/taxonomy-types",
   "crates/sec-profile-types",
   "crates/xbrl-report-types",
+  "crates/xbrlkit-utils",
   "crates/xbrlkit-feature-grid",
   "crates/xbrlkit-test-grid",
   "crates/xbrlkit-bdd",
@@ -111,6 +112,7 @@ xbrl-linkbases = { version = "0.1.0-alpha.1", path = "crates/xbrl-linkbases" }
 xbrl-report-types = { version = "0.1.0-alpha.1", path = "crates/xbrl-report-types" }
 xbrl-stream = { version = "0.1.0-alpha.1", path = "crates/xbrl-stream" }
 xbrl-units = { version = "0.1.0-alpha.1", path = "crates/xbrl-units" }
+xbrlkit-utils = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-utils" }
 xbrlkit-bdd = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-bdd" }
 xbrlkit-bdd-steps = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-bdd-steps" }
 xbrlkit-cli = { version = "0.1.0-alpha.1", path = "crates/xbrlkit-cli" }
