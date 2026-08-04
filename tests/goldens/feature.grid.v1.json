@@ -1616,7 +1616,8 @@
         "crates/receipt-types",
         "xtask",
         "contracts/schemas",
-        "specs/features/workflow"
+        "specs/features/workflow",
+        "tests/goldens"
       ],
       "suite": "synthetic",
       "speed": "fast"
