@@ -65,11 +65,12 @@ pub fn scan_inline_fragments(html: &str) -> Vec<InlineFragment> {
 }
 
 fn find_tag_end(html: &str, start: usize) -> Option<usize> {
-    let mut in_quotes = false;
+    let mut quote = None;
     for (relative_index, ch) in html[start..].char_indices() {
         match ch {
-            '"' => in_quotes = !in_quotes,
-            '>' if !in_quotes => return Some(start + relative_index),
+            '"' | '\'' if quote.is_none() => quote = Some(ch),
+            _ if quote == Some(ch) => quote = None,
+            '>' if quote.is_none() => return Some(start + relative_index),
             _ => {}
         }
     }
@@ -113,10 +114,11 @@ fn parse_attributes(raw: &str) -> BTreeMap<String, String> {
             while index < bytes.len() && bytes[index].is_ascii_whitespace() {
                 index += 1;
             }
-            let value = if index < bytes.len() && bytes[index] == b'"' {
+            let value = if index < bytes.len() && matches!(bytes[index], b'"' | b'\'') {
+                let quote = bytes[index];
                 index += 1;
                 let value_start = index;
-                while index < bytes.len() && bytes[index] != b'"' {
+                while index < bytes.len() && bytes[index] != quote {
                     index += 1;
                 }
                 let value = raw[value_start..index].to_string();
@@ -181,5 +183,20 @@ mod tests {
             fragments[0].attributes.get("xml:base").map(String::as_str),
             Some("https://example.com")
         );
+    }
+
+    #[test]
+    fn preserves_single_quoted_attributes_containing_tag_delimiters() {
+        let html = "<ix:nonNumeric name='dei:DocumentType' contextRef='c1' data='x>y'>10-K</ix:nonNumeric>";
+        let fragments = scan_inline_fragments(html);
+
+        assert_eq!(fragments.len(), 1);
+        assert_eq!(fragments[0].fact_name.as_deref(), Some("dei:DocumentType"));
+        assert_eq!(fragments[0].context_ref.as_deref(), Some("c1"));
+        assert_eq!(
+            fragments[0].attributes.get("data").map(String::as_str),
+            Some("x>y")
+        );
+        assert_eq!(fragments[0].value, "10-K");
     }
 }
