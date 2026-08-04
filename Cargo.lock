@@ -2275,6 +2275,7 @@ dependencies = [
  "serde_json",
  "taxonomy-dimensions",
  "taxonomy-loader",
+ "tempfile",
  "walkdir",
  "xbrl-contexts",
  "xbrl-report-types",

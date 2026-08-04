@@ -150,6 +150,24 @@ fn impact(changed: &[String]) -> anyhow::Result<()> {
 
 fn test_ac(ac_id: &str) -> anyhow::Result<()> {
     let grid = load_grid()?;
+
+    // Taxonomy-loader acceptance criteria are implemented by their BDD steps,
+    // not by the generic fixture execution path below.
+    if ac_id.starts_with("AC-XK-TAX-LOAD-") {
+        let run = xbrlkit_bdd::run(&repo_root(), &grid, &format!("@{ac_id}"))?;
+        if run.selected.is_empty() {
+            anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
+        }
+        let receipt_path = repo_root().join("artifacts/runs/scenario.run.v1.json");
+        write_json(&receipt_path, &run.receipt)?;
+        println!(
+            "test-ac: executed {} scenario(s) for {}",
+            run.selected.len(),
+            ac_id
+        );
+        return Ok(());
+    }
+
     let scenarios = select_matching_scenarios(&grid, ac_id);
     if scenarios.is_empty() {
         anyhow::bail!("test-ac: selector matched no scenarios: {ac_id}");
