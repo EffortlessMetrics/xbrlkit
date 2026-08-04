@@ -28,7 +28,7 @@ context-completeness.workspace = true
 xbrl-report-types.workspace = true
 numeric-rules.workspace = true
 xbrl-stream.workspace = true
-taxonomy-loader.workspace = true
+taxonomy-loader = { workspace = true, features = ["http"] }
 
 [lints]
 workspace = true
