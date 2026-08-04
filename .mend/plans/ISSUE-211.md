@@ -16,7 +16,10 @@ the current unit-test suite already performs external HTTP requests.
   derivation, and rejection of an unsupported URL scheme.
 - The schema and linkbase tests parse inline XML and do not load a remote URL.
 - No current test provides deterministic coverage for successful HTTP loading,
-  HTTP status failures, transport failures, or remote cache hit/miss behavior.
+  HTTP status failures, or transport failures.
+- PR #401 is an open owner-controlled lane that adds deterministic offline
+  cache miss/write/hit and recursive-import observations; those cache branches
+  are not landed on `origin/main` and must not be duplicated here.
 
 The original issue wording says tests "may trigger actual HTTP calls", but that
 behavior was not reproduced from the current test code. The durable problem is
@@ -45,13 +48,15 @@ Add fixture-free tests for:
 1. a successful remote response containing a minimal schema;
 2. a non-success HTTP status, such as 404;
 3. a transport error without waiting for the 30-second production timeout;
-4. rejection of unsupported schemes before transport use;
-5. a cache miss followed by a write; and
-6. a cache hit that avoids the transport.
+4. rejection of unsupported schemes before transport use.
 
-The test double must record requests sufficiently to prove cache hits do not
-perform a second request. Tests must not depend on public Internet hosts,
-wall-clock sleeps, or process-global mutable state.
+Cache miss/write/hit behavior remains owned by PR #401. If that lane does not
+land before this issue is implemented, rebase and reconcile its exact proof
+before adding any cache assertions here.
+
+The test double must expose deterministic responses and transport errors
+without relying on public Internet hosts, wall-clock sleeps, or process-global
+mutable state.
 
 ### Slice 2: document the testing contract
 
@@ -67,10 +72,10 @@ existing implementation issues rather than duplicating those contracts here.
       network call in the existing tests.
 - [ ] A crate-internal transport seam or equivalent test adapter exists without
       requiring tests to contact an external host.
-- [ ] Success, HTTP failure, transport failure, unsupported scheme, cache miss,
-      and cache hit behavior are covered by focused tests.
-- [ ] The cache-hit test proves that the transport is not called after a cached
-      response is available.
+- [ ] Success, HTTP failure, transport failure, and unsupported scheme behavior
+      are covered by focused tests in this lane.
+- [ ] Cache miss/write/hit behavior is covered by PR #401 or a narrowly scoped
+      follow-up after that owner-controlled lane is reconciled.
 - [ ] Existing public constructors and local-path loading remain compatible.
 - [ ] `crates/taxonomy-loader/README.md` documents the no-network test rule.
 - [ ] Normal tests pass with offline dependency resolution and no network
