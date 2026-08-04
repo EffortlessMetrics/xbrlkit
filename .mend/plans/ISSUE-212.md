@@ -12,7 +12,7 @@ Implementation is intentionally queued behind the contract work in PR #380 and t
 The original proposal cannot be implemented safely by filtering only on `@alpha-active` yet:
 
 - `origin/main` `ScenarioRecord` has no scenario-tag field.
-- PR #380 (`2962d546cee0d9c228a5978e1c92e4a88435f8d4`) adds tags to the feature-grid contract and compiler, but explicitly leaves alpha-check selection unchanged. Its current head also has an unresolved malformed mixed-tag case documented on the PR.
+- PR #380 (`bda46dab5a3a83472fac7e185b5e3378323e97d0`) adds tags to the feature-grid contract and compiler, but explicitly leaves alpha-check selection unchanged. Its current head also includes the repaired malformed mixed-tag rejection; the PR remains open and must land before this plan can consume the contract as a base.
 - PR #389 (`260531329da100d9cfa72d6a5b0523e74491f412`) adds declared `test_type` and `test_tag` data used to distinguish BDD and scenario-runner dispatch, but it is not merged into `main`.
 - The existing list includes ACs whose execution is not equivalent to the global `@alpha-active` BDD run. Deriving every tagged AC and invoking `test-ac` would either duplicate BDD execution or drop an existing direct check.
 
