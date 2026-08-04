@@ -12,6 +12,7 @@ use scenario_runner::{
 };
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
+use std::sync::Arc;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -77,10 +78,20 @@ pub struct TaxonomyLoaderContext {
     pub loader: Option<taxonomy_loader::TaxonomyLoader>,
     pub taxonomy: Option<DimensionTaxonomy>,
     pub cache_dir: Option<PathBuf>,
+    cache_dir_guard: Option<Arc<CacheDirGuard>>,
     pub cache_collision_urls: Option<(String, String)>,
     pub cache_collision_taxonomies: Option<(DimensionTaxonomy, DimensionTaxonomy)>,
     pub schema_path: Option<String>,
     pub loaded: bool,
+}
+
+#[derive(Debug)]
+struct CacheDirGuard(PathBuf);
+
+impl Drop for CacheDirGuard {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
 }
 
 const CACHE_COLLISION_FIXTURE: &str = "fixtures/synthetic/taxonomy/cache-collision";
@@ -655,8 +666,10 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
             std::process::id(),
             suffix
         ));
-        std::fs::create_dir_all(&cache_dir)?;
+        std::fs::create_dir(&cache_dir)?;
         world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
+        world.taxonomy_loader_context.cache_dir_guard =
+            Some(Arc::new(CacheDirGuard(cache_dir.clone())));
         world.taxonomy_loader_context.loader =
             Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
         return Ok(true);
@@ -1727,4 +1740,40 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FeatureGrid, ScenarioRecord, Step, World, handle_given};
+    use std::path::PathBuf;
+
+    #[test]
+    fn fresh_cache_directory_is_removed_when_world_drops() -> Result<(), String> {
+        let cache_dir = {
+            let mut world = World::new(PathBuf::from("."), FeatureGrid::default());
+            let step = Step {
+                text: "a fresh cache directory is configured".to_string(),
+                table: Vec::new(),
+            };
+            handle_given(&mut world, &ScenarioRecord::default(), &step)
+                .map_err(|error| error.to_string())?;
+            let cache_dir = world
+                .taxonomy_loader_context
+                .cache_dir
+                .clone()
+                .ok_or_else(|| "cache directory was not configured".to_string())?;
+            if !cache_dir.exists() {
+                return Err("cache directory was not created".to_string());
+            }
+            cache_dir
+        };
+
+        if cache_dir.exists() {
+            return Err(format!(
+                "cache directory was not removed: {}",
+                cache_dir.display()
+            ));
+        }
+        Ok(())
+    }
 }
