@@ -37,14 +37,19 @@ work.
 
 - AC-350-001: all 17 dimension feature scenarios have sidecar records with the
   correct AC, requirement, fixture, crate, and edit-root metadata.
-- AC-350-002: `cargo xtask feature-grid` reports 17 dimension records and the
-  checked-in golden matches the generated grid.
+- AC-350-002: `cargo xtask feature-grid` produces exactly the unique scenario
+  IDs `SCN-XK-DIM-001` through `SCN-XK-DIM-017` in the generated grid, and the
+  checked-in golden is JSON-equivalent to that generated grid after the
+  authoritative generator runs.
 - AC-350-003: representative typed-member and typed-value scenarios execute
   through the declared BDD path, including DIM-005 and at least one valid and
   invalid typed-value case.
 - AC-350-004: `cargo xtask test-ac` succeeds for the representative ACs after
   the handler prerequisite is present.
-- AC-350-005: the sidecar-only PR changes no production Rust behavior.
+- AC-350-005: relative to the recorded base head, the sidecar-only PR changes
+  only `specs/features/taxonomy/dimensions.meta.yaml` and
+  `tests/goldens/feature.grid.v1.json`; it changes no production Rust,
+  feature-step, ledger, or parser path.
 
 ## Proof commands
 
@@ -59,9 +64,26 @@ cargo xtask alpha-check
 git diff --check
 ```
 
-Also compare the generated `artifacts/feature.grid.v1.json` with
-`tests/goldens/feature.grid.v1.json` and record the exact base and prerequisite
-heads used for the proof.
+After `cargo xtask feature-grid`, run the following PowerShell assertions from
+the repository root. They make the scenario-ID and golden comparison
+machine-checkable rather than relying on a record count or visual diff:
+
+```powershell
+$generated = Get-Content artifacts/feature.grid.v1.json -Raw | ConvertFrom-Json
+$golden = Get-Content tests/goldens/feature.grid.v1.json -Raw | ConvertFrom-Json
+$expected = @(1..17 | ForEach-Object { 'SCN-XK-DIM-{0:D3}' -f $_ })
+$actual = @($generated.scenarios | Where-Object { $_.scenario_id -like 'SCN-XK-DIM-*' } | Select-Object -ExpandProperty scenario_id)
+if ($actual.Count -ne 17 -or (@($actual | Sort-Object -Unique).Count -ne 17) -or (Compare-Object ($expected | Sort-Object) ($actual | Sort-Object))) { throw 'dimension grid must contain exactly DIM-001 through DIM-017 once each' }
+if ((ConvertTo-Json $generated -Depth 100 -Compress) -ne (ConvertTo-Json $golden -Depth 100 -Compress)) { throw 'generated feature grid differs from the checked-in golden' }
+
+$allowed = @('specs/features/taxonomy/dimensions.meta.yaml', 'tests/goldens/feature.grid.v1.json')
+$changed = @(git diff --name-only <recorded-base-head>...HEAD)
+if (@($changed | Where-Object { $_ -notin $allowed }).Count -ne 0 -or @($changed | Sort-Object -Unique).Count -ne $allowed.Count) { throw 'sidecar-only PR changed a path outside the two-file allowlist' }
+```
+
+Replace `<recorded-base-head>` with the exact base head recorded for the
+follow-up PR. Record that base head and the prerequisite handler PR head in
+the PR receipt so the allowlist and execution proof are reproducible.
 
 ## Non-goals and rollback
 
