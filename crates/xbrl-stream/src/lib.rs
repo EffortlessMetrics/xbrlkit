@@ -446,6 +446,20 @@ mod tests {
     }
 
     #[test]
+    fn reports_malformed_xml_as_a_parser_error() -> anyhow::Result<()> {
+        let xml = r"<xbrl><us-gaap:Revenue></xbrl>";
+        let reader = XbrlStreamReader::new(Cursor::new(xml), TestHandler::default());
+
+        match reader.parse() {
+            Err(StreamError::XmlError { .. }) => Ok(()),
+            Err(error) => Err(anyhow::anyhow!("unexpected parser error: {error}")),
+            Ok(_) => Err(anyhow::anyhow!(
+                "malformed XML unexpectedly parsed successfully"
+            )),
+        }
+    }
+
+    #[test]
     fn parses_context_definition() -> anyhow::Result<()> {
         let xml = r#"<?xml version="1.0"?>
 <xbrl xmlns="http://www.xbrl.org/2003/instance" xmlns:xbrli="http://www.xbrl.org/2003/instance">
