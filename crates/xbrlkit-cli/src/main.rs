@@ -1,13 +1,14 @@
 //! CLI edge for xbrlkit.
 #![allow(clippy::too_many_lines)]
 
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 use clap::{Parser, Subcommand};
 use sec_profile_types::{ProfilePack, load_profile_from_workspace};
 use std::path::{Path, PathBuf};
 use validation_run::validate_html_members;
 use xbrl_contexts::{Period, get_dimensional_members, parse_contexts};
 use xbrl_report_types::ValidationFinding;
+use xbrlkit_cli::workspace_root;
 
 #[derive(Debug, Parser)]
 #[command(name = "xbrlkit")]
@@ -158,15 +159,6 @@ fn main() -> anyhow::Result<()> {
     std::process::exit(exit_code)
 }
 
-fn workspace_root(manifest_dir: &Path) -> anyhow::Result<&Path> {
-    manifest_dir.parent().and_then(Path::parent).ok_or_else(|| {
-        anyhow!(
-            "unable to derive workspace root from manifest directory `{}`",
-            manifest_dir.display()
-        )
-    })
-}
-
 fn load_profile(profile_id: &str) -> anyhow::Result<ProfilePack> {
     let root = workspace_root(Path::new(env!("CARGO_MANIFEST_DIR")))?;
     load_profile_from_workspace(root, profile_id)
@@ -230,6 +222,7 @@ fn print_taxonomy_summary(taxonomy: &taxonomy_dimensions::DimensionTaxonomy) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::anyhow;
 
     #[test]
     fn derives_workspace_root_from_nested_manifest_directory() -> anyhow::Result<()> {

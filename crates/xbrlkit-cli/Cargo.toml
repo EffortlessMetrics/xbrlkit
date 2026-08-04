@@ -7,6 +7,9 @@ repository.workspace = true
 description.workspace = true
 publish = false
 
+[lib]
+path = "src/lib.rs"
+
 [[bin]]
 name = "xbrlkit-cli"
 path = "src/main.rs"

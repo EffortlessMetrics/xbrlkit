@@ -1,0 +1,15 @@
+feature_id: FEAT-XK-CLI
+layer: cli
+module: workspace-root
+scenarios:
+  SCN-XK-CLI-002:
+    ac_id: AC-XK-CLI-002
+    req_id: REQ-XK-CLI
+    crates: [xbrlkit-cli, xbrlkit-bdd-steps]
+    suite: synthetic
+    speed: fast
+    receipts: [scenario.run.v1]
+    allowed_edit_roots:
+      - crates/xbrlkit-cli
+      - crates/xbrlkit-bdd-steps
+      - specs/features/cli

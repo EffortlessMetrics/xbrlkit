@@ -40,6 +40,7 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+    pub cli_manifest_dir: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -102,6 +103,7 @@ impl World {
             cli_output: None,
             cli_json_output: None,
             cli_exit_code: None,
+            cli_manifest_dir: None,
         }
     }
 }
@@ -328,6 +330,11 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     // CLI Given steps
     if step.text == "a SEC profile is configured" {
         world.profile_id = Some("sec/efm-77/opco".to_string());
+        return Ok(true);
+    }
+
+    if step.text == "a malformed CLI manifest directory is supplied" {
+        world.cli_manifest_dir = Some(PathBuf::new());
         return Ok(true);
     }
 
@@ -891,6 +898,24 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I derive the CLI workspace root" {
+        let manifest_dir = world
+            .cli_manifest_dir
+            .as_deref()
+            .context("CLI manifest directory not configured")?;
+        match xbrlkit_cli::workspace_root(manifest_dir) {
+            Ok(root) => {
+                world.cli_output = Some(root.display().to_string());
+                world.cli_exit_code = Some(0);
+            }
+            Err(error) => {
+                world.cli_output = Some(error.to_string());
+                world.cli_exit_code = Some(1);
+            }
+        }
+        return Ok(true);
+    }
+
     // Alpha check When steps
     if step.text == "I run the alpha readiness gate" {
         // Instead of running bdd (which causes recursion), just verify the grid can be loaded
@@ -1199,6 +1224,22 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 if json_value.get(field).is_none() {
                     anyhow::bail!("required field '{field}' is missing from profile output");
                 }
+            }
+            Ok(())
+        }
+        "the CLI workspace root derivation should fail with path context" => {
+            let exit_code = world
+                .cli_exit_code
+                .context("CLI workspace-root derivation was not executed")?;
+            if exit_code == 0 {
+                anyhow::bail!("malformed CLI manifest directory unexpectedly succeeded");
+            }
+            let output = world
+                .cli_output
+                .as_deref()
+                .context("CLI workspace-root error was not captured")?;
+            if !output.contains("manifest directory") {
+                anyhow::bail!("CLI workspace-root error lacks path context: {output}");
             }
             Ok(())
         }
