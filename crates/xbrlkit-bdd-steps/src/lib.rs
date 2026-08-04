@@ -1671,8 +1671,15 @@ fn parse_inline_fact_step(step: &str) -> anyhow::Result<(String, String)> {
     let value = value
         .strip_suffix('"')
         .context("inline fact value must be quoted")?;
-    if concept.is_empty() || value.is_empty() {
-        anyhow::bail!("inline fact concept and value must not be empty");
+    if concept.is_empty() || value.is_empty() || concept.contains('"') || value.contains('"') {
+        anyhow::bail!(
+            "inline fact step must contain exactly one quoted concept and one quoted value"
+        );
+    }
+    if remainder.matches('"').count() != 4 {
+        anyhow::bail!(
+            "inline fact step must contain exactly one quoted concept and one quoted value"
+        );
     }
     Ok((concept.to_string(), value.to_string()))
 }
@@ -1883,6 +1890,36 @@ mod tests {
             Err(error) => error,
         };
         if !error.to_string().contains("quoted concept and value") {
+            return Err(anyhow::anyhow!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn inline_fact_step_rejects_trailing_quoted_field() -> anyhow::Result<()> {
+        let scenario = scenario("SCN-XK-SEC-NEGATIVE-001", "AC-XK-SEC-NEGATIVE-001");
+        let grid = FeatureGrid {
+            scenarios: vec![scenario.clone()],
+        };
+        let mut world = World::new(PathBuf::from("."), grid);
+        let error = match run_scenario(
+            &mut world,
+            &scenario,
+            &[step(
+                "an inline XBRL document with fact \"dei:EntityCommonStockSharesOutstanding\" valued \"-1000\" \"unexpected\"",
+            )],
+        ) {
+            Ok(()) => {
+                return Err(anyhow::anyhow!(
+                    "trailing inline fact field unexpectedly passed"
+                ));
+            }
+            Err(error) => error,
+        };
+        if !error
+            .to_string()
+            .contains("exactly one quoted concept and one quoted value")
+        {
             return Err(anyhow::anyhow!("unexpected error: {error}"));
         }
         Ok(())
