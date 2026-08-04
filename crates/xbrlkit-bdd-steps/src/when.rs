@@ -83,7 +83,9 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
             scenario: None,
         };
 
-        if !dimension.is_empty() && !member.is_empty() {
+        // Validate a declared dimension even when the scenario omits its
+        // member, so unknown dimensions cannot bypass the validator.
+        if !dimension.is_empty() {
             context.scenario = Some(DimensionalContainer {
                 dimensions: vec![DimensionMember {
                     dimension: dimension.to_string(),
@@ -398,4 +400,41 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
     }
 
     Ok(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::handle;
+    use crate::world::{Step, World};
+    use scenario_contract::{FeatureGrid, ScenarioRecord};
+    use std::path::PathBuf;
+
+    #[test]
+    fn unknown_dimension_without_member_is_validated() -> Result<(), String> {
+        let mut world = World::new(PathBuf::new(), FeatureGrid::default());
+        world.dimension.dimension = Some("custom:UnknownAxis".to_string());
+        let scenario = ScenarioRecord::default();
+        let step = Step {
+            text: "I validate the dimension-member pair".to_string(),
+            table: Vec::new(),
+        };
+
+        if !handle(&mut world, &scenario, &step)
+            .map_err(|error| format!("dimension validation failed: {error}"))?
+        {
+            return Err("dimension validation step was not handled".to_string());
+        }
+        if !world
+            .dimension
+            .validation_findings
+            .iter()
+            .any(|finding| finding == "XBRL.DIMENSION.UNKNOWN")
+        {
+            return Err(format!(
+                "unknown dimension finding was not reported: {:?}",
+                world.dimension.validation_findings
+            ));
+        }
+        Ok(())
+    }
 }
