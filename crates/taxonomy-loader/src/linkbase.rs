@@ -7,6 +7,7 @@
 //! - `all`/`notAll` → Closed vs open hypercubes
 
 use crate::error::TaxonomyLoaderError;
+use crate::xml_util;
 use roxmltree::{Document, Node};
 use std::collections::HashMap;
 use taxonomy_dimensions::{Domain, DomainMember, Hypercube};
@@ -26,7 +27,7 @@ pub fn parse_definition_linkbase(
     let doc = Document::parse(content)?;
 
     // Extract namespace prefixes
-    let ns_map = extract_namespaces(&doc);
+    let ns_map = xml_util::extract_namespaces(&doc);
 
     // Find all linkbaseRef elements to locate definition links
     // Process all link:definitionLink elements
@@ -255,19 +256,15 @@ fn add_domain_member(
     });
 }
 
-/// Extracts namespace mappings from the document.
-fn extract_namespaces(doc: &Document<'_>) -> HashMap<String, String> {
-    let mut ns_map = HashMap::new();
-
-    for ns in doc.root_element().namespaces() {
-        let prefix = ns.name().unwrap_or("");
-        ns_map.insert(prefix.to_string(), ns.uri().to_string());
-    }
-
-    ns_map
-}
-
-/// Extracts linkbase references from a schema.
+/// Extracts definition linkbase references from a schema.
+///
+/// The function filters `linkbaseRef` elements to definition linkbases,
+/// resolves relative `xlink:href` values against the directory containing
+/// `base_path`, and returns the resolved reference paths.
+///
+/// # Errors
+///
+/// Returns an error when `content` is not well-formed XML.
 pub fn extract_linkbase_refs(
     content: &str,
     base_path: &str,
@@ -275,10 +272,7 @@ pub fn extract_linkbase_refs(
     let doc = Document::parse(content)?;
     let mut refs = Vec::new();
 
-    let base_dir = std::path::Path::new(base_path)
-        .parent()
-        .map(|p| p.to_string_lossy().to_string())
-        .unwrap_or_default();
+    let base_dir = xml_util::base_dir_from_path(base_path);
 
     for node in doc.root_element().descendants() {
         // Check for linkbaseRef with or without namespace prefix
@@ -303,7 +297,7 @@ pub fn extract_linkbase_refs(
                 });
 
             if let Some(href) = href {
-                let resolved = resolve_path(&base_dir, href);
+                let resolved = xml_util::resolve_path(&base_dir, href);
                 // Only process definition linkbases
                 if resolved.ends_with("_def.xml") || resolved.contains("definition") {
                     refs.push(resolved);
@@ -312,16 +306,6 @@ pub fn extract_linkbase_refs(
         }
     }
     Ok(refs)
-}
-
-/// Resolves a relative path against a base directory.
-fn resolve_path(base_dir: &str, relative: &str) -> String {
-    if (relative.starts_with("http://") || relative.starts_with("https://")) || base_dir.is_empty()
-    {
-        relative.to_string()
-    } else {
-        format!("{base_dir}/{relative}")
-    }
 }
 
 #[cfg(test)]
