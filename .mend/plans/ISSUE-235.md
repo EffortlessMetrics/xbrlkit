@@ -20,6 +20,9 @@ CLI instead of returning the existing `anyhow::Result` error path.
   operation context.
 - AC-235-003: these CLI JSON paths contain no production `unwrap()` calls.
 - AC-235-004: successful human-readable and JSON command behavior is unchanged.
+- SCN-XK-CLI-002: a ledger-backed CLI scenario drives deterministic JSON
+  serialization failure for both inspect paths and asserts the non-zero exit
+  contract plus operation-specific error output.
 
 ## Proof
 
@@ -29,14 +32,17 @@ CLI instead of returning the existing `anyhow::Result` error path.
 - `git diff --check`
 - `cargo run -p xbrlkit-cli --locked --offline -- --help`
 - targeted source audit for `unwrap()` in `crates/xbrlkit-cli/src/main.rs`
+- `cargo xtask bdd --tags @SCN-XK-CLI-002`
+- feature-grid, sidecar, and scenario receipt validation for the CLI scenario
 
 ## Non-goals
 
 - Do not change the separate `workspace_root()` `expect`; that belongs to a
   different issue and is outside the two JSON serialization call sites.
 - Do not redesign CLI output or add new dependencies.
-- Do not add a scenario solely for this behavior-preserving error-plumbing
-  change; the existing CLI contract and targeted compile/test proof cover it.
+- Do not add unrelated CLI scenarios; the implementation lane must retain the
+  targeted scenario because the failure and exit-code behavior is externally
+  observable. PR #369 is the implementation owner for `SCN-XK-CLI-002`.
 
 ## Risk and rollback
 
