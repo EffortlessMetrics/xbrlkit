@@ -61,9 +61,13 @@ pub struct ContextCompletenessContext {
 }
 
 #[derive(Debug, Clone, Default)]
+/// State used by fixture-free BDD steps that exercise numeric validation.
 pub struct NumericValidationContext {
+    /// Synthetic facts supplied by the current scenario.
     pub facts: Vec<xbrl_report_types::Fact>,
+    /// Findings produced by validating the synthetic facts.
     pub findings: Vec<xbrl_report_types::ValidationFinding>,
+    /// Finding selected by the most recent finding assertion.
     pub current_finding: Option<xbrl_report_types::ValidationFinding>,
 }
 
@@ -1658,6 +1662,7 @@ fn handle_parameterized_assertion(world: &mut World, step: &Step) -> anyhow::Res
     anyhow::bail!("unsupported BDD step: {}", step.text)
 }
 
+/// Parse one inline-fact Given step into its concept and lexical value.
 fn parse_inline_fact_step(step: &str) -> anyhow::Result<(String, String)> {
     let remainder = step
         .strip_prefix("an inline XBRL document with fact ")
