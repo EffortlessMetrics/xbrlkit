@@ -3,7 +3,7 @@
 **Stream:** Plan quality and source truth  
 **Issue:** #284  
 **Status:** Reconciled — no production repair identified  
-**Verified:** 2026-08-03
+**Verified:** 2026-08-04
 
 ## Objective
 
@@ -22,10 +22,14 @@ repository contains these plan documents under `.mend/plans/`:
 - `ISSUE-101.md`
 - `ISSUE-102-review.md`
 - `ISSUE-102.md`
+- `ISSUE-284.md`
+- `scheduler-log.md`
 - `taxonomy-loader.md`
 
 The issue's earlier reference to `.mend/plans/ISSUE-284.md` was not itself
-committed; this document supplies the missing source-truth artifact.
+committed on the base branch; this document supplies the missing source-truth
+artifact on this branch. `scheduler-log.md` is retained as historical planning
+evidence, not treated as a builder plan or a missing implementation target.
 
 The cited paths were checked in their surrounding plan context:
 
@@ -52,6 +56,7 @@ not duplicated here.
 | Existing plan paths | Verified against current files; no repair required |
 | Historical `MAINTAINER_VISION.md` path | Retain as an explicit deletion record in ISSUE-101 |
 | Aspirational files in plan tables | Keep marked as planned; do not create them as a reference repair |
+| Scheduler log | Retain as historical planning evidence; no path repair required |
 | Untracked/orphaned plans and scout artifacts | Defer to issue #225 and related plan-maintenance work |
 | Benchmark target references | Verified in PR #408; do not duplicate |
 
@@ -73,6 +78,7 @@ Run from the repository root:
 
 ```text
 Get-ChildItem .mend/plans -Filter *.md
+Get-ChildItem .mend/plans -Filter *.md | Measure-Object
 rg -n -g '*.md' '`[^`]+`' .mend/plans
 Test-Path docs/MAINTAINER_VISION.md
 Test-Path adr/ADR-008-taxonomy-loader-http-client.md
@@ -80,10 +86,11 @@ Test-Path .mend/research/taxonomy-dimension-loading.md
 git diff --check
 ```
 
-These checks establish the current file inventory and the specific historical
-or existing paths discussed above. They do not prove that every prose
-reference in every future plan is semantically correct; future plan changes
-must repeat the contextual audit.
+These checks establish the current file inventory, including the scheduler log
+and this source-truth plan, plus the specific historical or existing paths
+discussed above. They do not prove that every prose reference in every future
+plan is semantically correct; future plan changes must repeat the contextual
+audit.
 
 ## Non-goals
 
