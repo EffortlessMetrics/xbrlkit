@@ -28,8 +28,8 @@
       "speed": "fast"
     },
     {
-      "scenario_id": "SCN-XK-CLI-002",
-      "ac_id": "AC-XK-CLI-002",
+      "scenario_id": "SCN-XK-CLI-003",
+      "ac_id": "AC-XK-CLI-003",
       "req_id": "REQ-XK-CLI",
       "feature_file": "specs/features/cli/workspace_root.feature",
       "sidecar_file": "specs/features/cli/workspace_root.meta.yaml",

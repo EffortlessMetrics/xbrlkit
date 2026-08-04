@@ -4,8 +4,8 @@
 Feature: CLI workspace-root discovery
 
   @alpha-active
-  @AC-XK-CLI-002
-  @SCN-XK-CLI-002
+  @AC-XK-CLI-003
+  @SCN-XK-CLI-003
   @speed.fast
   Scenario: Report malformed workspace-root input
     Given a malformed CLI manifest directory is supplied

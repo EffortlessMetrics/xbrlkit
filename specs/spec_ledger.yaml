@@ -99,11 +99,11 @@ stories:
               - type: bdd
                 tag: "@AC-XK-CLI-001"
                 file: "specs/features/cli/describe_profile.feature"
-          - id: AC-XK-CLI-002
+          - id: AC-XK-CLI-003
             title: Report malformed workspace-root input
             tests:
               - type: bdd
-                tag: "@AC-XK-CLI-002"
+                tag: "@AC-XK-CLI-003"
                 file: "specs/features/cli/workspace_root.feature"
       - id: REQ-XK-CONTEXT
         title: Validate that all facts reference defined contexts
