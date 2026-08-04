@@ -23,8 +23,8 @@ keeps the remaining test gaps explicit; it is no longer a build plan.
 | Definition linkbase parsing | `crates/taxonomy-loader/src/linkbase.rs`: dimension arcs, domain-member arcs, and hypercube associations |
 | Taxonomy construction | `taxonomy_dimensions::DimensionTaxonomy` is populated by the schema and linkbase parsers |
 | CLI integration | `crates/xbrlkit-cli/src/main.rs`: `Command::InspectTaxonomy` |
-| Focused proof | Unit tests in `taxonomy-loader/src/{lib,schema,linkbase}.rs` cover synthetic schemas, linkbases, URL validation, and cache behavior |
-| Acceptance scenarios | `specs/features/taxonomy/taxonomy_loader.feature` covers loader availability, schemas, linkbases, caching, imports, and validation integration |
+| Focused proof | Unit tests in `taxonomy-loader/src/{lib,schema,linkbase}.rs` cover synthetic schemas, linkbases, URL validation, and cache configuration/path helpers |
+| Acceptance scenarios | `specs/features/taxonomy/taxonomy_loader.feature` includes loader, schema, linkbase, cache, import, and validation scenarios; the current cache steps only verify directory setup, so behavioral cache hit/miss proof remains deferred to issue #211 |
 
 ## Acceptance ledger
 
