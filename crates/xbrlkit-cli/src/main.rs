@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use validation_run::validate_html_members;
 use xbrl_contexts::{Period, get_dimensional_members, parse_contexts};
 use xbrl_report_types::ValidationFinding;
+use xbrlkit_cli::workspace_root;
 
 #[derive(Debug, Parser)]
 #[command(name = "xbrlkit")]
@@ -158,15 +159,9 @@ fn main() -> anyhow::Result<()> {
     std::process::exit(exit_code)
 }
 
-fn workspace_root() -> &'static Path {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .expect("workspace root")
-}
-
 fn load_profile(profile_id: &str) -> anyhow::Result<ProfilePack> {
-    load_profile_from_workspace(workspace_root(), profile_id)
+    let root = workspace_root(Path::new(env!("CARGO_MANIFEST_DIR")))?;
+    load_profile_from_workspace(root, profile_id)
 }
 
 fn print_validation_summary(profile: &ProfilePack, run: &validation_run::ValidationRun) {
@@ -221,5 +216,33 @@ fn print_taxonomy_summary(taxonomy: &taxonomy_dimensions::DimensionTaxonomy) {
             "  concept-hypercube associations: {}",
             taxonomy.concept_hypercubes.len()
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::anyhow;
+
+    #[test]
+    fn derives_workspace_root_from_nested_manifest_directory() -> anyhow::Result<()> {
+        let root = workspace_root(Path::new("repo/crates/xbrlkit-cli"))?;
+
+        if root != Path::new("repo") {
+            return Err(anyhow!("unexpected workspace root: {}", root.display()));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn reports_malformed_manifest_directory_instead_of_panicking() -> anyhow::Result<()> {
+        let error = workspace_root(Path::new(""))
+            .err()
+            .ok_or_else(|| anyhow!("malformed manifest directory unexpectedly succeeded"))?;
+
+        if !error.to_string().contains("manifest directory") {
+            return Err(anyhow!("missing path context in error: {error}"));
+        }
+        Ok(())
     }
 }

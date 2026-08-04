@@ -28,6 +28,32 @@
       "speed": "fast"
     },
     {
+      "scenario_id": "SCN-XK-CLI-003",
+      "ac_id": "AC-XK-CLI-003",
+      "req_id": "REQ-XK-CLI",
+      "feature_file": "specs/features/cli/workspace_root.feature",
+      "sidecar_file": "specs/features/cli/workspace_root.meta.yaml",
+      "layer": "cli",
+      "module": "FEAT-XK-CLI:workspace-root",
+      "crates": [
+        "xbrlkit-cli",
+        "xbrlkit-bdd-steps"
+      ],
+      "fixtures": [],
+      "profile_pack": null,
+      "receipts": [
+        "scenario.run.v1"
+      ],
+      "allowed_edit_roots": [
+        "crates/xbrlkit-cli",
+        "crates/xbrlkit-bdd-steps",
+        "specs/features/cli",
+        "tests/goldens"
+      ],
+      "suite": "synthetic",
+      "speed": "fast"
+    },
+    {
       "scenario_id": "SCN-XK-CONTEXT-001",
       "ac_id": "AC-XK-CONTEXT-001",
       "req_id": "REQ-XK-CONTEXT",
