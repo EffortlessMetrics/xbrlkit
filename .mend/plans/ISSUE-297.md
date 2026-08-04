@@ -61,6 +61,28 @@ The helper must preserve:
 - all existing loader-context, validation-context, and execution-state
   mutations around the construction.
 
+### Missing-schema fallback proof contract
+
+The implementation PR must add a focused `run_scenario` test (or an equally
+direct BDD-runner test) for the existing missing-schema branch. The test must
+select a scenario whose `fixtures/synthetic/taxonomy/standard-location-01/`
+directory is present while `schema.xsd` is absent, then verify the resulting
+`World` state rather than only asserting that the step returns `Ok(())`:
+
+- `TaxonomyLoaderContext.loaded` is `true` and a taxonomy is present;
+- `us-gaap:ScenarioDomain` contains the Actual and Forecast members with their
+  existing order and parent values;
+- `us-gaap:StatementScenarioAxis` remains a non-required explicit dimension
+  and maps to `us-gaap:ScenarioDomain`;
+- the fallback-only `dim:CustomerAxis` typed dimension has value type
+  `xs:string`;
+- unrelated validation context and `World.execution` state are unchanged by
+  the taxonomy-loading step.
+
+The test must use the repository's existing synthetic path and remain
+fixture-free at runtime; it must not introduce a network dependency or turn
+the fallback into a general fixture abstraction.
+
 ## Acceptance criteria
 
 - [ ] The three equivalent BDD constructions delegate to one private helper
@@ -70,10 +92,11 @@ The helper must preserve:
   requiredness, and typed-dimension behavior before and after the refactor.
 - [ ] The missing-schema fallback remains covered by
   `@AC-XK-TAX-LOAD-003`: with the current fixture directory present but
-  `schema.xsd` absent, the runner selects the fallback and its oracle verifies
-  the `dim:CustomerAxis` `xs:string` typed dimension. If the existing oracle
-  does not distinguish that path, strengthen the focused BDD assertion in the
-  implementation PR.
+  `schema.xsd` absent, the focused runner proof verifies the complete fallback
+  contract above, including domain members, dimension mapping, non-required
+  explicit-dimension behavior, and the fallback-only typed dimension. The
+  implementation PR must strengthen the existing BDD oracle if it currently
+  accepts the path without distinguishing those values.
 - [ ] `dimensional-rules` and `taxonomy-dimensions` keep their distinct local
   fixtures; no misleading cross-crate abstraction is introduced.
 - [ ] No public API, schema, profile, receipt, or production validation
