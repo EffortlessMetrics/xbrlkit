@@ -5,10 +5,58 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
-    "kind": { "type": "string" },
-    "version": { "type": "string" },
+    "kind": { "const": "sensor.report" },
+    "version": { "const": "v1" },
     "subject": { "type": "string" },
-    "result": { "type": "string" }
+    "result": {
+      "type": "string",
+      "enum": ["success", "warning", "error"]
+    },
+    "sensor_id": { "type": "string" },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifactRef" }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "inner_receipt": {
+      "$ref": "#/$defs/innerReceipt"
+    }
   },
-  "required": ["kind", "version", "subject", "result"]
+  "required": ["kind", "version", "subject", "result"],
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": ["string", "null"] }
+      },
+      "required": ["path", "sha256"]
+    },
+    "innerReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string" },
+        "version": { "type": "string" },
+        "subject": { "type": "string" },
+        "result": {
+          "type": "string",
+          "enum": ["success", "warning", "error"]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifactRef" }
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["kind", "version", "subject", "result", "artifacts", "notes"]
+    }
+  }
 }

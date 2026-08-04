@@ -1615,7 +1615,9 @@
         "crates/cockpit-export",
         "crates/receipt-types",
         "xtask",
-        "specs/features/workflow"
+        "contracts/schemas",
+        "specs/features/workflow",
+        "tests/goldens"
       ],
       "suite": "synthetic",
       "speed": "fast"
