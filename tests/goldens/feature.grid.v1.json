@@ -47,7 +47,8 @@
       "allowed_edit_roots": [
         "crates/xbrlkit-cli",
         "crates/xbrlkit-bdd-steps",
-        "specs/features/cli"
+        "specs/features/cli",
+        "tests/goldens"
       ],
       "suite": "synthetic",
       "speed": "fast"
