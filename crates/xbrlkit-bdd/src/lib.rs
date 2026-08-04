@@ -49,7 +49,8 @@ fn run_selected_scenarios(
             .get(&scenario.scenario_id)
             .with_context(|| format!("missing parsed feature for {}", scenario.scenario_id))?;
         let mut world = World::new(repo_root.to_path_buf(), grid.clone());
-        run_scenario(&mut world, scenario, &parsed.steps)?;
+        run_scenario(&mut world, scenario, &parsed.steps)
+            .with_context(|| format!("running scenario {}", scenario.scenario_id))?;
         receipt
             .notes
             .push(format!("{} passed", scenario.scenario_id));
@@ -269,6 +270,8 @@ mod tests {
     fn does_not_reuse_world_state_between_selected_scenarios() -> anyhow::Result<()> {
         let first = test_scenario("SCN-XK-TEST-001");
         let second = test_scenario("SCN-XK-TEST-002");
+        let first_id = first.scenario_id.clone();
+        let second_id = second.scenario_id.clone();
         let grid = FeatureGrid {
             scenarios: vec![first.clone(), second.clone()],
         };
@@ -305,9 +308,17 @@ mod tests {
 
         let result =
             run_selected_scenarios(Path::new("."), &grid, &[first, second], &parsed, "@test");
+        let error = result
+            .err()
+            .ok_or_else(|| anyhow::anyhow!("the second scenario unexpectedly passed"))?
+            .to_string();
         ensure!(
-            result.is_err(),
-            "a scenario must not observe output created by an earlier scenario"
+            error.contains(&second_id),
+            "expected the isolated failure to identify {second_id}, got: {error}"
+        );
+        ensure!(
+            !error.contains(&first_id),
+            "the first scenario failed before the isolation check: {error}"
         );
         Ok(())
     }
