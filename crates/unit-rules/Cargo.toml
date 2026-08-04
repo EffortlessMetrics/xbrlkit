@@ -9,7 +9,6 @@ description = "XBRL unit consistency validation rules"
 xbrl-report-types.workspace = true
 sec-profile-types.workspace = true
 regex = "1.10"
-serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 # Test dependencies added as needed
