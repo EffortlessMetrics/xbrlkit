@@ -23,10 +23,58 @@ pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 
 /// Default timeout for HTTP requests (30 seconds).
 const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// The response data needed by the loader, kept independent of the HTTP
+/// client implementation so tests can exercise remote-loading branches
+/// without opening a network connection.
+#[derive(Debug, Clone)]
+struct HttpResponse {
+    status: u16,
+    status_text: String,
+    body: String,
+}
+
+impl HttpResponse {
+    fn is_success(&self) -> bool {
+        (200..300).contains(&self.status)
+    }
+}
+
+trait HttpTransport: std::fmt::Debug + Send + Sync {
+    fn fetch(&self, url: &str) -> Result<HttpResponse, String>;
+}
+
+#[derive(Debug, Clone)]
+struct ReqwestTransport {
+    client: reqwest::blocking::Client,
+}
+
+impl HttpTransport for ReqwestTransport {
+    fn fetch(&self, url: &str) -> Result<HttpResponse, String> {
+        let response = self
+            .client
+            .get(url)
+            .send()
+            .map_err(|error| error.to_string())?;
+        let status = response.status();
+        let body = if status.is_success() {
+            response.text().map_err(|error| error.to_string())?
+        } else {
+            String::new()
+        };
+
+        Ok(HttpResponse {
+            status: status.as_u16(),
+            status_text: status.to_string(),
+            body,
+        })
+    }
+}
 
 /// Loads a dimension taxonomy from an entrypoint URL or local path.
 ///
@@ -46,7 +94,7 @@ pub struct TaxonomyLoader {
     cache_hits: std::cell::RefCell<HashSet<String>>,
     loaded_schemas: std::cell::RefCell<HashSet<String>>,
     offline_contents: Option<HashMap<String, String>>,
-    http_client: Option<reqwest::blocking::Client>,
+    http_transport: Option<Arc<dyn HttpTransport>>,
 }
 
 impl Default for TaxonomyLoader {
@@ -65,7 +113,7 @@ impl TaxonomyLoader {
             cache_hits: std::cell::RefCell::new(HashSet::new()),
             loaded_schemas: std::cell::RefCell::new(HashSet::new()),
             offline_contents: None,
-            http_client: None,
+            http_transport: None,
         }
     }
 
@@ -95,24 +143,25 @@ impl TaxonomyLoader {
         cache_dir: std::path::PathBuf,
         offline_contents: Option<HashMap<String, String>>,
     ) -> Self {
-        let http_client = Self::build_http_client();
+        let http_transport = Self::build_http_transport();
         Self {
             cache_dir: Some(cache_dir),
             visited: std::cell::RefCell::new(HashSet::new()),
             cache_hits: std::cell::RefCell::new(HashSet::new()),
             loaded_schemas: std::cell::RefCell::new(HashSet::new()),
             offline_contents,
-            http_client,
+            http_transport,
         }
     }
 
     /// Builds the HTTP client with proper configuration.
-    fn build_http_client() -> Option<reqwest::blocking::Client> {
+    fn build_http_transport() -> Option<Arc<dyn HttpTransport>> {
         reqwest::blocking::Client::builder()
             .timeout(HTTP_TIMEOUT)
             .user_agent(concat!("xbrlkit/", env!("CARGO_PKG_VERSION")))
             .build()
             .ok()
+            .map(|client| Arc::new(ReqwestTransport { client }) as Arc<dyn HttpTransport>)
     }
 
     /// Loads a dimension taxonomy from an entrypoint.
@@ -221,35 +270,32 @@ impl TaxonomyLoader {
             return Ok(content);
         }
 
-        // Ensure we have an HTTP client
-        let client = if let Some(ref client) = self.http_client {
-            client.clone()
-        } else {
-            Self::build_http_client().ok_or_else(|| {
+        // Ensure we have an HTTP transport.
+        let transport = self
+            .http_transport
+            .clone()
+            .or_else(Self::build_http_transport)
+            .ok_or_else(|| {
                 TaxonomyLoaderError::HttpError(
                     url.to_string(),
                     "Failed to build HTTP client".into(),
                 )
-            })?
-        };
+            })?;
 
-        // Fetch content via HTTP (blocking)
-        let response = client
-            .get(url)
-            .send()
-            .map_err(|e| TaxonomyLoaderError::HttpError(url.to_string(), e.to_string()))?;
+        // Fetch content via the configured transport.
+        let response = transport
+            .fetch(url)
+            .map_err(|error| TaxonomyLoaderError::HttpError(url.to_string(), error))?;
 
         // Check for HTTP errors
-        if !response.status().is_success() {
+        if !response.is_success() {
             return Err(TaxonomyLoaderError::HttpError(
                 url.to_string(),
-                format!("HTTP {}", response.status()),
+                format!("HTTP {}", response.status_text),
             ));
         }
 
-        let content = response
-            .text()
-            .map_err(|e| TaxonomyLoaderError::HttpError(url.to_string(), e.to_string()))?;
+        let content = response.body;
 
         // Write to cache if configured
         if let Some(ref cache_dir) = self.cache_dir {
@@ -297,6 +343,81 @@ impl TaxonomyLoader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    const TEST_URL: &str = "https://example.com/schema.xsd";
+    const MINIMAL_SCHEMA: &str = r#"<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xbrldt="http://xbrl.org/2005/xbrldt"
+        xmlns:demo="https://example.com/demo"
+        targetNamespace="https://example.com/demo">
+        <xsd:element name="Axis" substitutionGroup="xbrldt:dimensionItem"/>
+    </xsd:schema>"#;
+
+    #[derive(Debug)]
+    struct TestTransport {
+        response: Result<HttpResponse, String>,
+        requested_urls: Mutex<Vec<String>>,
+    }
+
+    impl TestTransport {
+        fn success(body: &str) -> Self {
+            Self::with_response(HttpResponse {
+                status: 200,
+                status_text: "200 OK".to_string(),
+                body: body.to_string(),
+            })
+        }
+
+        fn status(status: u16, status_text: &str) -> Self {
+            Self::with_response(HttpResponse {
+                status,
+                status_text: status_text.to_string(),
+                body: String::new(),
+            })
+        }
+
+        fn failure(message: &str) -> Self {
+            Self {
+                response: Err(message.to_string()),
+                requested_urls: Mutex::new(Vec::new()),
+            }
+        }
+
+        fn with_response(response: HttpResponse) -> Self {
+            Self {
+                response: Ok(response),
+                requested_urls: Mutex::new(Vec::new()),
+            }
+        }
+
+        fn requested_urls(&self) -> Result<Vec<String>, String> {
+            self.requested_urls
+                .lock()
+                .map(|urls| urls.clone())
+                .map_err(|error| format!("transport request log was poisoned: {error}"))
+        }
+    }
+
+    impl HttpTransport for TestTransport {
+        fn fetch(&self, url: &str) -> Result<HttpResponse, String> {
+            self.requested_urls
+                .lock()
+                .map_err(|error| format!("transport request log was poisoned: {error}"))?
+                .push(url.to_string());
+            self.response.clone()
+        }
+    }
+
+    fn loader_with_transport(transport: Arc<TestTransport>) -> TaxonomyLoader {
+        TaxonomyLoader {
+            cache_dir: None,
+            visited: std::cell::RefCell::new(HashSet::new()),
+            cache_hits: std::cell::RefCell::new(HashSet::new()),
+            loaded_schemas: std::cell::RefCell::new(HashSet::new()),
+            offline_contents: None,
+            http_transport: Some(transport),
+        }
+    }
 
     #[test]
     fn test_loader_new() {
@@ -323,15 +444,70 @@ mod tests {
     }
 
     #[test]
-    fn test_fetch_url_invalid_scheme() {
-        let loader = TaxonomyLoader::new();
+    fn test_remote_schema_uses_deterministic_transport() -> Result<(), Box<dyn std::error::Error>> {
+        let transport = Arc::new(TestTransport::success(MINIMAL_SCHEMA));
+        let loader = loader_with_transport(transport.clone());
+        let taxonomy = loader.load(TEST_URL)?;
+
+        if !taxonomy.dimensions.contains_key("demo:Axis") {
+            return Err("remote schema did not populate its dimension".into());
+        }
+        if transport.requested_urls()? != vec![TEST_URL.to_string()] {
+            return Err("remote schema was not fetched exactly once".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_remote_status_failure_is_reported() -> Result<(), Box<dyn std::error::Error>> {
+        let transport = Arc::new(TestTransport::status(404, "404 Not Found"));
+        let loader = loader_with_transport(transport.clone());
+        let result = loader.fetch_url(TEST_URL);
+
+        match result {
+            Err(TaxonomyLoaderError::HttpError(url, detail))
+                if url == TEST_URL && detail == "HTTP 404 Not Found" => {}
+            Err(error) => return Err(format!("unexpected taxonomy-loader error: {error}").into()),
+            Ok(_) => return Err("a non-success response unexpectedly succeeded".into()),
+        }
+        if transport.requested_urls()? != vec![TEST_URL.to_string()] {
+            return Err("status failure did not reach the transport".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_remote_transport_failure_is_reported() -> Result<(), Box<dyn std::error::Error>> {
+        let transport = Arc::new(TestTransport::failure("synthetic transport failure"));
+        let loader = loader_with_transport(transport.clone());
+        let result = loader.fetch_url(TEST_URL);
+
+        match result {
+            Err(TaxonomyLoaderError::HttpError(url, detail))
+                if url == TEST_URL && detail == "synthetic transport failure" => {}
+            Err(error) => return Err(format!("unexpected taxonomy-loader error: {error}").into()),
+            Ok(_) => return Err("a transport failure unexpectedly succeeded".into()),
+        }
+        if transport.requested_urls()? != vec![TEST_URL.to_string()] {
+            return Err("transport failure was not recorded".into());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_unsupported_scheme_is_rejected_before_transport()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let transport = Arc::new(TestTransport::success(MINIMAL_SCHEMA));
+        let loader = loader_with_transport(transport.clone());
         let result = loader.fetch_url("ftp://example.com/test.xsd");
 
-        assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            TaxonomyLoaderError::UnsupportedUrl(_)
-        ));
+        if !matches!(result, Err(TaxonomyLoaderError::UnsupportedUrl(_))) {
+            return Err("unsupported URL scheme was not rejected".into());
+        }
+        if !transport.requested_urls()?.is_empty() {
+            return Err("unsupported URL scheme reached the transport".into());
+        }
+        Ok(())
     }
 
     #[test]
