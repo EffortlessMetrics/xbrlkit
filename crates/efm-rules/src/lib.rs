@@ -4,6 +4,7 @@ use ixhtml_scan::scan_inline_fragments;
 use sec_profile_types::ProfilePack;
 use taxonomy_dts::mixed_taxonomy_years;
 use xbrl_report_types::ValidationFinding;
+use xbrlkit_utils::sanitize_for_rule_id;
 
 #[must_use]
 pub fn validate_inline_restrictions(
@@ -118,19 +119,6 @@ fn inline_attribute_rule_id(attribute: &str) -> String {
             sanitize_for_rule_id(attribute)
         ),
     }
-}
-
-fn sanitize_for_rule_id(value: &str) -> String {
-    value
-        .chars()
-        .map(|ch| {
-            if ch.is_ascii_alphanumeric() {
-                ch.to_ascii_uppercase()
-            } else {
-                '_'
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]

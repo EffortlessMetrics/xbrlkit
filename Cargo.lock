@@ -301,6 +301,7 @@ dependencies = [
  "sec-profile-types",
  "taxonomy-dts",
  "xbrl-report-types",
+ "xbrlkit-utils",
 ]
 
 [[package]]
@@ -839,6 +840,7 @@ name = "numeric-rules"
 version = "0.1.0-alpha.1"
 dependencies = [
  "xbrl-report-types",
+ "xbrlkit-utils",
 ]
 
 [[package]]
@@ -2345,6 +2347,10 @@ version = "0.1.0-alpha.1"
 dependencies = [
  "scenario-contract",
 ]
+
+[[package]]
+name = "xbrlkit-utils"
+version = "0.1.0-alpha.1"
 
 [[package]]
 name = "xtask"
