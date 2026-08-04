@@ -197,7 +197,13 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
 
 fn discover_publishable_packages(repo_root: &std::path::Path) -> anyhow::Result<Vec<String>> {
     let output = std::process::Command::new("cargo")
-        .args(["metadata", "--format-version", "1", "--no-deps"])
+        .args([
+            "metadata",
+            "--format-version",
+            "1",
+            "--no-deps",
+            "--offline",
+        ])
         .current_dir(repo_root)
         .output()
         .context("running cargo metadata for package check")?;
@@ -244,6 +250,7 @@ fn run_package_check(
                 package,
                 "--allow-dirty",
                 "--locked",
+                "--offline",
                 "--list",
             ])
             .current_dir(repo_root)
