@@ -219,20 +219,16 @@ pub fn validate_dimensions(
 
 /// Validate context completeness using streaming parser for large files.
 ///
-/// For files >100MB, uses SAX-style streaming to avoid DOM memory overhead.
+/// Uses SAX-style streaming to avoid DOM memory overhead.
 /// Collects facts and validates context references in a single pass.
 ///
 /// # Arguments
 /// * `xbrl_xml` - The XBRL XML content
-/// * `size_threshold_mb` - Use streaming if file exceeds this size (default: 100)
 ///
 /// # Returns
 /// Vector of validation findings for missing context references.
 #[must_use]
-pub fn validate_context_completeness_streaming(
-    xbrl_xml: &str,
-    _size_threshold_mb: usize,
-) -> Vec<ValidationFinding> {
+pub fn validate_context_completeness_streaming(xbrl_xml: &str) -> Vec<ValidationFinding> {
     use std::collections::HashSet;
     use xbrl_stream::{FactHandler, StreamingContext, StreamingFact, XbrlStreamReader};
 
@@ -294,11 +290,78 @@ pub fn validate_context_completeness_streaming(
     }
 }
 
-/// Returns whether streaming parser should be used for given content size.
+/// Returns whether streaming parsing should be recommended for the given content size.
 ///
-/// Default threshold is 100MB to avoid excessive memory usage with DOM parsing.
+/// The default recommendation threshold is 100 MiB. This selector remains separate from
+/// [`validate_context_completeness_streaming`], which always uses the streaming parser once
+/// selected by its caller.
 #[must_use]
 pub fn should_use_streaming(content_size_bytes: usize, threshold_mb: Option<usize>) -> bool {
     let threshold = threshold_mb.unwrap_or(100);
-    content_size_bytes > threshold * 1024 * 1024
+    threshold
+        .checked_mul(1024 * 1024)
+        .is_some_and(|threshold_bytes| content_size_bytes > threshold_bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{should_use_streaming, validate_context_completeness_streaming};
+
+    #[test]
+    fn recommends_streaming_only_above_default_threshold() -> Result<(), String> {
+        let threshold_bytes = 100 * 1024 * 1024;
+        if should_use_streaming(threshold_bytes, None) {
+            return Err("default threshold should include exactly 100 MiB".to_string());
+        }
+        if !should_use_streaming(threshold_bytes + 1, None) {
+            return Err("default threshold should recommend streaming above 100 MiB".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn honors_custom_streaming_threshold() -> Result<(), String> {
+        let threshold_bytes = 10 * 1024 * 1024;
+        if should_use_streaming(threshold_bytes, Some(10)) {
+            return Err("custom threshold should include exactly 10 MiB".to_string());
+        }
+        if !should_use_streaming(threshold_bytes + 1, Some(10)) {
+            return Err("custom threshold should recommend streaming above 10 MiB".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn oversized_streaming_threshold_is_safe() -> Result<(), String> {
+        if should_use_streaming(0, Some(usize::MAX)) {
+            return Err("an unrepresentable threshold must not recommend streaming".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn streaming_validation_reports_missing_context_references() -> Result<(), String> {
+        let xml = r#"<xbrl xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:us-gaap="http://fasb.org/us-gaap/2023">
+            <xbrli:context id="ctx-1"></xbrli:context>
+            <us-gaap:Revenue contextRef="ctx-1" unitRef="usd">100</us-gaap:Revenue>
+            <us-gaap:Assets contextRef="missing" unitRef="usd">200</us-gaap:Assets>
+        </xbrl>"#;
+
+        let findings = validate_context_completeness_streaming(xml);
+        if findings.len() != 1 {
+            return Err(format!("expected one finding, got {}", findings.len()));
+        }
+
+        let finding = findings
+            .first()
+            .ok_or_else(|| "missing expected finding".to_string())?;
+        if finding.rule_id != "XBRL.CONTEXT.MISSING_REF" {
+            return Err(format!("unexpected rule id: {}", finding.rule_id));
+        }
+        if finding.subject.as_deref() != Some("missing") {
+            return Err(format!("unexpected subject: {:?}", finding.subject));
+        }
+
+        Ok(())
+    }
 }
