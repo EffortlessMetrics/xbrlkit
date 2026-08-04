@@ -3,7 +3,9 @@
 ## Current state
 
 `specs/features/taxonomy/dimensions.feature` declares 17 scenarios,
-`SCN-XK-DIM-001` through `SCN-XK-DIM-017`, all tagged `@alpha-active`.
+`SCN-XK-DIM-001` through `SCN-XK-DIM-017`. The active gate must contain only
+scenarios whose handlers and assertions are runnable; DIM-005 through DIM-017
+remain non-active until the verified handler prerequisite is available.
 `specs/features/taxonomy/dimensions.meta.yaml` currently registers only the
 first four scenarios. The missing thirteen records are source-truth debt, but
 registering them immediately would make the feature grid advertise scenarios
@@ -28,24 +30,35 @@ an explicitly documented replacement provides the same handlers.
 ## Selected follow-up slice
 
 After the prerequisite is available, add DIM-005 through DIM-017 to
-`dimensions.meta.yaml` using the existing typed-member fixture, regenerate the
-feature-grid golden, and verify the scenarios through the BDD and `test-ac`
-routes. Keep the sidecar and golden change separate from handler implementation
-work.
+`dimensions.meta.yaml` with fixture metadata that is specific enough to
+exercise each scenario. A shared fixture is acceptable for scenarios with the
+same input contract only when it contains the required data for each selected
+scenario; valid and invalid typed-value scenarios must not resolve to the same
+fixture input. In particular, DIM-009 and DIM-010 need distinguishable
+fixture-backed inputs, and no registered scenario may leave `fixtures` empty
+when it is verified through `cargo xtask test-ac`. Regenerate the feature-grid
+golden and verify the scenarios through both the BDD and `test-ac` routes. Keep
+the sidecar and golden change separate from handler implementation work.
 
 ## Acceptance criteria
 
 - AC-350-001: all 17 dimension feature scenarios have sidecar records with the
-  correct AC, requirement, fixture, crate, and edit-root metadata.
+  correct AC, requirement, crate, and edit-root metadata; every scenario used
+  by `cargo xtask test-ac` has non-empty fixture metadata, and typed-value
+  scenarios point to inputs that distinguish their valid, invalid, empty, and
+  type-specific cases.
 - AC-350-002: `cargo xtask feature-grid` produces exactly the unique scenario
   IDs `SCN-XK-DIM-001` through `SCN-XK-DIM-017` in the generated grid, and the
   checked-in golden is JSON-equivalent to that generated grid after the
   authoritative generator runs.
 - AC-350-003: representative typed-member and typed-value scenarios execute
-  through the declared BDD path, including DIM-005 and at least one valid and
-  invalid typed-value case.
+  through the declared BDD path, including DIM-005, DIM-009, and DIM-010; the
+  valid and invalid typed-value cases use distinguishable inputs and produce
+  their respective outcomes.
 - AC-350-004: `cargo xtask test-ac` succeeds for the representative ACs after
-  the handler prerequisite is present.
+  the handler prerequisite is present, using the declared fixture metadata;
+  this route proves AC dispatch and fixture-backed execution, while the BDD
+  route proves the Gherkin value-specific behavior.
 - AC-350-005: relative to the recorded base head, the sidecar-only PR changes
   only `specs/features/taxonomy/dimensions.meta.yaml` and
   `tests/goldens/feature.grid.v1.json`; it changes no production Rust,
@@ -59,6 +72,8 @@ cargo xtask test-ac AC-XK-DIM-005
 cargo xtask test-ac AC-XK-DIM-009
 cargo xtask test-ac AC-XK-DIM-010
 cargo xtask bdd --tags @SCN-XK-DIM-005
+cargo xtask bdd --tags @SCN-XK-DIM-009
+cargo xtask bdd --tags @SCN-XK-DIM-010
 cargo xtask schema-check
 cargo xtask alpha-check
 git diff --check
