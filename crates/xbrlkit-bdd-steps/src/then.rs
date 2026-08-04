@@ -340,11 +340,14 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         .text
         .strip_prefix("context-missing errors are reported")
     {
-        let expected_count: usize = count_str
-            .split_whitespace()
-            .next()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(1);
+        let count = count_str.trim();
+        let expected_count = if count.is_empty() {
+            1
+        } else {
+            count
+                .parse::<usize>()
+                .context("invalid context-missing error count")?
+        };
         let actual_count = world
             .completeness
             .findings
@@ -563,4 +566,32 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     }
 
     anyhow::bail!("unsupported BDD step: {}", step.text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::handle;
+    use crate::world::{Step, World};
+    use scenario_contract::FeatureGrid;
+    use std::path::PathBuf;
+
+    #[test]
+    fn malformed_context_missing_count_is_rejected() -> Result<(), String> {
+        let mut world = World::new(PathBuf::new(), FeatureGrid::default());
+        let step = Step {
+            text: "context-missing errors are reported two".to_string(),
+            table: Vec::new(),
+        };
+
+        let error = handle(&mut world, &step)
+            .err()
+            .ok_or_else(|| "malformed context-missing count was accepted".to_string())?;
+        if !error
+            .to_string()
+            .contains("invalid context-missing error count")
+        {
+            return Err(format!("unexpected error: {error}"));
+        }
+        Ok(())
+    }
 }
