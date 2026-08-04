@@ -22,6 +22,7 @@ cockpit-export.workspace = true
 receipt-types.workspace = true
 filing-load.workspace = true
 edgar-attachments.workspace = true
+sha2 = "0.10"
 xbrlkit-feature-grid.workspace = true
 sec-profile-types.workspace = true
 context-completeness.workspace = true

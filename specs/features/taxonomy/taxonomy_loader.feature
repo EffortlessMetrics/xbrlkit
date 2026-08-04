@@ -50,6 +50,14 @@ Feature: Taxonomy Loader
     Then the taxonomy file should be cached
     And subsequent loads should use the cache
 
+  @alpha-active @SCN-XK-TAX-LOAD-009 @AC-XK-TAX-LOAD-009
+  @speed.fast
+  Scenario: Keep formerly colliding URL cache entries separate
+    Given two taxonomy URLs that would collide under the legacy cache key
+    And a fresh cache directory is configured
+    When I load both taxonomies from the cache
+    Then each cached taxonomy should retain its own dimension
+
   @alpha-active @SCN-XK-TAX-LOAD-006 @AC-XK-TAX-LOAD-006
   @speed.fast
   Scenario: Handle schema imports recursively

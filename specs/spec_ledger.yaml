@@ -222,6 +222,12 @@ stories:
               - type: bdd
                 tag: "@AC-XK-TAX-LOAD-005"
                 file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-009
+            title: Distinct URL cache entries retain distinct taxonomy content
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-009"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
           - id: AC-XK-TAX-LOAD-006
             title: Handle schema imports recursively
             tests:

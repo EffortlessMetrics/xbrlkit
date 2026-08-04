@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:xbrldt="http://xbrl.org/2005/xbrldt"
+            xmlns:second="urn:xbrlkit:cache:second"
+            targetNamespace="urn:xbrlkit:cache:second"
+            elementFormDefault="qualified">
+  <xsd:element id="second_SecondAxis"
+               name="SecondAxis"
+               substitutionGroup="xbrldt:dimensionItem"/>
+</xsd:schema>

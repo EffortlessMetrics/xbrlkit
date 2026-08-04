@@ -21,6 +21,7 @@ pub use error::TaxonomyLoaderError;
 pub use taxonomy_dimensions::DimensionTaxonomy;
 pub use taxonomy_dimensions::{Dimension, Domain, Hypercube};
 
+use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::path::Path;
 use std::time::Duration;
@@ -223,8 +224,9 @@ impl TaxonomyLoader {
     }
 
     fn url_to_cache_path(url: &str, cache_dir: &Path) -> std::path::PathBuf {
-        // Simple cache path generation based on URL
-        let filename = url.replace(['/', ':', '?', '&', '='], "_");
+        // Hash the complete URL so distinct URLs cannot collide in the cache.
+        let digest = Sha256::digest(url.as_bytes());
+        let filename = format!("{digest:x}");
         cache_dir.join(filename)
     }
 }
@@ -234,38 +236,91 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_loader_new() {
+    fn test_loader_new() -> Result<(), Box<dyn std::error::Error>> {
         let loader = TaxonomyLoader::new();
-        assert!(loader.cache_dir.is_none());
+        if loader.cache_dir.is_some() {
+            return Err(
+                std::io::Error::other("new loader unexpectedly has a cache directory").into(),
+            );
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_loader_with_cache() {
+    fn test_loader_with_cache() -> Result<(), Box<dyn std::error::Error>> {
         let loader = TaxonomyLoader::with_cache_dir("/tmp/cache");
-        assert!(loader.cache_dir.is_some());
+        if loader.cache_dir.is_none() {
+            return Err(
+                std::io::Error::other("cached loader is missing its cache directory").into(),
+            );
+        }
+        Ok(())
     }
 
     #[test]
-    fn test_url_to_cache_path() {
+    fn test_url_to_cache_path_is_deterministic_and_filesystem_safe()
+    -> Result<(), Box<dyn std::error::Error>> {
         let cache_dir = Path::new("/tmp/cache");
         let url = "https://xbrl.fasb.org/us-gaap/2024/entire/us-gaap-2024.xsd";
-        let path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
-        // URL chars / : are replaced with _, https:// becomes https___
-        assert_eq!(
-            path,
-            Path::new("/tmp/cache/https___xbrl.fasb.org_us-gaap_2024_entire_us-gaap-2024.xsd")
-        );
+        let first = TaxonomyLoader::url_to_cache_path(url, cache_dir);
+        let second = TaxonomyLoader::url_to_cache_path(url, cache_dir);
+        let filename = first
+            .file_name()
+            .ok_or_else(|| std::io::Error::other("cache path has no filename"))?;
+
+        if first != second {
+            return Err("same URL produced different cache paths".into());
+        }
+        let expected = "2989cb2a49e8937d05f00d00847a7f70b120b296b6e4a9de23c48b20ca218c3d";
+        if filename != expected {
+            return Err(format!(
+                "cache filename is not the SHA-256 digest: got {}, expected {expected}",
+                filename.to_string_lossy()
+            )
+            .into());
+        }
+        if filename.len() != 64 {
+            return Err("cache filename is not a SHA-256 hex digest".into());
+        }
+        if !filename
+            .as_encoded_bytes()
+            .iter()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(byte))
+        {
+            return Err("cache filename is not lowercase hexadecimal".into());
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn test_fetch_url_invalid_scheme() {
-        let loader = TaxonomyLoader::new();
-        let result = loader.fetch_url("ftp://example.com/test.xsd");
+    fn test_url_to_cache_path_avoids_collisions() -> Result<(), Box<dyn std::error::Error>> {
+        let cache_dir = Path::new("/tmp/cache");
+        let first = TaxonomyLoader::url_to_cache_path("http://a/b", cache_dir);
+        let second = TaxonomyLoader::url_to_cache_path("http://a_b", cache_dir);
 
-        assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            TaxonomyLoaderError::UnsupportedUrl(_)
-        ));
+        if first == second {
+            return Err("distinct URLs produced the same cache path".into());
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_fetch_url_invalid_scheme() -> Result<(), Box<dyn std::error::Error>> {
+        let loader = TaxonomyLoader::new();
+        let error = loader
+            .fetch_url("ftp://example.com/test.xsd")
+            .err()
+            .ok_or_else(|| {
+                std::io::Error::other("unsupported URL scheme unexpectedly succeeded")
+            })?;
+
+        if !matches!(error, TaxonomyLoaderError::UnsupportedUrl(_)) {
+            return Err(
+                std::io::Error::other("unsupported URL scheme returned the wrong error").into(),
+            );
+        }
+        Ok(())
     }
 }

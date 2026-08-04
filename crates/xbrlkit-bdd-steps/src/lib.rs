@@ -10,7 +10,9 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
+use sha2::{Digest, Sha256};
 use std::path::PathBuf;
+use std::sync::Arc;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -76,8 +78,37 @@ pub struct TaxonomyLoaderContext {
     pub loader: Option<taxonomy_loader::TaxonomyLoader>,
     pub taxonomy: Option<DimensionTaxonomy>,
     pub cache_dir: Option<PathBuf>,
+    cache_dir_guard: Option<Arc<CacheDirGuard>>,
+    pub cache_collision_urls: Option<(String, String)>,
+    pub cache_collision_taxonomies: Option<(DimensionTaxonomy, DimensionTaxonomy)>,
     pub schema_path: Option<String>,
     pub loaded: bool,
+}
+
+#[derive(Debug)]
+struct CacheDirGuard(PathBuf);
+
+impl Drop for CacheDirGuard {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+const CACHE_COLLISION_FIXTURE: &str = "fixtures/synthetic/taxonomy/cache-collision";
+const CACHE_COLLISION_URLS: (&str, &str) = (
+    "http://127.0.0.1:9/taxonomy/a/b.xsd",
+    "http://127.0.0.1:9/taxonomy/a_b.xsd",
+);
+
+fn cache_path_for_url(url: &str, cache_dir: &std::path::Path) -> PathBuf {
+    let digest = Sha256::digest(url.as_bytes());
+    cache_dir.join(format!("{digest:x}"))
+}
+
+fn seed_cached_schema(cache_dir: &std::path::Path, url: &str, content: &str) -> anyhow::Result<()> {
+    std::fs::create_dir_all(cache_dir)?;
+    std::fs::write(cache_path_for_url(url, cache_dir), content)?;
+    Ok(())
 }
 
 impl World {
@@ -608,11 +639,37 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    if step.text == "two taxonomy URLs that would collide under the legacy cache key" {
+        world.taxonomy_loader_context.cache_collision_urls = Some((
+            CACHE_COLLISION_URLS.0.to_string(),
+            CACHE_COLLISION_URLS.1.to_string(),
+        ));
+        return Ok(true);
+    }
+
     if step.text == "a cache directory is configured" {
         let cache_dir = std::env::temp_dir().join("xbrlkit_taxonomy_cache");
         // Create the cache directory so it exists for the Then step
         let _ = std::fs::create_dir_all(&cache_dir);
         world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
+        world.taxonomy_loader_context.loader =
+            Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
+        return Ok(true);
+    }
+
+    if step.text == "a fresh cache directory is configured" {
+        let suffix = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |duration| duration.as_nanos());
+        let cache_dir = std::env::temp_dir().join(format!(
+            "xbrlkit_taxonomy_cache_collision_{}_{}",
+            std::process::id(),
+            suffix
+        ));
+        std::fs::create_dir(&cache_dir)?;
+        world.taxonomy_loader_context.cache_dir = Some(cache_dir.clone());
+        world.taxonomy_loader_context.cache_dir_guard =
+            Some(Arc::new(CacheDirGuard(cache_dir.clone())));
         world.taxonomy_loader_context.loader =
             Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_dir));
         return Ok(true);
@@ -1035,6 +1092,47 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
 
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
+        return Ok(true);
+    }
+
+    if step.text == "I load both taxonomies from the cache" {
+        let (first_url, second_url) = world
+            .taxonomy_loader_context
+            .cache_collision_urls
+            .clone()
+            .context("cache collision URLs not configured")?;
+        let cache_dir = world
+            .taxonomy_loader_context
+            .cache_dir
+            .as_ref()
+            .context("cache directory not configured")?;
+        let first_schema = world
+            .repo_root
+            .join(CACHE_COLLISION_FIXTURE)
+            .join("first.xsd");
+        let second_schema = world
+            .repo_root
+            .join(CACHE_COLLISION_FIXTURE)
+            .join("second.xsd");
+        seed_cached_schema(
+            cache_dir,
+            &first_url,
+            &std::fs::read_to_string(&first_schema).with_context(|| {
+                format!("read cache collision fixture {}", first_schema.display())
+            })?,
+        )?;
+        seed_cached_schema(
+            cache_dir,
+            &second_url,
+            &std::fs::read_to_string(&second_schema).with_context(|| {
+                format!("read cache collision fixture {}", second_schema.display())
+            })?,
+        )?;
+
+        let loader = taxonomy_loader::TaxonomyLoader::with_cache_dir(cache_dir);
+        let first = loader.load(&first_url)?;
+        let second = loader.load(&second_url)?;
+        world.taxonomy_loader_context.cache_collision_taxonomies = Some((first, second));
         return Ok(true);
     }
 
@@ -1535,6 +1633,26 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
         return Ok(());
     }
 
+    if step.text == "each cached taxonomy should retain its own dimension" {
+        let (first, second) = world
+            .taxonomy_loader_context
+            .cache_collision_taxonomies
+            .as_ref()
+            .context("cache collision taxonomies were not loaded")?;
+        if !first.dimensions.contains_key("first:FirstAxis")
+            || first.dimensions.contains_key("second:SecondAxis")
+            || !second.dimensions.contains_key("second:SecondAxis")
+            || second.dimensions.contains_key("first:FirstAxis")
+        {
+            anyhow::bail!(
+                "cache collision changed taxonomy identity: first={:?}, second={:?}",
+                first.dimensions.keys().collect::<Vec<_>>(),
+                second.dimensions.keys().collect::<Vec<_>>(),
+            );
+        }
+        return Ok(());
+    }
+
     if step.text == "imported schemas should be loaded" {
         return Ok(());
     }
@@ -1622,4 +1740,40 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FeatureGrid, ScenarioRecord, Step, World, handle_given};
+    use std::path::PathBuf;
+
+    #[test]
+    fn fresh_cache_directory_is_removed_when_world_drops() -> Result<(), String> {
+        let cache_dir = {
+            let mut world = World::new(PathBuf::from("."), FeatureGrid::default());
+            let step = Step {
+                text: "a fresh cache directory is configured".to_string(),
+                table: Vec::new(),
+            };
+            handle_given(&mut world, &ScenarioRecord::default(), &step)
+                .map_err(|error| error.to_string())?;
+            let cache_dir = world
+                .taxonomy_loader_context
+                .cache_dir
+                .clone()
+                .ok_or_else(|| "cache directory was not configured".to_string())?;
+            if !cache_dir.exists() {
+                return Err("cache directory was not created".to_string());
+            }
+            cache_dir
+        };
+
+        if cache_dir.exists() {
+            return Err(format!(
+                "cache directory was not removed: {}",
+                cache_dir.display()
+            ));
+        }
+        Ok(())
+    }
 }
