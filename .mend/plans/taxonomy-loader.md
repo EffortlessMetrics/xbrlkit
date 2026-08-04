@@ -1,151 +1,65 @@
 # Plan: Taxonomy Dimension Loading from Actual XBRL Files
 
 **Stream:** D: Taxonomy Core  
-**Issue:** #35  
-**Date:** 2026-03-23  
-**Status:** 🔨 Ready for Build
+**Original issue:** #35
+**Implementation:** PR #37 (`5a577da681b9c3207843c56d1c0cee3c22e21c2d`)
+**Status:** ✅ Implemented; historical plan reconciled
 
 ---
 
-## Decision: Create New `taxonomy-loader` Crate
+## Reconciled outcome
 
-After reviewing the codebase structure, I recommend creating a new `taxonomy-loader` crate rather than extending existing stubs. This provides clear separation of concerns:
+The implementation planned here landed in PR #37, which closed issue #35.
+The repository now contains the `xbrlkit-taxonomy-loader` crate and the CLI
+`inspect-taxonomy` command. This document records the delivered contract and
+keeps the remaining test gaps explicit; it is no longer a build plan.
 
-| Crate | Responsibility |
-|-------|---------------|
-| `taxonomy-dimensions` | Type definitions (already exists ✅) |
-| `taxonomy-loader` | **Orchestrate loading from files** (NEW) |
-| `taxonomy-cache` | Local taxonomy package storage (extend later) |
-| `xbrl-linkbases` | Linkbase type definitions (extend later) |
+## Delivered scope
 
----
+| Planned capability | Current evidence |
+| --- | --- |
+| Public loader API | `crates/taxonomy-loader/src/lib.rs`: `load_taxonomy`, `TaxonomyLoader::new`, and `with_cache_dir` |
+| Schema parsing | `crates/taxonomy-loader/src/schema.rs`: hypercube, dimension, domain, import, and include handling |
+| Definition linkbase parsing | `crates/taxonomy-loader/src/linkbase.rs`: dimension arcs, domain-member arcs, and hypercube associations |
+| Taxonomy construction | `taxonomy_dimensions::DimensionTaxonomy` is populated by the schema and linkbase parsers |
+| CLI integration | `crates/xbrlkit-cli/src/main.rs`: `Command::InspectTaxonomy` |
+| Focused proof | Unit tests in `taxonomy-loader/src/{lib,schema,linkbase}.rs` cover synthetic schemas, linkbases, URL validation, and cache configuration/path helpers |
+| Acceptance scenarios | `specs/features/taxonomy/taxonomy_loader.feature` includes loader, schema, linkbase, cache, import, and validation scenarios; the current cache steps only verify directory setup, so behavioral cache hit/miss proof remains deferred to issue #211 |
 
-## Implementation Plan
+## Acceptance ledger
 
-### Phase 1: Crate Skeleton
-```
-crates/taxonomy-loader/
-├── Cargo.toml
-├── src/
-│   ├── lib.rs          # Public API: load_taxonomy(entrypoint)
-│   ├── schema.rs       # XSD parsing module
-│   ├── linkbase.rs     # Definition linkbase parsing
-│   └── error.rs        # TaxonomyLoaderError enum
-```
+- [x] The `taxonomy-loader` crate exists with a stable internal loading seam.
+- [x] Minimal synthetic XSD input is parsed for dimension taxonomy elements.
+- [x] Minimal definition linkbase input is parsed for supported arcs.
+- [x] Parsed inputs build a `DimensionTaxonomy`.
+- [x] `xbrlkit inspect-taxonomy <entrypoint>` is wired to the loader.
+- [ ] A live SEC taxonomy integration test is not part of the current local
+  proof surface. External-network coverage is intentionally deferred until a
+  deterministic transport seam is available; issue #211 tracks that work.
+- [x] The implementation was delivered with the quality-gate evidence recorded
+  by PR #37. Future implementation changes must rerun the repository's current
+  gates rather than treating this historical plan as a fresh receipt.
 
-**Dependencies:**
-- `roxmltree` for XML parsing (check if already in tree)
-- `taxonomy-dimensions` for types
-- `thiserror` for error handling
+## Current contract and boundaries
 
-### Phase 2: Schema Parsing
-Parse `.xsd` files to identify:
-- Elements with `xbrldt:hypercubeItem` → Hypercube
-- Elements with `xbrldt:dimensionItem` → Dimension
-- Elements with `xbrli:domainItemType` → Domain member
+- Local paths are loaded without network access.
+- HTTP and HTTPS loading is available through the blocking `reqwest` client;
+  `with_cache_dir` enables the process's file cache.
+- Schema imports/includes and linkbase references are followed recursively with
+  visited-path protection.
+- The plan does not promise coverage of every XBRL taxonomy edge case or a
+  live-network test in normal BDD/focused runs.
+- No public API, receipt, or schema change is required to reconcile this plan.
 
-**Key XML patterns to handle:**
-```xml
-<xsd:element
-    id="us-gaap_StatementTable"
-    name="StatementTable"
-    substitutionGroup="xbrldt:hypercubeItem"
-    type="xbrli:stringItemType"
-    xbrli:periodType="duration"/>
-```
+## Follow-ups
 
-### Phase 3: Linkbase Parsing
-Parse `_def.xml` definition linkbases for arc relationships:
-- `hypercube-dimension` → Hypercube → Dimension
-- `dimension-domain` → Dimension → Domain
-- `domain-member` → Parent → Child member
-- `all`/`notAll` → Closed vs open hypercubes
+- Issue #211: add a deterministic HTTP transport seam and fixture-backed tests
+  for remote success/failure plus cache hit/miss behavior.
+- Keep later taxonomy-loader refactors and dependency changes in their own
+  issue/PR slices; do not reopen this historical implementation plan for them.
 
-**Arc role constants:**
-- `http://xbrl.org/int/dim/arcrole/hypercube-dimension`
-- `http://xbrl.org/int/dim/arcrole/dimension-domain`
-- `http://xbrl.org/int/dim/arcrole/domain-member`
+## Rollback
 
-### Phase 4: Integration
-- Add to `validation-run` crate
-- Wire into CLI as `xbrlkit inspect-taxonomy <entrypoint>`
-- Integration test with real SEC taxonomy entry point
-
----
-
-## API Sketch
-
-```rust
-// lib.rs
-pub struct TaxonomyLoader {
-    cache_dir: Option<PathBuf>,
-}
-
-impl TaxonomyLoader {
-    pub fn new() -> Self;
-    pub fn with_cache_dir(path: impl Into<PathBuf>) -> Self;
-    
-    pub fn load(&self, entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoaderError>;
-}
-
-// Convenience function
-pub fn load_taxonomy(entrypoint: &str) -> Result<DimensionTaxonomy, TaxonomyLoaderError>;
-```
-
----
-
-## Testing Strategy
-
-| Test Type | Coverage |
-|-----------|----------|
-| Unit | Schema/linkbase parsers in isolation |
-| Integration | Real SEC taxonomy entry point (DEI or US-GAAP) |
-| Golden | Serialized `DimensionTaxonomy` snapshot comparison |
-
-**Test fixtures:**
-- Minimal synthetic XSD with dimension elements
-- Minimal synthetic definition linkbase
-- Real SEC entry point (cached)
-
----
-
-## Risks & Mitigations
-
-| Risk | Mitigation |
-|------|------------|
-| XBRL spec edge cases | Start with common patterns, iterate based on real taxonomies |
-| Circular schema imports | Track visited URLs with HashSet |
-| XML namespace complexity | Use roxmltree's namespace resolution |
-| Performance with large taxonomies | Profile before optimizing; lazy loading as v2 |
-
----
-
-## Acceptance Criteria
-
-- [ ] `taxonomy-loader` crate created with clean API
-- [ ] Can parse minimal synthetic XSD for dimension elements
-- [ ] Can parse minimal synthetic definition linkbase for arcs
-- [ ] Can build `DimensionTaxonomy` from parsed files
-- [ ] CLI command `xbrlkit inspect-taxonomy <entrypoint>` outputs taxonomy structure
-- [ ] Integration test with real SEC taxonomy passes
-- [ ] All quality gates pass (fmt, clippy, test, alpha-check)
-
----
-
-## Branch Strategy
-
-```
-mend/issue-35-taxonomy-loader
-├── Commit 1: Crate skeleton + dependencies
-├── Commit 2: Schema parsing implementation
-├── Commit 3: Linkbase parsing implementation
-├── Commit 4: Integration + CLI command
-└── Commit 5: Tests + documentation
-```
-
----
-
-## Notes
-
-- Research document: `.mend/research/taxonomy-dimension-loading.md`
-- This plan is ready for build phase — will create PR once implemented
+This is source-truth documentation only. Revert the documentation commit if
+the historical status needs correction; implementation rollback belongs to the
+separate PRs that changed the loader.
