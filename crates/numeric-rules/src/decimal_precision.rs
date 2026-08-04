@@ -48,16 +48,15 @@ fn check_decimal_truncation(fact: &Fact, decimals: &str) -> Option<ValidationFin
 
     // Check for truncation based on decimals value
     if would_truncate_nonzero_digits(value, decimals_val) {
-        return Some(ValidationFinding {
-            rule_id: "fs-0637-Nonzero-Digits-Truncated".to_string(),
-            severity: "error".to_string(),
-            message: format!(
+        return Some(ValidationFinding::for_fact(
+            fact,
+            "fs-0637-Nonzero-Digits-Truncated",
+            "error",
+            format!(
                 "Value '{}' has decimals='{}' which truncates non-zero digits (EFM 6.5.37)",
                 fact.value, decimals
             ),
-            member: Some(fact.member.clone()),
-            subject: Some(fact.concept.clone()),
-        });
+        ));
     }
 
     None
