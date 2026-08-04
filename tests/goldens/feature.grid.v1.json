@@ -1615,6 +1615,7 @@
         "crates/cockpit-export",
         "crates/receipt-types",
         "xtask",
+        "contracts/schemas",
         "specs/features/workflow"
       ],
       "suite": "synthetic",
