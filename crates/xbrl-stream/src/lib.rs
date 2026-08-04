@@ -5,6 +5,7 @@
 //!
 //! # Example
 //! ```
+//! # fn main() -> anyhow::Result<()> {
 //! use xbrl_stream::{XbrlStreamReader, StreamingFact, FactHandler};
 //! use std::io::Cursor;
 //!
@@ -27,8 +28,10 @@
 //!
 //! let handler = PrintHandler::default();
 //! let reader = XbrlStreamReader::new(Cursor::new(xml), handler);
-//! let handler = reader.parse().expect("parse failed");
+//! let handler = reader.parse()?;
 //! assert_eq!(handler.facts.len(), 1);
+//! # Ok(())
+//! # }
 //! ```
 
 use quick_xml::Reader;
@@ -385,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_simple_fact() {
+    fn parses_simple_fact() -> anyhow::Result<()> {
         let xml = r#"<?xml version="1.0"?>
 <xbrl xmlns="http://www.xbrl.org/2003/instance" xmlns:us-gaap="http://fasb.org/us-gaap/2023">
     <us-gaap:Revenue contextRef="ctx-1" unitRef="usd" decimals="-3">12345000</us-gaap:Revenue>
@@ -394,7 +397,7 @@ mod tests {
 
         let handler = TestHandler::default();
         let reader = XbrlStreamReader::new(Cursor::new(xml), handler);
-        let handler = reader.parse().expect("parse failed");
+        let handler = reader.parse()?;
 
         assert_eq!(handler.facts.len(), 1);
         let fact = &handler.facts[0];
@@ -403,10 +406,11 @@ mod tests {
         assert_eq!(fact.unit_ref, Some("usd".to_string()));
         assert_eq!(fact.decimals, Some("-3".to_string()));
         assert_eq!(fact.value, "12345000");
+        Ok(())
     }
 
     #[test]
-    fn parses_multiple_facts() {
+    fn parses_multiple_facts() -> anyhow::Result<()> {
         let xml = r#"<?xml version="1.0"?>
 <xbrl xmlns:us-gaap="http://fasb.org/us-gaap/2023">
     <us-gaap:Revenue contextRef="ctx-1" unitRef="usd">1000000</us-gaap:Revenue>
@@ -417,16 +421,17 @@ mod tests {
 
         let handler = TestHandler::default();
         let reader = XbrlStreamReader::new(Cursor::new(xml), handler);
-        let handler = reader.parse().expect("parse failed");
+        let handler = reader.parse()?;
 
         assert_eq!(handler.facts.len(), 3);
         assert_eq!(handler.facts[0].concept, "us-gaap:Revenue");
         assert_eq!(handler.facts[1].concept, "us-gaap:Assets");
         assert_eq!(handler.facts[2].concept, "us-gaap:Liabilities");
+        Ok(())
     }
 
     #[test]
-    fn handles_empty_xbrl() {
+    fn handles_empty_xbrl() -> anyhow::Result<()> {
         let xml = r#"<?xml version="1.0"?>
 <xbrl xmlns="http://www.xbrl.org/2003/instance">
 </xbrl>
@@ -434,13 +439,28 @@ mod tests {
 
         let handler = TestHandler::default();
         let reader = XbrlStreamReader::new(Cursor::new(xml), handler);
-        let handler = reader.parse().expect("parse failed");
+        let handler = reader.parse()?;
 
         assert!(handler.facts.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn parses_context_definition() {
+    fn reports_malformed_xml_as_a_parser_error() -> anyhow::Result<()> {
+        let xml = r"<xbrl><us-gaap:Revenue></xbrl>";
+        let reader = XbrlStreamReader::new(Cursor::new(xml), TestHandler::default());
+
+        match reader.parse() {
+            Err(StreamError::XmlError { .. }) => Ok(()),
+            Err(error) => Err(anyhow::anyhow!("unexpected parser error: {error}")),
+            Ok(_) => Err(anyhow::anyhow!(
+                "malformed XML unexpectedly parsed successfully"
+            )),
+        }
+    }
+
+    #[test]
+    fn parses_context_definition() -> anyhow::Result<()> {
         let xml = r#"<?xml version="1.0"?>
 <xbrl xmlns="http://www.xbrl.org/2003/instance" xmlns:xbrli="http://www.xbrl.org/2003/instance">
     <xbrli:context id="ctx-1">
@@ -456,14 +476,15 @@ mod tests {
 
         let handler = TestHandler::default();
         let reader = XbrlStreamReader::new(Cursor::new(xml), handler);
-        let handler = reader.parse().expect("parse failed");
+        let handler = reader.parse()?;
 
         assert_eq!(handler.contexts.len(), 1);
         assert_eq!(handler.contexts[0].id, "ctx-1");
+        Ok(())
     }
 
     #[test]
-    fn parses_unit_definition() {
+    fn parses_unit_definition() -> anyhow::Result<()> {
         let xml = r#"<?xml version="1.0"?>
 <xbrl xmlns="http://www.xbrl.org/2003/instance" xmlns:xbrli="http://www.xbrl.org/2003/instance">
     <xbrli:unit id="usd">
@@ -474,9 +495,10 @@ mod tests {
 
         let handler = TestHandler::default();
         let reader = XbrlStreamReader::new(Cursor::new(xml), handler);
-        let handler = reader.parse().expect("parse failed");
+        let handler = reader.parse()?;
 
         assert_eq!(handler.units.len(), 1);
         assert_eq!(handler.units[0].id, "usd");
+        Ok(())
     }
 }
