@@ -21,10 +21,13 @@ scenario taxonomy in three paths:
 3. `create_synthetic_taxonomy`, the fallback used when a fixture-backed load
    is unavailable.
 
-Each construction currently defines the `us-gaap:ScenarioDomain` domain with
-Actual and Forecast members, the
+The Given and When constructions currently define the
+`us-gaap:ScenarioDomain` domain with Actual and Forecast members, the
 `us-gaap:StatementScenarioAxis` explicit dimension, and the dimension-to-domain
-link. The fallback additionally defines `dim:CustomerAxis`.
+link. `create_synthetic_taxonomy` is called only by `I load the taxonomy` when
+the selected path contains `fixtures/` but the schema file is missing. That
+fallback adds `dim:CustomerAxis` with value type `xs:string`; the current Given
+steps do not require that typed dimension.
 
 This duplication can drift and makes BDD behavior harder to review. The
 existing taxonomy-loader setup refactor in PR #383 is a separate seam and must
@@ -41,11 +44,10 @@ land or otherwise be reconciled before editing the same `lib.rs` file.
 ## Selected design
 
 Add a private helper in `xbrlkit-bdd-steps/src/lib.rs` for the shared BDD
-scenario taxonomy. The helper should return the same `DimensionTaxonomy`
-shape currently produced by the three BDD paths. Keep the typed
-`dim:CustomerAxis` addition in the fallback path only if the current call
-site requires it, or expose a narrowly named private option rather than
-adding a general-purpose fixture abstraction.
+scenario taxonomy used by the Given and When paths. The missing-schema
+fallback should call that helper and then add its narrowly required
+`dim:CustomerAxis` typed dimension. Do not add the typed dimension to the
+shared Given/When shape or expose a general-purpose fixture option.
 
 The helper must preserve:
 
@@ -54,16 +56,24 @@ The helper must preserve:
   labels;
 - `us-gaap:StatementScenarioAxis` as a non-required explicit dimension;
 - the existing dimension-to-domain mapping;
-- the fallback's `dim:CustomerAxis` typed dimension and `xs:string` value type;
+- the missing-schema fallback's `dim:CustomerAxis` typed dimension and
+  `xs:string` value type;
 - all existing loader-context, validation-context, and execution-state
   mutations around the construction.
 
 ## Acceptance criteria
 
 - [ ] The three equivalent BDD constructions delegate to one private helper
-  or one helper plus a clearly named typed-dimension extension.
+  or the missing-schema fallback delegates to that helper plus a clearly
+  named typed-dimension extension.
 - [ ] Existing BDD scenarios observe the same taxonomy members, QNames,
   requiredness, and typed-dimension behavior before and after the refactor.
+- [ ] The missing-schema fallback remains covered by
+  `@AC-XK-TAX-LOAD-003`: with the current fixture directory present but
+  `schema.xsd` absent, the runner selects the fallback and its oracle verifies
+  the `dim:CustomerAxis` `xs:string` typed dimension. If the existing oracle
+  does not distinguish that path, strengthen the focused BDD assertion in the
+  implementation PR.
 - [ ] `dimensional-rules` and `taxonomy-dimensions` keep their distinct local
   fixtures; no misleading cross-crate abstraction is introduced.
 - [ ] No public API, schema, profile, receipt, or production validation
@@ -99,8 +109,10 @@ git diff --check
 ```
 
 The focused BDD selectors establish that the affected Given/When paths still
-execute. They do not prove equivalence of unrelated dimensional-rules or
-taxonomy-dimensions unit fixtures, which remain out of scope.
+execute. `@AC-XK-TAX-LOAD-003` additionally establishes the deterministic
+missing-schema fallback and typed-dimension extension. They do not prove
+equivalence of unrelated dimensional-rules or taxonomy-dimensions unit
+fixtures, which remain out of scope.
 
 ## Non-goals
 
