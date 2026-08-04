@@ -13,7 +13,11 @@
 
 mod error;
 mod linkbase;
+#[cfg(feature = "scenario-support")]
+mod scenario_support;
 mod schema;
+#[cfg(feature = "scenario-support")]
+pub use scenario_support::ScenarioCacheObservation;
 
 pub use error::TaxonomyLoaderError;
 
@@ -198,16 +202,35 @@ impl TaxonomyLoader {
             .text()
             .map_err(|e| TaxonomyLoaderError::HttpError(url.to_string(), e.to_string()))?;
 
-        // Write to cache if configured
-        if let Some(ref cache_dir) = self.cache_dir {
-            let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
-            if let Err(e) = Self::write_to_cache(&content, &cache_path) {
-                // Cache write failure is non-fatal, just log it
-                eprintln!("Warning: Failed to write cache for {url}: {e}");
-            }
-        }
+        self.cache_fetched_content(url, &content);
 
         Ok(content)
+    }
+
+    fn cache_fetched_content(&self, url: &str, content: &str) {
+        if let Some(ref cache_dir) = self.cache_dir {
+            let cache_path = TaxonomyLoader::url_to_cache_path(url, cache_dir);
+            if let Err(e) = Self::write_to_cache(content, &cache_path) {
+                tracing::warn!(
+                    operation = "taxonomy_cache_write",
+                    error = %e,
+                    "failed to write taxonomy cache; continuing without cached content"
+                );
+            }
+        }
+    }
+
+    #[cfg(feature = "scenario-support")]
+    #[doc(hidden)]
+    pub fn load_fetched_content_for_scenario(
+        &self,
+        url: &str,
+        content: &str,
+    ) -> ScenarioCacheObservation {
+        scenario_support::capture_cache_write(|| {
+            self.cache_fetched_content(url, content);
+            content.to_string()
+        })
     }
 
     fn write_to_cache(content: &str, cache_path: &Path) -> Result<(), std::io::Error> {

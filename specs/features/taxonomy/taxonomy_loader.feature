@@ -76,3 +76,13 @@ Feature: Taxonomy Loader
     When I validate the dimension-member pair
     Then the validation should fail
     And an "XBRL.DIMENSION.INVALID_MEMBER" finding should be reported
+
+  @alpha-active @SCN-XK-TAX-LOAD-010 @AC-XK-TAX-LOAD-010
+  @speed.fast
+  Scenario: Preserve fetched taxonomy when cache write fails
+    Given a fetched taxonomy with an unwritable cache
+    When I persist the fetched taxonomy
+    Then the fetched taxonomy should be returned
+    And a structured taxonomy cache warning should be emitted
+    And the structured warning omits URLs and cache paths
+    And the temporary cache failure fixture is cleaned up

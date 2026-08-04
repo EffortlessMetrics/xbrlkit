@@ -240,6 +240,12 @@ stories:
               - type: bdd
                 tag: "@AC-XK-TAX-LOAD-008"
                 file: "specs/features/taxonomy/taxonomy_loader.feature"
+          - id: AC-XK-TAX-LOAD-010
+            title: Preserve fetched taxonomy when cache write fails
+            tests:
+              - type: bdd
+                tag: "@AC-XK-TAX-LOAD-010"
+                file: "specs/features/taxonomy/taxonomy_loader.feature"
       - id: REQ-XK-PERFORMANCE
         title: Stream-parse large XBRL filings with bounded memory
         acceptance_criteria:

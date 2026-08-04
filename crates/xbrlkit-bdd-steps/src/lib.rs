@@ -76,6 +76,9 @@ pub struct TaxonomyLoaderContext {
     pub loader: Option<taxonomy_loader::TaxonomyLoader>,
     pub taxonomy: Option<DimensionTaxonomy>,
     pub cache_dir: Option<PathBuf>,
+    pub cache_failure_fixture: Option<PathBuf>,
+    pub cache_observation: Option<taxonomy_loader::ScenarioCacheObservation>,
+    pub fetched_content: Option<String>,
     pub schema_path: Option<String>,
     pub loaded: bool,
 }
@@ -123,16 +126,33 @@ pub fn run_scenario(
         );
     }
 
-    for step in steps {
-        run_step(world, scenario, step)?;
+    let result = (|| {
+        for step in steps {
+            run_step(world, scenario, step)?;
+        }
+
+        // Some scenarios (like dimension validation) validate via step assertions
+        // and don't set execution. Skip scenario-level outcome check in that case.
+        if let Some(execution) = world.execution.as_ref() {
+            assert_scenario_outcome(scenario, execution)?;
+        }
+
+        Ok(())
+    })();
+
+    if result.is_err() {
+        cleanup_cache_failure_fixture(world)?;
     }
 
-    // Some scenarios (like dimension validation) validate via step assertions
-    // and don't set execution. Skip scenario-level outcome check in that case.
-    if let Some(execution) = world.execution.as_ref() {
-        assert_scenario_outcome(scenario, execution)?;
-    }
+    result
+}
 
+fn cleanup_cache_failure_fixture(world: &mut World) -> anyhow::Result<()> {
+    if let Some(path) = world.taxonomy_loader_context.cache_failure_fixture.take()
+        && path.exists()
+    {
+        std::fs::remove_file(&path).with_context(|| format!("removing {}", path.display()))?;
+    }
     Ok(())
 }
 
@@ -618,6 +638,30 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         return Ok(true);
     }
 
+    if step.text == "a fetched taxonomy with an unwritable cache" {
+        let fixture_path = world
+            .repo_root
+            .join("fixtures/synthetic/taxonomy/cache-write-failure-01/fetched-content.txt");
+        let fetched_content = std::fs::read_to_string(&fixture_path)
+            .with_context(|| format!("reading {}", fixture_path.display()))?;
+        let cache_file = std::env::temp_dir().join(format!(
+            "xbrlkit_taxonomy_cache_failure_{}.fixture",
+            std::process::id()
+        ));
+        if cache_file.exists() {
+            std::fs::remove_file(&cache_file)
+                .with_context(|| format!("removing stale {}", cache_file.display()))?;
+        }
+        std::fs::write(&cache_file, "cache path is intentionally a file")
+            .with_context(|| format!("creating {}", cache_file.display()))?;
+        world.taxonomy_loader_context.cache_failure_fixture = Some(cache_file.clone());
+        world.taxonomy_loader_context.cache_dir = Some(cache_file.clone());
+        world.taxonomy_loader_context.fetched_content = Some(fetched_content);
+        world.taxonomy_loader_context.loader =
+            Some(taxonomy_loader::TaxonomyLoader::with_cache_dir(&cache_file));
+        return Ok(true);
+    }
+
     if step.text == "a taxonomy schema that imports another schema" {
         world.taxonomy_loader_context.schema_path =
             Some("fixtures/synthetic/taxonomy/standard-location-01/schema.xsd".to_string());
@@ -1038,6 +1082,25 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I persist the fetched taxonomy" {
+        let loader = world
+            .taxonomy_loader_context
+            .loader
+            .as_ref()
+            .context("taxonomy loader not initialized")?;
+        let content = world
+            .taxonomy_loader_context
+            .fetched_content
+            .as_deref()
+            .context("fetched taxonomy content not initialized")?;
+        let observation = loader.load_fetched_content_for_scenario(
+            "https://example.test/taxonomy.xsd?token=redacted",
+            content,
+        );
+        world.taxonomy_loader_context.cache_observation = Some(observation);
+        return Ok(true);
+    }
+
     Ok(false)
 }
 
@@ -1086,6 +1149,85 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
             );
         }
         return Ok(());
+    }
+
+    if step.text == "the fetched taxonomy should be returned" {
+        let observation = world
+            .taxonomy_loader_context
+            .cache_observation
+            .as_ref()
+            .context("cache observation was not captured")?;
+        let expected_content = world
+            .taxonomy_loader_context
+            .fetched_content
+            .as_deref()
+            .context("fetched taxonomy content not initialized")?;
+        if observation.content != expected_content {
+            anyhow::bail!(
+                "expected fetched taxonomy content to be returned, got {:?}",
+                observation.content
+            );
+        }
+        return Ok(());
+    }
+
+    if step.text == "the structured warning omits URLs and cache paths" {
+        let observation = world
+            .taxonomy_loader_context
+            .cache_observation
+            .as_ref()
+            .context("cache observation was not captured")?;
+        let cache_path = world
+            .taxonomy_loader_context
+            .cache_failure_fixture
+            .as_ref()
+            .map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_default();
+        for value in [
+            observation.warning_message.as_deref().unwrap_or_default(),
+            observation.warning_error.as_deref().unwrap_or_default(),
+        ] {
+            if value.contains("https://example.test")
+                || (!cache_path.is_empty() && value.contains(&cache_path))
+            {
+                anyhow::bail!("taxonomy cache warning leaked external or local path data: {value}");
+            }
+        }
+        return Ok(());
+    }
+
+    if step.text == "a structured taxonomy cache warning should be emitted" {
+        let observation = world
+            .taxonomy_loader_context
+            .cache_observation
+            .as_ref()
+            .context("cache observation was not captured")?;
+        if observation.warning_operation.as_deref() != Some("taxonomy_cache_write") {
+            anyhow::bail!(
+                "expected taxonomy_cache_write warning, got {:?}",
+                observation.warning_operation
+            );
+        }
+        if observation.warning_message.as_deref()
+            != Some("failed to write taxonomy cache; continuing without cached content")
+        {
+            anyhow::bail!(
+                "unexpected taxonomy cache warning message: {:?}",
+                observation.warning_message
+            );
+        }
+        let warning_error = observation
+            .warning_error
+            .as_deref()
+            .context("taxonomy cache warning did not include an I/O error")?;
+        if warning_error.is_empty() {
+            anyhow::bail!("taxonomy cache warning included an empty I/O error");
+        }
+        return Ok(());
+    }
+
+    if step.text == "the temporary cache failure fixture is cleaned up" {
+        return cleanup_cache_failure_fixture(world);
     }
 
     // Decimal precision Then steps
@@ -1622,4 +1764,70 @@ fn selector_matches(scenario: &ScenarioRecord, selector: &str) -> bool {
             .ac_id
             .as_ref()
             .is_some_and(|ac| format!("@{ac}") == selector)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FeatureGrid, ScenarioRecord, Step, TaxonomyLoaderContext, World, run_scenario};
+    use std::fs;
+    use std::path::PathBuf;
+
+    struct FixtureGuard(PathBuf);
+
+    impl Drop for FixtureGuard {
+        fn drop(&mut self) {
+            let _ = fs::remove_file(&self.0);
+        }
+    }
+
+    #[test]
+    fn failed_scenario_removes_cache_failure_fixture() -> Result<(), Box<dyn std::error::Error>> {
+        let fixture_path = std::env::temp_dir().join(format!(
+            "xbrlkit_bdd_cleanup_test_{}_{}.fixture",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
+        ));
+        let _fixture_guard = FixtureGuard(fixture_path.clone());
+        fs::write(&fixture_path, "cache path is intentionally a file")?;
+
+        let scenario = ScenarioRecord {
+            scenario_id: "SCN-XK-TEST-CLEANUP".to_string(),
+            ..ScenarioRecord::default()
+        };
+        let mut world = World::new(
+            PathBuf::from("."),
+            FeatureGrid {
+                scenarios: vec![scenario.clone()],
+            },
+        );
+        world.taxonomy_loader_context = TaxonomyLoaderContext {
+            cache_failure_fixture: Some(fixture_path.clone()),
+            ..TaxonomyLoaderContext::default()
+        };
+        let steps = vec![Step {
+            text: "this step fails before cleanup".to_string(),
+            table: Vec::new(),
+        }];
+
+        let error = run_scenario(&mut world, &scenario, &steps)
+            .err()
+            .ok_or_else(|| std::io::Error::other("unsupported step unexpectedly succeeded"))?;
+        if !error.to_string().contains("unsupported BDD step") {
+            return Err(format!("unexpected step error: {error}").into());
+        }
+        if fixture_path.exists() {
+            return Err("failed scenario left the cache fixture behind".into());
+        }
+        if world
+            .taxonomy_loader_context
+            .cache_failure_fixture
+            .is_some()
+        {
+            return Err("failed scenario retained the cache fixture owner".into());
+        }
+
+        Ok(())
+    }
 }
