@@ -10,6 +10,7 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
+use serde::Deserialize;
 use std::path::PathBuf;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
@@ -40,6 +41,7 @@ pub struct World {
     pub cli_output: Option<String>,
     pub cli_json_output: Option<serde_json::Value>,
     pub cli_exit_code: Option<i32>,
+    pub package_check_context: PackageCheckContext,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -80,6 +82,19 @@ pub struct TaxonomyLoaderContext {
     pub loaded: bool,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct PackageCheckContext {
+    pub publishable_crates: Vec<String>,
+    pub results: Vec<PackageCheckResult>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PackageCheckResult {
+    pub package: String,
+    pub success: bool,
+    pub details: String,
+}
+
 impl World {
     #[must_use]
     pub fn new(repo_root: PathBuf, grid: FeatureGrid) -> Self {
@@ -102,6 +117,7 @@ impl World {
             cli_output: None,
             cli_json_output: None,
             cli_exit_code: None,
+            package_check_context: PackageCheckContext::default(),
         }
     }
 }
@@ -179,6 +195,86 @@ fn assert_declared_inputs_match(world: &World, scenario: &ScenarioRecord) -> any
     Ok(())
 }
 
+fn discover_publishable_packages(repo_root: &std::path::Path) -> anyhow::Result<Vec<String>> {
+    let output = std::process::Command::new("cargo")
+        .args([
+            "metadata",
+            "--format-version",
+            "1",
+            "--no-deps",
+            "--offline",
+        ])
+        .current_dir(repo_root)
+        .output()
+        .context("running cargo metadata for package check")?;
+    if !output.status.success() {
+        anyhow::bail!(
+            "package check: cargo metadata failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let metadata: CargoMetadata =
+        serde_json::from_slice(&output.stdout).context("parsing cargo metadata output")?;
+    let mut packages = metadata
+        .packages
+        .into_iter()
+        .filter(package_is_publishable)
+        .map(|package| package.name)
+        .collect::<Vec<_>>();
+    packages.sort();
+    if packages.is_empty() {
+        anyhow::bail!("package check: no publishable crates found in workspace");
+    }
+    Ok(packages)
+}
+
+fn package_is_publishable(package: &CargoMetadataPackage) -> bool {
+    package
+        .publish
+        .as_ref()
+        .is_none_or(|registries| !registries.is_empty())
+}
+
+fn run_package_check(
+    repo_root: &std::path::Path,
+    packages: &[String],
+) -> anyhow::Result<Vec<PackageCheckResult>> {
+    let mut results = Vec::with_capacity(packages.len());
+    for package in packages {
+        let output = std::process::Command::new("cargo")
+            .args([
+                "package",
+                "-p",
+                package,
+                "--allow-dirty",
+                "--locked",
+                "--offline",
+                "--list",
+            ])
+            .current_dir(repo_root)
+            .output()
+            .with_context(|| format!("packaging {package}"))?;
+        let success = output.status.success();
+        let details = if success {
+            format!("packaged {package} successfully")
+        } else {
+            format!(
+                "cargo package failed for {package}\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            )
+        };
+        results.push(PackageCheckResult {
+            package: package.clone(),
+            success,
+            details,
+        });
+    }
+    Ok(results)
+}
+
 #[allow(clippy::too_many_lines)]
 fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
     if let Some(profile_id) = step.text.strip_prefix("the profile pack \"") {
@@ -208,6 +304,13 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
         world
             .fixture_dirs
             .push(world.repo_root.join("fixtures").join(fixture));
+        return Ok(true);
+    }
+
+    if step.text == "the publishable workspace crates declare crates.io-compatible manifests" {
+        world.package_check_context.publishable_crates =
+            discover_publishable_packages(&world.repo_root)?;
+        world.package_check_context.results.clear();
         return Ok(true);
     }
 
@@ -925,6 +1028,17 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         return Ok(true);
     }
 
+    if step.text == "I run the package readiness check" {
+        let packages = &world.package_check_context.publishable_crates;
+        if packages.is_empty() {
+            anyhow::bail!(
+                "package readiness check requires the publishable workspace crates step first"
+            );
+        }
+        world.package_check_context.results = run_package_check(&world.repo_root, packages)?;
+        return Ok(true);
+    }
+
     // Streaming parser When steps
     if step.text == "I validate it using the streaming parser" {
         // Simulate streaming validation - in real implementation this would
@@ -1151,6 +1265,28 @@ fn handle_then(world: &mut World, step: &Step) -> anyhow::Result<()> {
                 );
             }
             Ok(())
+        }
+        "the publishable workspace crates package successfully" => {
+            let results = &world.package_check_context.results;
+            if results.is_empty() {
+                anyhow::bail!("package readiness check did not run");
+            }
+            let failures = results
+                .iter()
+                .filter(|result| !result.success)
+                .collect::<Vec<_>>();
+            if failures.is_empty() {
+                return Ok(());
+            }
+            let details = failures
+                .iter()
+                .map(|result| format!("  - {}: {}", result.package, result.details))
+                .collect::<Vec<_>>()
+                .join("\n");
+            anyhow::bail!(
+                "package check failed for {} crate(s):\n{details}",
+                failures.len()
+            );
         }
         "the sensor report is emitted" => {
             if world.sensor_report.is_none() {
@@ -1601,4 +1737,56 @@ fn parse_count_suffix(step: &str, prefix: &str, noun_stem: &str) -> Option<usize
         .unwrap_or_default()
         .trim_end_matches('s');
     if noun == noun_stem { Some(count) } else { None }
+}
+
+#[derive(Debug, Deserialize)]
+struct CargoMetadata {
+    packages: Vec<CargoMetadataPackage>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CargoMetadataPackage {
+    name: String,
+    publish: Option<Vec<String>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CargoMetadataPackage, package_is_publishable};
+
+    fn package(publish: Option<Vec<&str>>) -> CargoMetadataPackage {
+        CargoMetadataPackage {
+            name: "fixture".to_string(),
+            publish: publish.map(|registries| {
+                registries
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect::<Vec<_>>()
+            }),
+        }
+    }
+
+    #[test]
+    fn package_publishability_matches_cargo_metadata_semantics() -> Result<(), String> {
+        let cases = [
+            (package(None), true, "missing publish field"),
+            (package(Some(vec![])), false, "empty publish list"),
+            (
+                package(Some(vec!["crates-io"])),
+                true,
+                "registry publish list",
+            ),
+        ];
+
+        for (candidate, expected, label) in cases {
+            let actual = package_is_publishable(&candidate);
+            if actual != expected {
+                return Err(format!(
+                    "{label}: expected publishable={expected}, got {actual}"
+                ));
+            }
+        }
+
+        Ok(())
+    }
 }

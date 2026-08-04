@@ -1692,7 +1692,7 @@
       "module": "FEAT-XK-WORKFLOW-PACKAGE:package-check",
       "crates": [
         "xtask",
-        "xbrlkit-core"
+        "xbrlkit-bdd-steps"
       ],
       "fixtures": [],
       "profile_pack": null,
@@ -1701,6 +1701,7 @@
       ],
       "allowed_edit_roots": [
         "Cargo.toml",
+        "Cargo.lock",
         "CHANGELOG.md",
         "crates",
         "docs/how-to",
