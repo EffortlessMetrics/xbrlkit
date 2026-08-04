@@ -7,7 +7,7 @@ Builder-ready audit ledger, reconciled against `origin/main` at
 
 The original issue reported eight crates and a single broad cleanup. The
 current `cargo machete --with-metadata` run reports seventeen dependency edges
-across ten packages. Several edges are already owned by active PRs, so this
+across nine packages. Several edges are already owned by active PRs, so this
 issue remains an index and sequencing contract rather than a license to make
 overlapping manifest edits.
 
