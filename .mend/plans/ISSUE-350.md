@@ -72,13 +72,13 @@ machine-checkable rather than relying on a record count or visual diff:
 $generated = Get-Content artifacts/feature.grid.v1.json -Raw | ConvertFrom-Json
 $golden = Get-Content tests/goldens/feature.grid.v1.json -Raw | ConvertFrom-Json
 $expected = @(1..17 | ForEach-Object { 'SCN-XK-DIM-{0:D3}' -f $_ })
-$actual = @($generated.scenarios | Where-Object { $_.scenario_id -like 'SCN-XK-DIM-*' } | Select-Object -ExpandProperty scenario_id)
-if ($actual.Count -ne 17 -or (@($actual | Sort-Object -Unique).Count -ne 17) -or (Compare-Object ($expected | Sort-Object) ($actual | Sort-Object))) { throw 'dimension grid must contain exactly DIM-001 through DIM-017 once each' }
-if ((ConvertTo-Json $generated -Depth 100 -Compress) -ne (ConvertTo-Json $golden -Depth 100 -Compress)) { throw 'generated feature grid differs from the checked-in golden' }
+$actual = @($generated.scenarios | Where-Object { $_.scenario_id -clike 'SCN-XK-DIM-*' } | Select-Object -ExpandProperty scenario_id)
+if ($actual.Count -ne 17 -or (@($actual | Sort-Object -CaseSensitive -Unique).Count -ne 17) -or (Compare-Object -CaseSensitive ($expected | Sort-Object -CaseSensitive) ($actual | Sort-Object -CaseSensitive))) { throw 'dimension grid must contain exactly DIM-001 through DIM-017 once each' }
+if ((ConvertTo-Json $generated -Depth 100 -Compress) -cne (ConvertTo-Json $golden -Depth 100 -Compress)) { throw 'generated feature grid differs from the checked-in golden' }
 
 $allowed = @('specs/features/taxonomy/dimensions.meta.yaml', 'tests/goldens/feature.grid.v1.json')
 $changed = @(git diff --name-only <recorded-base-head>...HEAD)
-if (@($changed | Where-Object { $_ -notin $allowed }).Count -ne 0 -or @($changed | Sort-Object -Unique).Count -ne $allowed.Count) { throw 'sidecar-only PR changed a path outside the two-file allowlist' }
+if (@($changed | Where-Object { $_ -cnotin $allowed }).Count -ne 0 -or @($changed | Sort-Object -CaseSensitive -Unique).Count -ne $allowed.Count) { throw 'sidecar-only PR changed a path outside the two-file allowlist' }
 ```
 
 Replace `<recorded-base-head>` with the exact base head recorded for the
