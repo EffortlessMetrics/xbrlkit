@@ -1,6 +1,6 @@
 //! Minimal step execution for the active BDD slices.
 
-use anyhow::Context;
+use anyhow::{Context, bail, ensure};
 use dimensional_rules::validate_context_dimensions;
 use scenario_contract::{BundleManifest, FeatureGrid, ScenarioRecord};
 use scenario_runner::{
@@ -10,7 +10,8 @@ use scenario_runner::{
     ensure_taxonomy_resolution_resolves_at_least, ensure_taxonomy_resolution_succeeds,
     execute_scenario, write_execution_receipts,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use taxonomy_dimensions::{Dimension, DimensionTaxonomy, Domain, DomainMember};
 use xbrl_contexts::{DimensionMember, DimensionalContainer, EntityIdentifier, Period};
 
@@ -669,6 +670,80 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     Ok(false)
 }
 
+fn verify_taxonomy_loader_features(repo_root: &Path, manifest_path: &Path) -> anyhow::Result<()> {
+    let manifest_arg = manifest_path
+        .to_str()
+        .context("taxonomy-loader manifest path is not valid UTF-8")?;
+    let metadata = Command::new("cargo")
+        .current_dir(repo_root)
+        .args([
+            "metadata",
+            "--format-version",
+            "1",
+            "--no-deps",
+            "--locked",
+            "--offline",
+            "--manifest-path",
+            manifest_arg,
+        ])
+        .output()
+        .context("failed to run cargo metadata for taxonomy-loader")?;
+    if !metadata.status.success() {
+        bail!(
+            "cargo metadata failed for taxonomy-loader: {}",
+            String::from_utf8_lossy(&metadata.stderr).trim()
+        );
+    }
+
+    let metadata: serde_json::Value = serde_json::from_slice(&metadata.stdout)
+        .context("failed to parse taxonomy-loader cargo metadata")?;
+    let package = metadata
+        .get("packages")
+        .and_then(serde_json::Value::as_array)
+        .and_then(|packages| {
+            packages.iter().find(|package| {
+                package.get("name").and_then(serde_json::Value::as_str) == Some("taxonomy-loader")
+            })
+        })
+        .context("taxonomy-loader package is missing from cargo metadata")?;
+    let features = package
+        .get("features")
+        .and_then(serde_json::Value::as_object)
+        .context("taxonomy-loader cargo metadata has no feature map")?;
+    let default_features = features
+        .get("default")
+        .and_then(serde_json::Value::as_array)
+        .context("taxonomy-loader default feature is missing from cargo metadata")?;
+    ensure!(
+        default_features.is_empty(),
+        "taxonomy-loader default feature unexpectedly enables dependencies"
+    );
+    let http_features = features
+        .get("http")
+        .and_then(serde_json::Value::as_array)
+        .context("taxonomy-loader http feature is missing from cargo metadata")?;
+    ensure!(
+        http_features
+            .iter()
+            .any(|feature| feature.as_str() == Some("dep:reqwest")),
+        "taxonomy-loader http feature does not enable dep:reqwest"
+    );
+    let reqwest = package
+        .get("dependencies")
+        .and_then(serde_json::Value::as_array)
+        .and_then(|dependencies| {
+            dependencies.iter().find(|dependency| {
+                dependency.get("name").and_then(serde_json::Value::as_str) == Some("reqwest")
+            })
+        })
+        .context("reqwest dependency is missing from taxonomy-loader cargo metadata")?;
+    ensure!(
+        reqwest.get("optional").and_then(serde_json::Value::as_bool) == Some(true),
+        "taxonomy-loader reqwest dependency is not optional"
+    );
+    Ok(())
+}
+
 #[allow(clippy::too_many_lines)]
 fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyhow::Result<bool> {
     if matches!(
@@ -701,15 +776,8 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             .join("..")
             .join("taxonomy-loader")
             .join("Cargo.toml");
-        let manifest = std::fs::read_to_string(&manifest_path).with_context(|| {
-            format!(
-                "failed to read taxonomy-loader manifest at {}",
-                manifest_path.display()
-            )
-        })?;
-        world.taxonomy_loader_context.offline_default_verified = manifest.contains("default = []")
-            && manifest.contains("http = [\"dep:reqwest\"]")
-            && manifest.contains("optional = true");
+        verify_taxonomy_loader_features(&world.repo_root, &manifest_path)?;
+        world.taxonomy_loader_context.offline_default_verified = true;
         return Ok(true);
     }
 
@@ -1047,13 +1115,12 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
             .context("schema path not set")?;
 
         // For synthetic test schemas that may not exist, create a minimal taxonomy
-        let taxonomy =
-            if schema_path.contains("fixtures/") && !std::path::Path::new(&schema_path).exists() {
-                // Create synthetic taxonomy for testing
-                create_synthetic_taxonomy()
-            } else {
-                loader.load(&schema_path)?
-            };
+        let taxonomy = if schema_path.contains("fixtures/") && !Path::new(&schema_path).exists() {
+            // Create synthetic taxonomy for testing
+            create_synthetic_taxonomy()
+        } else {
+            loader.load(&schema_path)?
+        };
 
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
