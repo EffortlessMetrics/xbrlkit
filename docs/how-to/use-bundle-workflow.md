@@ -60,7 +60,7 @@ The bundle command matches scenarios using these rules (in order):
 | `REQ-XXX-NAME` | Exact req_id |
 | `@SCN-XXX-NNN` | Exact scenario_id (tag style) |
 | `@AC-XXX-NNN` | Exact ac_id (tag style) |
-| `@tag-name` | Any scenario carrying the exact feature tag |
+| `@tag-name` | Any scenario carrying the exact tag |
 
 ## Bundle Output Structure
 

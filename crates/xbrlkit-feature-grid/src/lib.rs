@@ -115,6 +115,9 @@ fn parse_feature_tags(path: &Path) -> anyhow::Result<BTreeMap<String, Vec<String
                 if !tag.starts_with('@') || tag.len() == 1 {
                     anyhow::bail!("invalid tag {tag:?} in {}", path.display());
                 }
+                if tag == "@SCN-" {
+                    anyhow::bail!("invalid empty scenario tag {tag:?} in {}", path.display());
+                }
                 let tag = tag.to_string();
                 if !target.contains(&tag) {
                     target.push(tag);
@@ -140,7 +143,6 @@ fn parse_feature_tags(path: &Path) -> anyhow::Result<BTreeMap<String, Vec<String
                 .iter()
                 .find_map(|tag| {
                     tag.strip_prefix("@SCN-")
-                        .filter(|suffix| !suffix.is_empty())
                         .map(|suffix| format!("SCN-{suffix}"))
                 })
                 .with_context(|| {
@@ -283,7 +285,28 @@ mod tests {
             Ok(_) => return Err("empty scenario ID suffix should fail".to_string()),
             Err(error) => error.to_string(),
         };
-        if !error.contains("missing an @SCN tag") {
+        if !error.contains("invalid empty scenario tag") {
+            return Err(format!("unexpected parse error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn compile_rejects_empty_scenario_id_with_a_later_valid_id() -> Result<(), String> {
+        let root = temp_root()?;
+        write_inputs(
+            &root,
+            "Feature: Example\n\n  @SCN- @SCN-TEST-001\n  Scenario: Mixed IDs\n",
+            "feature_id: FEAT-TEST\nlayer: foundation\nmodule: example\nscenarios:\n  SCN-TEST-001:\n    ac_id: AC-TEST-001\n    req_id: REQ-TEST\n",
+        )?;
+
+        let error = match compile(&root.0) {
+            Ok(_) => {
+                return Err("empty scenario ID should fail even with a later valid ID".to_string());
+            }
+            Err(error) => error.to_string(),
+        };
+        if !error.contains("invalid empty scenario tag") {
             return Err(format!("unexpected parse error: {error}"));
         }
         Ok(())

@@ -383,28 +383,25 @@ mod tests {
             scenarios: vec![scenario],
         };
 
-        assert_eq!(
-            select_matching_scenarios(&grid, "AC-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "SCN-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "@AC-XK-WORKFLOW-002").len(),
-            1
-        );
-        assert_eq!(
-            select_matching_scenarios(&grid, "@SCN-XK-WORKFLOW-002").len(),
-            1
-        );
-        if select_matching_scenarios(&grid, "@alpha-active").len() != 1 {
-            return Err(anyhow::anyhow!(
-                "feature-tag selector should match the tagged scenario"
-            ));
+        for selector in [
+            "AC-XK-WORKFLOW-002",
+            "SCN-XK-WORKFLOW-002",
+            "@AC-XK-WORKFLOW-002",
+            "@SCN-XK-WORKFLOW-002",
+            "@alpha-active",
+        ] {
+            let matches = select_matching_scenarios(&grid, selector);
+            anyhow::ensure!(
+                matches.len() == 1,
+                "selector {selector:?} should match one scenario, found {}",
+                matches.len()
+            );
         }
-        assert!(select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty());
+
+        anyhow::ensure!(
+            select_matching_scenarios(&grid, "AC-XK-DOES-NOT-EXIST").is_empty(),
+            "unknown selector should match no scenarios"
+        );
         Ok(())
     }
 
