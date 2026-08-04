@@ -14,11 +14,11 @@ review and parallel-edit threshold.
 2. Extract the result model and summary aggregation into `result.rs`, while
    preserving the crate-root public API. Completed by [PR #422](https://github.com/EffortlessMetrics/xbrlkit/pull/422), stacked on PR #395.
 3. Extract context and dimension validation orchestration into `validate.rs`,
-   while preserving the crate-root public API. This is the current stacked
-   slice.
+   while preserving the crate-root public API. Completed by [PR #424](https://github.com/EffortlessMetrics/xbrlkit/pull/424), stacked on PR #422.
 4. Reconcile finding construction only where a clear, tested responsibility
    boundary remains.
 5. Partition tests by responsibility after the production seams stabilize.
+   This is the current stacked slice.
 
 ## Completed prior slice
 
@@ -27,7 +27,7 @@ boolean, and URI helpers into `typed_values.rs`. Keep the module private and
 call it from the existing public validation path. No validation rule, finding
 shape, public symbol, dependency, or scenario contract changes.
 
-## Current slice
+## Completed validation slice
 
 Move `validate_context_dimensions`, its private `validate_dimension_member`
 helper, and `is_descendant_member` into the private `validate.rs` module.
@@ -36,13 +36,23 @@ resolve the same crate-root public symbols. Keep report-level
 `validate_fact_dimensions`, result aggregation, finding construction, and the
 existing test location outside this slice.
 
+## Current slice
+
+Move the existing `#[cfg(test)]` unit-test module from `lib.rs` into the
+private `tests.rs` module. Preserve the test names, fixtures, assertions, and
+production visibility. This is a layout-only change; finding construction and
+new test coverage remain separate.
+
 ## Acceptance criteria
 
 - Existing dimensional validation behavior remains unchanged.
-- The typed-value, result/summary, and context-validation responsibilities each
-  have one focused private module with no duplicate implementation in `lib.rs`.
+- The typed-value, result/summary, context-validation, and test responsibilities
+  each have one focused module with no duplicate production implementation in
+  `lib.rs`.
 - `validate_context_dimensions` and `is_descendant_member` remain available at
   the crate root with unchanged public names and signatures.
+- All existing dimensional-rules unit tests continue to execute with their
+  existing names and assertions.
 - Package tests, Clippy, formatting, and workspace compilation pass.
 
 ## Proof
@@ -60,7 +70,7 @@ existing test location outside this slice.
 - No validation behavior changes or new dimensional rules.
 - No public module promotion or public API redesign.
 - No report-level orchestration, result aggregation, broad test relocation, or
-  finding-construction refactor.
+  finding-construction refactor or new test cases.
 
 ## Rollback
 
