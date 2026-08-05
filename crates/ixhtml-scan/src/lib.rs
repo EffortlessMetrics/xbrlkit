@@ -65,11 +65,12 @@ pub fn scan_inline_fragments(html: &str) -> Vec<InlineFragment> {
 }
 
 fn find_tag_end(html: &str, start: usize) -> Option<usize> {
-    let mut in_quotes = false;
+    let mut quote = None;
     for (relative_index, ch) in html[start..].char_indices() {
         match ch {
-            '"' => in_quotes = !in_quotes,
-            '>' if !in_quotes => return Some(start + relative_index),
+            '"' | '\'' if quote.is_none() => quote = Some(ch),
+            _ if quote == Some(ch) => quote = None,
+            '>' if quote.is_none() => return Some(start + relative_index),
             _ => {}
         }
     }
@@ -113,10 +114,11 @@ fn parse_attributes(raw: &str) -> BTreeMap<String, String> {
             while index < bytes.len() && bytes[index].is_ascii_whitespace() {
                 index += 1;
             }
-            let value = if index < bytes.len() && bytes[index] == b'"' {
+            let value = if index < bytes.len() && matches!(bytes[index], b'"' | b'\'') {
+                let quote = bytes[index];
                 index += 1;
                 let value_start = index;
-                while index < bytes.len() && bytes[index] != b'"' {
+                while index < bytes.len() && bytes[index] != quote {
                     index += 1;
                 }
                 let value = raw[value_start..index].to_string();
@@ -157,7 +159,29 @@ fn strip_tags(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::scan_inline_fragments;
+    use super::{InlineFragment, scan_inline_fragments};
+    use std::error::Error;
+    use std::fmt::Debug;
+
+    fn expect_equal<T: Debug + PartialEq>(
+        label: &str,
+        actual: &T,
+        expected: &T,
+    ) -> Result<(), Box<dyn Error>> {
+        if actual != expected {
+            return Err(std::io::Error::other(format!(
+                "{label}: expected {expected:?}, got {actual:?}"
+            ))
+            .into());
+        }
+        Ok(())
+    }
+
+    fn first_fragment(fragments: &[InlineFragment]) -> Result<&InlineFragment, Box<dyn Error>> {
+        fragments
+            .first()
+            .ok_or_else(|| std::io::Error::other("expected one inline fragment").into())
+    }
 
     #[test]
     fn parses_inline_fact_attributes_and_value() {
@@ -181,5 +205,28 @@ mod tests {
             fragments[0].attributes.get("xml:base").map(String::as_str),
             Some("https://example.com")
         );
+    }
+
+    #[test]
+    fn preserves_single_quoted_attributes_containing_tag_delimiters() -> Result<(), Box<dyn Error>>
+    {
+        let html = "<ix:nonNumeric name='dei:DocumentType' contextRef='c1' data='x>y'>10-K</ix:nonNumeric>";
+        let fragments = scan_inline_fragments(html);
+
+        expect_equal("fragment count", &fragments.len(), &1)?;
+        let fragment = first_fragment(&fragments)?;
+        expect_equal(
+            "fact name",
+            &fragment.fact_name.as_deref(),
+            &Some("dei:DocumentType"),
+        )?;
+        expect_equal("context ref", &fragment.context_ref.as_deref(), &Some("c1"))?;
+        expect_equal(
+            "data attribute",
+            &fragment.attributes.get("data").map(String::as_str),
+            &Some("x>y"),
+        )?;
+        expect_equal("value", &fragment.value.as_str(), &"10-K")?;
+        Ok(())
     }
 }
