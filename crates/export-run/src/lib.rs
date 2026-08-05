@@ -4,7 +4,7 @@ use oim_normalize::to_json_value;
 use receipt_types::{Receipt, RunResult};
 use xbrl_report_types::CanonicalReport;
 
-#[must_use]
+#[must_use = "handle the export result"]
 pub fn export_json(report: &CanonicalReport) -> Result<(String, Receipt), serde_json::Error> {
     let json = serde_json::to_string_pretty(&to_json_value(report))?;
     let receipt = Receipt::new("export.report", "canonical-report", RunResult::Success);
