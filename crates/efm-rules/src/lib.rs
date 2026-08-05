@@ -178,24 +178,28 @@ mod tests {
     }
 
     #[test]
-    fn flags_banned_inline_elements_and_attributes() {
+    fn flags_banned_inline_elements_and_attributes() -> Result<(), String> {
         let html = r#"<html><body><ix:fraction xml:base="https://example.com">1/2</ix:fraction></body></html>"#;
         let findings = validate_inline_restrictions("member-a.html", html, &profile());
 
-        assert!(
-            findings
-                .iter()
-                .any(|finding| finding.rule_id == "SEC.INLINE.NO_IX_FRACTION")
-        );
-        assert!(
-            findings
-                .iter()
-                .any(|finding| finding.rule_id == "SEC.INLINE.NO_XML_BASE")
-        );
+        if !findings
+            .iter()
+            .any(|finding| finding.rule_id == "SEC.INLINE.NO_IX_FRACTION")
+        {
+            return Err("expected SEC.INLINE.NO_IX_FRACTION finding".to_string());
+        }
+        if !findings
+            .iter()
+            .any(|finding| finding.rule_id == "SEC.INLINE.NO_XML_BASE")
+        {
+            return Err("expected SEC.INLINE.NO_XML_BASE finding".to_string());
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn flags_mixed_year_taxonomy_sets() {
+    fn flags_mixed_year_taxonomy_sets() -> Result<(), String> {
         let entry_points = vec![
             "https://xbrl.sec.gov/dei/2024/dei-2024.xsd".to_string(),
             "https://xbrl.fasb.org/us-gaap/2025/elts/us-gaap-2025.xsd".to_string(),
@@ -203,15 +207,18 @@ mod tests {
 
         let findings = validate_taxonomy_years(&entry_points, &profile());
 
-        assert!(
-            findings
-                .iter()
-                .any(|finding| finding.rule_id == "SEC.TAXONOMY.SAME_YEAR")
-        );
+        if !findings
+            .iter()
+            .any(|finding| finding.rule_id == "SEC.TAXONOMY.SAME_YEAR")
+        {
+            return Err("expected SEC.TAXONOMY.SAME_YEAR finding".to_string());
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn flags_missing_required_facts() {
+    fn flags_missing_required_facts() -> Result<(), String> {
         let facts = vec![
             Fact {
                 concept: "dei:EntityRegistrantName".to_string(),
@@ -226,25 +233,32 @@ mod tests {
 
         let findings = validate_required_facts(&facts, &profile_with_required_facts());
 
-        assert!(
-            findings
-                .iter()
-                .any(|f| f.rule_id == "SEC.REQUIRED_FACT.DEI_ENTITYCENTRALINDEXKEY")
-        );
-        assert!(
-            findings
-                .iter()
-                .any(|f| f.rule_id == "SEC.REQUIRED_FACT.DEI_DOCUMENTTYPE")
-        );
-        assert!(
-            !findings
-                .iter()
-                .any(|f| f.rule_id == "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
-        );
+        if !findings
+            .iter()
+            .any(|finding| finding.rule_id == "SEC.REQUIRED_FACT.DEI_ENTITYCENTRALINDEXKEY")
+        {
+            return Err("expected SEC.REQUIRED_FACT.DEI_ENTITYCENTRALINDEXKEY finding".to_string());
+        }
+        if !findings
+            .iter()
+            .any(|finding| finding.rule_id == "SEC.REQUIRED_FACT.DEI_DOCUMENTTYPE")
+        {
+            return Err("expected SEC.REQUIRED_FACT.DEI_DOCUMENTTYPE finding".to_string());
+        }
+        if findings
+            .iter()
+            .any(|finding| finding.rule_id == "SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME")
+        {
+            return Err(
+                "did not expect SEC.REQUIRED_FACT.DEI_ENTITYREGISTRANTNAME finding".to_string(),
+            );
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn passes_with_all_required_facts() {
+    fn passes_with_all_required_facts() -> Result<(), String> {
         let facts = vec![
             Fact {
                 concept: "dei:EntityRegistrantName".to_string(),
@@ -274,6 +288,12 @@ mod tests {
 
         let findings = validate_required_facts(&facts, &profile_with_required_facts());
 
-        assert!(findings.is_empty());
+        if !findings.is_empty() {
+            return Err(format!(
+                "expected no findings when all required facts are present, got {findings:?}"
+            ));
+        }
+
+        Ok(())
     }
 }
