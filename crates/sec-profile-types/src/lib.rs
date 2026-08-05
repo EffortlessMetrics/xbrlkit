@@ -136,44 +136,60 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
-    fn load_profile_pack_from_workspace() {
+    fn load_profile_pack_from_workspace() -> Result<(), String> {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let workspace_root = manifest_dir
             .parent()
             .and_then(|path| path.parent())
-            .expect("workspace root");
+            .ok_or_else(|| "workspace root is not an ancestor of the crate".to_string())?;
         let profile = load_profile_from_workspace(workspace_root, "sec/efm-77/opco")
-            .expect("profile pack should load");
+            .map_err(|error| format!("profile pack should load: {error}"))?;
 
-        assert_eq!(profile.id, "sec/efm-77/opco");
-        assert!(
-            profile
-                .inline_rules
-                .banned_elements
-                .contains(&"ix:fraction".to_string())
-        );
-        assert!(
-            profile
-                .accepted_taxonomies
-                .namespaces
-                .iter()
-                .any(|namespace| namespace.prefix == "dei")
-        );
-        assert!(
-            profile
-                .standard_taxonomy_uris
-                .iter()
-                .any(|uri| uri.contains("/dei/2025/"))
-        );
+        if profile.id != "sec/efm-77/opco" {
+            return Err(format!(
+                "profile id mismatch: expected sec/efm-77/opco, got {}",
+                profile.id
+            ));
+        }
+        if !profile
+            .inline_rules
+            .banned_elements
+            .iter()
+            .any(|element| element == "ix:fraction")
+        {
+            return Err("profile does not ban ix:fraction".to_string());
+        }
+        if !profile
+            .accepted_taxonomies
+            .namespaces
+            .iter()
+            .any(|namespace| namespace.prefix == "dei")
+        {
+            return Err("profile has no dei taxonomy namespace".to_string());
+        }
+        if !profile
+            .standard_taxonomy_uris
+            .iter()
+            .any(|uri| uri.contains("/dei/2025/"))
+        {
+            return Err("profile has no /dei/2025/ taxonomy URI".to_string());
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn extracts_attribute_values_from_simple_xml() {
+    fn extracts_attribute_values_from_simple_xml() -> Result<(), String> {
         let xml = r#"<root><node namespace="alpha" /><node namespace="beta" /></root>"#;
 
-        assert_eq!(
-            extract_attribute_values(xml, "namespace"),
-            vec!["alpha".to_string(), "beta".to_string()]
-        );
+        let actual = extract_attribute_values(xml, "namespace");
+        let expected = vec!["alpha".to_string(), "beta".to_string()];
+        if actual != expected {
+            return Err(format!(
+                "attribute values mismatch: expected {expected:?}, got {actual:?}"
+            ));
+        }
+
+        Ok(())
     }
 }
