@@ -187,32 +187,43 @@ mod tests {
     use std::path::Path;
 
     #[test]
-    fn parses_active_scenario_tags_and_steps() {
+    fn parses_active_scenario_tags_and_steps() -> Result<(), String> {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .and_then(|path| path.parent())
-            .expect("workspace root")
+            .ok_or_else(|| "xbrlkit-bdd manifest has no workspace root".to_string())?
             .join("specs/features/inline/ixds_assembly.feature");
-        let scenarios = parse_feature_file(&path).expect("feature file should parse");
+        let scenarios = parse_feature_file(&path)
+            .map_err(|error| format!("failed to parse {}: {error}", path.display()))?;
 
-        assert!(
-            scenarios
-                .iter()
-                .any(|scenario| scenario.tags.iter().any(|tag| tag == "@alpha-active"))
-        );
-        assert!(scenarios.iter().any(|scenario| {
+        if !scenarios
+            .iter()
+            .any(|scenario| scenario.tags.iter().any(|tag| tag == "@alpha-active"))
+        {
+            return Err("parsed scenarios did not contain an @alpha-active scenario".to_string());
+        }
+        if !scenarios.iter().any(|scenario| {
             scenario
                 .steps
                 .iter()
                 .any(|step| step.text == "I validate the filing")
-        }));
+        }) {
+            return Err(
+                "parsed scenarios did not contain the `I validate the filing` step".to_string(),
+            );
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn parses_table_rows() {
-        assert_eq!(
-            parse_table_row("| dei:DocumentType |"),
-            vec!["dei:DocumentType".to_string()]
-        );
+    fn parses_table_rows() -> Result<(), String> {
+        let actual = parse_table_row("| dei:DocumentType |");
+        let expected = vec!["dei:DocumentType".to_string()];
+        if actual != expected {
+            return Err(format!("expected {expected:?}, got {actual:?}"));
+        }
+
+        Ok(())
     }
 }
