@@ -535,9 +535,9 @@ mod tests {
     fn invalid_large_filing_size_is_rejected() -> anyhow::Result<()> {
         let error = run_given("an XBRL filing larger than not-a-numberMB")
             .err()
-            .ok_or_else(|| "invalid large filing size unexpectedly passed".to_string())?;
+            .ok_or_else(|| anyhow::anyhow!("invalid large filing size unexpectedly passed"))?;
         if !error.to_string().contains("invalid large filing size") {
-            return Err(format!("unexpected large-size error: {error}"));
+            anyhow::bail!("unexpected large-size error: {error}");
         }
         Ok(())
     }
@@ -546,9 +546,9 @@ mod tests {
     fn invalid_small_filing_size_is_rejected() -> anyhow::Result<()> {
         let error = run_given("an XBRL filing smaller than not-a-numbermb")
             .err()
-            .ok_or_else(|| "invalid small filing size unexpectedly passed".to_string())?;
+            .ok_or_else(|| anyhow::anyhow!("invalid small filing size unexpectedly passed"))?;
         if !error.to_string().contains("invalid small filing size") {
-            return Err(format!("unexpected small-size error: {error}"));
+            anyhow::bail!("unexpected small-size error: {error}");
         }
         Ok(())
     }
@@ -557,9 +557,9 @@ mod tests {
     fn invalid_large_filing_fact_count_is_rejected() -> anyhow::Result<()> {
         let error = run_given("a large XBRL filing with not-a-number facts")
             .err()
-            .ok_or_else(|| "invalid filing fact count unexpectedly passed".to_string())?;
+            .ok_or_else(|| anyhow::anyhow!("invalid filing fact count unexpectedly passed"))?;
         if !error.to_string().contains("invalid fact count") {
-            return Err(format!("unexpected fact-count error: {error}"));
+            anyhow::bail!("unexpected fact-count error: {error}");
         }
         Ok(())
     }
