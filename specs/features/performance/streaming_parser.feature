@@ -9,6 +9,7 @@ Feature: Streaming Parser for Large Files
 
   Background:
     Given the xbrl-stream crate is available
+      | capability | streaming |
 
   @streaming @memory @SCN-XK-STREAM-001
   Scenario: SCN-XK-STREAM-001 — Stream parse a large XBRL file

@@ -1,5 +1,4 @@
 //! CLI edge for xbrlkit.
-#![allow(clippy::too_many_lines)]
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -51,6 +50,7 @@ enum Command {
     },
 }
 
+#[allow(clippy::too_many_lines)]
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let exit_code = match cli.command {
