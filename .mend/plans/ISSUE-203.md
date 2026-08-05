@@ -3,13 +3,18 @@
 ## Status
 
 Builder-ready audit ledger, reconciled against `origin/main` at
-`e4d941c11ceb753866548a6a6b920917959dc456` on 2026-08-04.
+`e4d941c11ceb753866548a6a6b920917959dc456` on 2026-08-05.
 
 The original issue reported eight crates and a single broad cleanup. The
 current `cargo machete --with-metadata` run reports seventeen dependency edges
 across nine packages. Several edges are already owned by active PRs, so this
 issue remains an index and sequencing contract rather than a license to make
 overlapping manifest edits.
+
+A fresh audit from a disposable worktree at the same exact `origin/main` head
+on 2026-08-05 returned exit code `1` with seventeen edges across nine
+packages and no `Cargo.lock` change. The prior plan head `545f370` is not
+`origin/main` and is not used as the baseline.
 
 The recorded baseline toolchain is `cargo-machete 0.9.1`, Cargo `1.92.0
 (344c4567c 2025-10-21)`, and rustc `1.92.0 (ded5c06cf 2025-12-08)`. These
@@ -30,6 +35,26 @@ vary by tool version.
 | `unit-rules -> serde` | PR #475 | Re-audit after the owner-controlled removal slice |
 | `validation-run -> context-completeness` | PR #491 | Re-audit after the owner-controlled removal slice |
 | `taxonomy-loader -> serde_json`, `tempfile`, `tokio` | PRs #386, #400, #401, and the transport sequence in #429/#436 | Reconcile cache, warning, import, and transport ownership before removing edges |
+
+### Live ownership evidence
+
+The following owner, branch, and head records were refreshed against GitHub on
+2026-08-05. They identify ownership only; they do not claim that any PR has
+merged or that its dependency-removal proof is complete.
+
+| Lane | Owner | Branch | Current head | Bounded claim |
+| --- | --- | --- | --- | --- |
+| PR #391 (`receipt-types`, `scenario-contract`) | EffortlessSteven | `codex/issue308-remove-unused-deps` | `d582d85fbd98247a3cb2a1c1a2b834bf2ad2a37e` | remove the two `serde_json` edges |
+| PR #355 (`xbrl-stream`) | EffortlessSteven | `codex/pr318-clean` | `0244e412905d5eeb26afe2a0fa65094800b807d6` | remove the async dependency edges |
+| PR #354 (`xbrlkit-cli`) | EffortlessSteven | `codex/pr341-clean` | `2d0215fdeea5880f9ea6cafa41e8b1ca7d77078d` | remove the `render-md` edge |
+| PR #405 (`xtask`) | EffortlessSteven | `codex/issue249-machete-ci` | `dbec1fa0a1a9fc4d1e1bc8284a4e33921f3f2320` | remove the five listed `xtask` edges |
+| PR #492 (`dimensional-rules`) | EffortlessSteven | `codex/issue308-dimensional-rules` | `e71606ed86e40e6e07fc02cfb8141b19a9884833` | remove `serde` and `thiserror` |
+| PR #475 (`unit-rules`) | EffortlessSteven | `codex/issue330-unit-rules-serde` | `54e7ca615e7ef3644bcf38b948a7d7d9ea403313` | remove `serde` |
+| PR #491 (`validation-run`) | EffortlessSteven | `codex/issue308-validation-run` | `fcb39514751b0412e978566e95ef97522cdbbc1f` | remove `context-completeness` |
+| PR #386 (`taxonomy-loader` cache keys) | EffortlessSteven | `codex/issue233-cache-path` | `90ab770fc11dc1fbe0d32b6c482d506789c6b561` | isolate URL-cache keys |
+| PR #400 (`taxonomy-loader` warning) | EffortlessSteven | `codex/issue216-tracing-warning` | `7f2c4a0443b1026fc532d942354e837b9b919410` | preserve content and redact cache-write warnings |
+| PR #401 (`taxonomy-loader` cache/import tracking) | EffortlessSteven | `codex/issue248-cache-tracking-repair` | `8ee14719e2b9247fe8779fcc06adc55902eac372` | track cache reuse and imported schemas |
+| PR #429/#436 (taxonomy-loader transport plan/seam) | EffortlessSteven | `codex/issue211-plan` / `codex/issue211-transport` | `cce9647ae39da6bf24e6c92039274133c7ab8429` / `d114fc15f13e1c28b328ad7fd3934ebdf19da07e` | bound deterministic transport coverage |
 
 The baseline command is expected to exit nonzero while the table contains
 findings. A nonzero audit is not a source failure by itself; it is the current
@@ -78,9 +103,15 @@ are either removed or explicitly recorded as reviewed, owned exceptions.
   findings from command/environment failures.
 - [ ] The ledger records the audit toolchain and each active row has a concrete
   owner-controlled PR or issue with a bounded claim.
-- [ ] The taxonomy-loader re-audit exercises the governed cache and import
-  scenarios (`SCN/AC-XK-TAX-LOAD-005` through `008`) and records any remaining
-  transport-specific proof separately from dependency-removal proof.
+- [ ] The taxonomy-loader re-audit runs the executable feature runner for the
+  four governed scenarios and maps each result explicitly:
+  - `cargo xtask bdd --tags @SCN-XK-TAX-LOAD-005` — cache reuse;
+  - `cargo xtask bdd --tags @SCN-XK-TAX-LOAD-006` — recursive schema imports;
+  - `cargo xtask bdd --tags @SCN-XK-TAX-LOAD-007` — valid dimension-member
+    validation; and
+  - `cargo xtask bdd --tags @SCN-XK-TAX-LOAD-008` — invalid-member findings.
+  Remaining transport-specific proof is recorded separately from
+  dependency-removal proof.
 - [ ] No public API, runtime behavior, schema, profile, or scenario contract
   changes as a consequence of manifest-only cleanup.
 
@@ -88,20 +119,24 @@ are either removed or explicitly recorded as reviewed, owned exceptions.
 
 ```text
 cargo metadata --locked --no-deps --format-version 1
-cargo tree -p <package> --edges normal --locked --offline
+cargo tree -p <package> --edges all --locked --offline
 cargo check -p <package> --all-targets --all-features --locked --offline
 cargo test -p <package> --all-targets --all-features --locked --offline
 cargo clippy -p <package> --all-targets --locked --offline -- -D warnings
 cargo fmt --all -- --check
-git diff --check
 cargo machete --with-metadata
+git diff --check
 ```
 
 The exact package, supported feature set, build scripts, examples, generated
 inputs, and whether workspace checks are warranted belong in the selected PR;
 the PR must document any unsupported `--all-features` or all-targets case. A
 passing package proof establishes that slice, not a clean workspace audit or
-release readiness.
+release readiness. Run `cargo machete` from a disposable clean worktree when
+possible; otherwise restore only incidental audit-generated `Cargo.lock`
+changes before the final `git diff --check`. The receipt must describe the
+post-restoration diff, while preserving any intentional lockfile delta from
+the selected dependency-removal slice.
 
 ## Non-goals
 
