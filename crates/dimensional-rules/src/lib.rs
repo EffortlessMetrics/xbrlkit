@@ -9,12 +9,14 @@
 use std::collections::BTreeSet;
 use taxonomy_dimensions::DimensionTaxonomy;
 use xbrl_contexts::ContextSet;
-use xbrl_report_types::{Fact, ValidationFinding};
+use xbrl_report_types::Fact;
 
+mod findings;
 mod result;
 mod typed_values;
 mod validate;
 
+use findings::missing_context;
 pub use result::{
     DimensionalSummary, DimensionalValidationResult, collect_findings, summarize_results,
 };
@@ -54,16 +56,7 @@ pub fn validate_fact_dimensions(
         let Some(context) = context_set.get(&fact.context_ref) else {
             results.push(DimensionalValidationResult {
                 context_id: fact.context_ref.clone(),
-                findings: vec![ValidationFinding {
-                    rule_id: "XBRL.DIMENSION.MISSING_CONTEXT".to_string(),
-                    severity: "error".to_string(),
-                    message: format!(
-                        "Context {} not found for fact {}",
-                        fact.context_ref, fact.concept
-                    ),
-                    member: Some(fact.concept.clone()),
-                    subject: Some(fact.context_ref.clone()),
-                }],
+                findings: vec![missing_context(&fact.context_ref, &fact.concept)],
                 present_dimensions: Vec::new(),
                 missing_dimensions: Vec::new(),
             });
