@@ -359,7 +359,11 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
                     .and_then(|s| s.strip_suffix("mb"))
             });
         if let Some(mb) = mb_str {
-            world.processing.streaming.file_size_mb = Some(mb.parse().unwrap_or(100.0));
+            let parsed_mb = mb
+                .trim()
+                .parse::<f64>()
+                .with_context(|| format!("invalid large filing size: {}", mb.trim()))?;
+            world.processing.streaming.file_size_mb = Some(parsed_mb);
             return Ok(true);
         }
         anyhow::bail!("invalid file size specification: {}", step.text);
@@ -376,7 +380,11 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
                     .and_then(|s| s.strip_suffix("mb"))
             });
         if let Some(mb) = mb_str {
-            world.processing.streaming.file_size_mb = Some(mb.parse().unwrap_or(10.0));
+            let parsed_mb = mb
+                .trim()
+                .parse::<f64>()
+                .with_context(|| format!("invalid small filing size: {}", mb.trim()))?;
+            world.processing.streaming.file_size_mb = Some(parsed_mb);
             world.processing.streaming.use_streaming = true;
             return Ok(true);
         }
@@ -388,8 +396,10 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
             let facts = facts_str
                 .split('+')
                 .next()
-                .and_then(|s| s.trim().parse().ok())
-                .unwrap_or(1000);
+                .context("missing fact count in large filing step")?
+                .trim()
+                .parse::<usize>()
+                .with_context(|| format!("invalid fact count: {}", facts_str.trim()))?;
             world.processing.streaming.fact_count = Some(facts);
             world.processing.streaming.file_size_mb = Some(50.0);
             return Ok(true);
@@ -500,4 +510,57 @@ pub fn handle(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> anyh
     }
 
     Ok(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::handle;
+    use crate::world::{Step, World};
+    use scenario_contract::{FeatureGrid, ScenarioRecord};
+    use std::path::PathBuf;
+
+    fn run_given(step_text: &str) -> anyhow::Result<bool> {
+        let mut world = World::new(PathBuf::new(), FeatureGrid::default());
+        handle(
+            &mut world,
+            &ScenarioRecord::default(),
+            &Step {
+                text: step_text.to_string(),
+                table: Vec::new(),
+            },
+        )
+    }
+
+    #[test]
+    fn invalid_large_filing_size_is_rejected() -> anyhow::Result<()> {
+        let error = run_given("an XBRL filing larger than not-a-numberMB")
+            .err()
+            .ok_or_else(|| "invalid large filing size unexpectedly passed".to_string())?;
+        if !error.to_string().contains("invalid large filing size") {
+            return Err(format!("unexpected large-size error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_small_filing_size_is_rejected() -> anyhow::Result<()> {
+        let error = run_given("an XBRL filing smaller than not-a-numbermb")
+            .err()
+            .ok_or_else(|| "invalid small filing size unexpectedly passed".to_string())?;
+        if !error.to_string().contains("invalid small filing size") {
+            return Err(format!("unexpected small-size error: {error}"));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_large_filing_fact_count_is_rejected() -> anyhow::Result<()> {
+        let error = run_given("a large XBRL filing with not-a-number facts")
+            .err()
+            .ok_or_else(|| "invalid filing fact count unexpectedly passed".to_string())?;
+        if !error.to_string().contains("invalid fact count") {
+            return Err(format!("unexpected fact-count error: {error}"));
+        }
+        Ok(())
+    }
 }
