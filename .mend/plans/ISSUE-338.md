@@ -18,7 +18,10 @@ review and parallel-edit threshold.
 4. Reconcile finding construction only where a clear, tested responsibility
    boundary remains.
 5. Partition tests by responsibility after the production seams stabilize.
-   This is the current stacked slice.
+   Completed by [PR #425](https://github.com/EffortlessMetrics/xbrlkit/pull/425).
+6. Extract the repeated finding-construction shapes into a private helper
+   module, keeping rule IDs, messages, and public APIs unchanged. This is the
+   current stacked slice.
 
 ## Completed prior slice
 
@@ -36,12 +39,19 @@ resolve the same crate-root public symbols. Keep report-level
 `validate_fact_dimensions`, result aggregation, finding construction, and the
 existing test location outside this slice.
 
-## Current slice
+## Completed test-partition slice
 
 Move the existing `#[cfg(test)]` unit-test module from `lib.rs` into the
 private `tests.rs` module. Preserve the test names, fixtures, assertions, and
 production visibility. This is a layout-only change; finding construction and
-new test coverage remain separate.
+new test coverage remain separate. Completed by PR #425.
+
+## Current finding-construction slice
+
+Move the five repeated `ValidationFinding` construction shapes used by the
+crate-root orchestration and context/member validation into a private
+`findings.rs` module. Keep the existing fields, rule IDs, messages, and
+call-site behavior unchanged; callers delegate to named helpers only.
 
 ## Acceptance criteria
 
@@ -53,6 +63,9 @@ new test coverage remain separate.
   the crate root with unchanged public names and signatures.
 - All existing dimensional-rules unit tests continue to execute with their
   existing names and assertions.
+- Finding construction has one private implementation location for missing
+  context, missing required dimension, unknown dimension, invalid member, and
+  missing domain findings.
 - Package tests, Clippy, formatting, and workspace compilation pass.
 
 ## Proof
@@ -69,8 +82,9 @@ new test coverage remain separate.
 
 - No validation behavior changes or new dimensional rules.
 - No public module promotion or public API redesign.
-- No report-level orchestration, result aggregation, broad test relocation, or
-  finding-construction refactor or new test cases.
+- No report-level orchestration, result aggregation, or new dimensional rules.
+- No additional test partitioning or new finding shapes beyond the five
+  existing construction paths.
 
 ## Rollback
 

@@ -1,6 +1,7 @@
 use super::*;
 use taxonomy_dimensions::{Dimension, Domain, DomainMember, Hypercube};
 use xbrl_contexts::{Context, DimensionMember, EntityIdentifier, Period};
+use xbrl_report_types::ValidationFinding;
 
 fn create_test_taxonomy() -> DimensionTaxonomy {
     let mut taxonomy = DimensionTaxonomy::new();

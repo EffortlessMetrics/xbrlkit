@@ -2,6 +2,7 @@ use taxonomy_dimensions::{DimensionTaxonomy, Domain};
 use xbrl_contexts::{Context, DimensionMember, get_dimensional_members};
 use xbrl_report_types::ValidationFinding;
 
+use crate::findings::{invalid_member, missing_required_dimension, no_domain, unknown_dimension};
 use crate::result::DimensionalValidationResult;
 use crate::typed_values::validate_typed_dimension_value;
 
@@ -35,16 +36,11 @@ pub fn validate_context_dimensions(
     for req_dim in &required_dims {
         if !present_dimensions.contains(req_dim) {
             missing_dimensions.push(req_dim.clone());
-            findings.push(ValidationFinding {
-                rule_id: "XBRL.DIMENSION.MISSING_REQUIRED".to_string(),
-                severity: "error".to_string(),
-                message: format!(
-                    "Concept {} requires dimension {} which is missing in context {}",
-                    concept_qname, req_dim, context.id
-                ),
-                member: Some(concept_qname.to_string()),
-                subject: Some(context.id.clone()),
-            });
+            findings.push(missing_required_dimension(
+                concept_qname,
+                req_dim,
+                &context.id,
+            ));
         }
     }
 
@@ -70,13 +66,7 @@ fn validate_dimension_member(
 ) -> Result<(), ValidationFinding> {
     // Check if dimension exists
     if !dim_taxonomy.dimensions.contains_key(&dim_member.dimension) {
-        return Err(ValidationFinding {
-            rule_id: "XBRL.DIMENSION.UNKNOWN".to_string(),
-            severity: "error".to_string(),
-            message: format!("Unknown dimension: {}", dim_member.dimension),
-            member: Some(dim_member.dimension.clone()),
-            subject: Some(dim_member.member.clone()),
-        });
+        return Err(unknown_dimension(&dim_member.dimension, &dim_member.member));
     }
 
     // Get the dimension definition
@@ -94,26 +84,15 @@ fn validate_dimension_member(
         if domain.contains(&dim_member.member) {
             return Ok(());
         }
-        return Err(ValidationFinding {
-            rule_id: "XBRL.DIMENSION.INVALID_MEMBER".to_string(),
-            severity: "error".to_string(),
-            message: format!(
-                "Member {} is not valid for dimension {} in domain {}",
-                dim_member.member, dim_member.dimension, domain_qname
-            ),
-            member: Some(dim_member.member.clone()),
-            subject: Some(dim_member.dimension.clone()),
-        });
+        return Err(invalid_member(
+            &dim_member.member,
+            &dim_member.dimension,
+            domain_qname,
+        ));
     }
 
     // No domain defined for this dimension
-    Err(ValidationFinding {
-        rule_id: "XBRL.DIMENSION.NO_DOMAIN".to_string(),
-        severity: "error".to_string(),
-        message: format!("Dimension {} has no domain defined", dim_member.dimension),
-        member: Some(dim_member.dimension.clone()),
-        subject: Some(dim_member.member.clone()),
-    })
+    Err(no_domain(&dim_member.dimension, &dim_member.member))
 }
 
 /// Check if a member is a descendant of another member in a domain.
