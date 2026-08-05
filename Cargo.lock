@@ -246,9 +246,7 @@ dependencies = [
 name = "dimensional-rules"
 version = "0.1.0-alpha.1"
 dependencies = [
- "serde",
  "taxonomy-dimensions",
- "thiserror 2.0.18",
  "xbrl-contexts",
  "xbrl-report-types",
 ]
