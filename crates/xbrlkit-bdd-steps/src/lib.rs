@@ -626,35 +626,7 @@ fn handle_given(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> an
     }
 
     if step.text == "a loaded taxonomy with dimension definitions" {
-        // Simulate loading a taxonomy with dimensions
-        let mut taxonomy = DimensionTaxonomy::new();
-
-        // Add a domain
-        let mut domain = Domain::new("us-gaap:ScenarioDomain");
-        domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioActualMember".to_string(),
-            parent: None,
-            order: 1,
-            label: None,
-        });
-        domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioForecastMember".to_string(),
-            parent: None,
-            order: 2,
-            label: None,
-        });
-        taxonomy.add_domain(domain);
-
-        // Add an explicit dimension
-        taxonomy.add_dimension(Dimension::Explicit {
-            qname: "us-gaap:StatementScenarioAxis".to_string(),
-            default_domain: Some("us-gaap:ScenarioDomain".to_string()),
-            required: false,
-        });
-        taxonomy.dimension_domains.insert(
-            "us-gaap:StatementScenarioAxis".to_string(),
-            "us-gaap:ScenarioDomain".to_string(),
-        );
+        let taxonomy = create_scenario_taxonomy();
 
         world.taxonomy_loader_context.taxonomy = Some(taxonomy);
         world.taxonomy_loader_context.loaded = true;
@@ -698,32 +670,7 @@ fn handle_when(world: &mut World, scenario: &ScenarioRecord, step: &Step) -> any
         let dimension = world.dimension_context.dimension.as_deref().unwrap_or("");
         let member = world.dimension_context.member.as_deref().unwrap_or("");
 
-        // Build minimal taxonomy with StatementScenarioAxis
-        let mut taxonomy = DimensionTaxonomy::new();
-        let mut scenario_domain = Domain::new("us-gaap:ScenarioDomain");
-        scenario_domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioActualMember".to_string(),
-            parent: None,
-            order: 1,
-            label: None,
-        });
-        scenario_domain.add_member(DomainMember {
-            qname: "us-gaap:ScenarioForecastMember".to_string(),
-            parent: None,
-            order: 2,
-            label: None,
-        });
-        taxonomy.add_domain(scenario_domain);
-
-        taxonomy.add_dimension(Dimension::Explicit {
-            qname: "us-gaap:StatementScenarioAxis".to_string(),
-            default_domain: Some("us-gaap:ScenarioDomain".to_string()),
-            required: false,
-        });
-        taxonomy.dimension_domains.insert(
-            "us-gaap:StatementScenarioAxis".to_string(),
-            "us-gaap:ScenarioDomain".to_string(),
-        );
+        let taxonomy = create_scenario_taxonomy();
 
         // Build context with dimensional information in scenario
         let mut context = xbrl_contexts::Context {
@@ -1554,8 +1501,8 @@ fn handle_parameterized_assertion(world: &World, step: &Step) -> anyhow::Result<
     anyhow::bail!("unsupported BDD step: {}", step.text)
 }
 
-/// Create a synthetic taxonomy for testing when fixture files don't exist
-fn create_synthetic_taxonomy() -> DimensionTaxonomy {
+/// Create the shared explicit scenario taxonomy used by dimension steps.
+fn create_scenario_taxonomy() -> DimensionTaxonomy {
     let mut taxonomy = DimensionTaxonomy::new();
 
     let mut scenario_domain = Domain::new("us-gaap:ScenarioDomain");
@@ -1583,6 +1530,12 @@ fn create_synthetic_taxonomy() -> DimensionTaxonomy {
         "us-gaap:ScenarioDomain".to_string(),
     );
 
+    taxonomy
+}
+
+/// Create a synthetic taxonomy for testing when fixture files don't exist.
+fn create_synthetic_taxonomy() -> DimensionTaxonomy {
+    let mut taxonomy = create_scenario_taxonomy();
     taxonomy.add_dimension(Dimension::Typed {
         qname: "dim:CustomerAxis".to_string(),
         value_type: "xs:string".to_string(),
