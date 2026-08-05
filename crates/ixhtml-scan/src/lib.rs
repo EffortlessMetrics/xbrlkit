@@ -159,7 +159,29 @@ fn strip_tags(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::scan_inline_fragments;
+    use super::{InlineFragment, scan_inline_fragments};
+    use std::error::Error;
+    use std::fmt::Debug;
+
+    fn expect_equal<T: Debug + PartialEq>(
+        label: &str,
+        actual: &T,
+        expected: &T,
+    ) -> Result<(), Box<dyn Error>> {
+        if actual != expected {
+            return Err(std::io::Error::other(format!(
+                "{label}: expected {expected:?}, got {actual:?}"
+            ))
+            .into());
+        }
+        Ok(())
+    }
+
+    fn first_fragment(fragments: &[InlineFragment]) -> Result<&InlineFragment, Box<dyn Error>> {
+        fragments
+            .first()
+            .ok_or_else(|| std::io::Error::other("expected one inline fragment").into())
+    }
 
     #[test]
     fn parses_inline_fact_attributes_and_value() {
@@ -186,17 +208,25 @@ mod tests {
     }
 
     #[test]
-    fn preserves_single_quoted_attributes_containing_tag_delimiters() {
+    fn preserves_single_quoted_attributes_containing_tag_delimiters() -> Result<(), Box<dyn Error>>
+    {
         let html = "<ix:nonNumeric name='dei:DocumentType' contextRef='c1' data='x>y'>10-K</ix:nonNumeric>";
         let fragments = scan_inline_fragments(html);
 
-        assert_eq!(fragments.len(), 1);
-        assert_eq!(fragments[0].fact_name.as_deref(), Some("dei:DocumentType"));
-        assert_eq!(fragments[0].context_ref.as_deref(), Some("c1"));
-        assert_eq!(
-            fragments[0].attributes.get("data").map(String::as_str),
-            Some("x>y")
-        );
-        assert_eq!(fragments[0].value, "10-K");
+        expect_equal("fragment count", &fragments.len(), &1)?;
+        let fragment = first_fragment(&fragments)?;
+        expect_equal(
+            "fact name",
+            &fragment.fact_name.as_deref(),
+            &Some("dei:DocumentType"),
+        )?;
+        expect_equal("context ref", &fragment.context_ref.as_deref(), &Some("c1"))?;
+        expect_equal(
+            "data attribute",
+            &fragment.attributes.get("data").map(String::as_str),
+            &Some("x>y"),
+        )?;
+        expect_equal("value", &fragment.value.as_str(), &"10-K")?;
+        Ok(())
     }
 }
