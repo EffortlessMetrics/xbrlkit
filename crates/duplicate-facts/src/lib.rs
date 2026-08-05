@@ -68,35 +68,59 @@ mod tests {
     }
 
     #[test]
-    fn classify_returns_none_when_no_duplicates_exist() {
+    fn classify_returns_none_when_no_duplicates_exist() -> Result<(), String> {
         let report = CanonicalReport {
             members: vec!["member-a.html".to_string()],
             facts: vec![fact("100")],
             findings: Vec::new(),
         };
 
-        assert_eq!(classify(&report), DuplicateDisposition::None);
+        let actual = classify(&report);
+        let expected = DuplicateDisposition::None;
+        if actual != expected {
+            return Err(format!(
+                "duplicate-free report classification mismatch: expected {expected:?}, got {actual:?}"
+            ));
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn classify_returns_consistent_when_duplicate_values_match() {
+    fn classify_returns_consistent_when_duplicate_values_match() -> Result<(), String> {
         let report = CanonicalReport {
             members: vec!["member-a.html".to_string()],
             facts: vec![fact("100"), fact("100")],
             findings: Vec::new(),
         };
 
-        assert_eq!(classify(&report), DuplicateDisposition::Consistent);
+        let actual = classify(&report);
+        let expected = DuplicateDisposition::Consistent;
+        if actual != expected {
+            return Err(format!(
+                "consistent duplicate report classification mismatch: expected {expected:?}, got {actual:?}"
+            ));
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn classify_returns_inconsistent_when_duplicate_values_differ() {
+    fn classify_returns_inconsistent_when_duplicate_values_differ() -> Result<(), String> {
         let report = CanonicalReport {
             members: vec!["member-a.html".to_string()],
             facts: vec![fact("100"), fact("101")],
             findings: Vec::new(),
         };
 
-        assert_eq!(classify(&report), DuplicateDisposition::Inconsistent);
+        let actual = classify(&report);
+        let expected = DuplicateDisposition::Inconsistent;
+        if actual != expected {
+            return Err(format!(
+                "inconsistent duplicate report classification mismatch: expected {expected:?}, got {actual:?}"
+            ));
+        }
+
+        Ok(())
     }
 }
