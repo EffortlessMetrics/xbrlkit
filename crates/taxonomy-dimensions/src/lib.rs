@@ -352,7 +352,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_domain_hierarchy() {
+    fn test_domain_hierarchy() -> Result<(), String> {
         let mut domain = Domain::new("us-gaap:StatementScenarioDomain");
 
         domain.add_member(DomainMember {
@@ -369,31 +369,55 @@ mod tests {
             label: Some("Budget".to_string()),
         });
 
-        assert!(domain.contains("us-gaap:ScenarioActualMember"));
-        assert!(domain.contains("us-gaap:ScenarioBudgetMember"));
-        assert!(!domain.contains("us-gaap:NonExistentMember"));
+        if !domain.contains("us-gaap:ScenarioActualMember") {
+            return Err("domain is missing the actual scenario member".to_string());
+        }
+        if !domain.contains("us-gaap:ScenarioBudgetMember") {
+            return Err("domain is missing the budget scenario member".to_string());
+        }
+        if domain.contains("us-gaap:NonExistentMember") {
+            return Err("domain contains a non-existent scenario member".to_string());
+        }
+        if domain.roots.len() != 2 {
+            return Err(format!(
+                "domain root count mismatch: expected 2, got {}",
+                domain.roots.len()
+            ));
+        }
 
-        assert_eq!(domain.roots.len(), 2);
+        Ok(())
     }
 
     #[test]
-    fn test_hypercube_dimensions() {
+    fn test_hypercube_dimensions() -> Result<(), String> {
         let mut hypercube = Hypercube::new("us-gaap:StatementTable");
 
         hypercube.add_dimension("us-gaap:StatementScenarioAxis", true);
         hypercube.add_dimension("us-gaap:StatementPeriodAxis", false);
 
-        assert_eq!(hypercube.dimension_qnames().len(), 2);
-        assert_eq!(hypercube.required_dimensions().len(), 1);
-        assert!(
-            hypercube
-                .required_dimensions()
-                .contains(&"us-gaap:StatementScenarioAxis".to_string())
-        );
+        let dimension_qnames = hypercube.dimension_qnames();
+        if dimension_qnames.len() != 2 {
+            return Err(format!(
+                "hypercube dimension count mismatch: expected 2, got {}",
+                dimension_qnames.len()
+            ));
+        }
+        let required_dimensions = hypercube.required_dimensions();
+        if required_dimensions.len() != 1 {
+            return Err(format!(
+                "hypercube required dimension count mismatch: expected 1, got {}",
+                required_dimensions.len()
+            ));
+        }
+        if !required_dimensions.contains(&"us-gaap:StatementScenarioAxis".to_string()) {
+            return Err("hypercube is missing the required scenario axis".to_string());
+        }
+
+        Ok(())
     }
 
     #[test]
-    fn test_dimension_taxonomy() {
+    fn test_dimension_taxonomy() -> Result<(), String> {
         let mut taxonomy = DimensionTaxonomy::new();
 
         // Add dimension
@@ -420,20 +444,21 @@ mod tests {
         );
 
         // Validate valid member
-        assert!(
-            taxonomy
-                .validate_member(
-                    "us-gaap:StatementScenarioAxis",
-                    "us-gaap:ScenarioActualMember"
-                )
-                .is_ok()
-        );
+        if let Err(error) = taxonomy.validate_member(
+            "us-gaap:StatementScenarioAxis",
+            "us-gaap:ScenarioActualMember",
+        ) {
+            return Err(format!("valid member was rejected: {error}"));
+        }
 
         // Validate invalid member
-        assert!(
-            taxonomy
-                .validate_member("us-gaap:StatementScenarioAxis", "us-gaap:InvalidMember")
-                .is_err()
-        );
+        if taxonomy
+            .validate_member("us-gaap:StatementScenarioAxis", "us-gaap:InvalidMember")
+            .is_ok()
+        {
+            return Err("invalid member was accepted".to_string());
+        }
+
+        Ok(())
     }
 }
