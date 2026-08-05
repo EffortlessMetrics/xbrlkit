@@ -90,7 +90,7 @@ local green tests alone are not release readiness.
 These dependencies are checkpoints, not completion claims and must be
 re-verified before work resumes:
 
-- The fallible workspace-root fallback in issue [#449](https://github.com/EffortlessMetrics/xbrlkit/issues/449) remains behind the active schema-check propagation lane in [PR #420](https://github.com/EffortlessMetrics/xbrlkit/pull/420).
+- The fallible workspace-root fallback in issue [#449](https://github.com/EffortlessMetrics/xbrlkit/issues/449) is a separate lane from the schema-validation test in [PR #420](https://github.com/EffortlessMetrics/xbrlkit/pull/420). Its implementation must still reconcile shared `repo_root()` callers such as `xtask/src/schema_check.rs` and current ownership before editing, but #420 is not a prerequisite.
 - Fixture-cache freshness work in issue [#376](https://github.com/EffortlessMetrics/xbrlkit/issues/376) has a merged stacked child ([PR #381](https://github.com/EffortlessMetrics/xbrlkit/pull/381)) but remains dependent on the open parent [PR #371](https://github.com/EffortlessMetrics/xbrlkit/pull/371) reaching the default branch.
 - Open PRs are candidate work, not landed behavior. An aligned PR should be improved in place only when its branch is not actively owned; otherwise leave a review or builder-ready handoff.
 
