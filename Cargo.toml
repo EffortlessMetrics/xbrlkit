@@ -37,7 +37,6 @@ members = [
   "crates/taxonomy-cache",
   "crates/archive-zip",
   "crates/render-json",
-  "crates/render-md",
   "crates/cockpit-export",
   "crates/xbrlkit-conform",
   "crates/xbrlkit-core",
@@ -92,7 +91,6 @@ oim-normalize = { version = "0.1.0-alpha.1", path = "crates/oim-normalize" }
 oracle-compare = { version = "0.1.0-alpha.1", path = "crates/oracle-compare" }
 receipt-types = { version = "0.1.0-alpha.1", path = "crates/receipt-types" }
 render-json = { version = "0.1.0-alpha.1", path = "crates/render-json" }
-render-md = { version = "0.1.0-alpha.1", path = "crates/render-md" }
 scenario-contract = { version = "0.1.0-alpha.1", path = "crates/scenario-contract" }
 scenario-runner = { version = "0.1.0-alpha.1", path = "crates/scenario-runner" }
 sec-http = { version = "0.1.0-alpha.1", path = "crates/sec-http" }
