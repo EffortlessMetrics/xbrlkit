@@ -1708,7 +1708,6 @@ name = "validation-run"
 version = "0.1.0-alpha.1"
 dependencies = [
  "anyhow",
- "context-completeness",
  "dimensional-rules",
  "duplicate-facts",
  "efm-rules",
