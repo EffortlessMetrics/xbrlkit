@@ -12,7 +12,7 @@ Agent: kimi-claw
 - **Parsing:** ixbrl-parse, ixbrl-dom
 - **CLI:** xbrlkit-cli, xtask
 - **BDD:** scenario-runner, xbrlkit-bdd-steps
-- **Infrastructure:** receipt-types, receipt-store, render-md
+- **Infrastructure:** receipt-types, receipt-store
 
 ### Validation Patterns Identified
 
