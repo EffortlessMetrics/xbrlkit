@@ -6,7 +6,7 @@ This is an individual agreement. Contributions owned by an employer or another e
 
 By signing this Agreement, you agree to the following:
 
-1. You are signing in your individual capacity and are legally entitled to submit the Contribution. If an employer or another entity owns or controls rights in the Contribution, do not use the individual signing flow unless you are personally authorized to grant every right stated here; contact the maintainers before submitting.
+1. You are signing in your individual capacity and are legally entitled to submit the Contribution. If an employer or another entity owns or controls rights in the Contribution, do not use the individual signing flow; contact the maintainers before submitting to arrange a separate written contribution path.
 2. You retain ownership of your Contribution.
 3. You grant EffortlessMetrics and all recipients of the Project a perpetual, worldwide, non-exclusive, irrevocable, royalty-free copyright license to use, reproduce, modify, prepare derivative works of, publicly display, publicly perform, and distribute your Contribution as part of the Project under the GNU Affero General Public License, version 3 or any later version (`AGPL-3.0-or-later`).
 4. To the extent you own or control patent claims necessarily infringed by your Contribution alone or by its combination with the Project, you grant EffortlessMetrics and all recipients of the Project a perpetual, worldwide, non-exclusive, irrevocable, royalty-free patent license to make, have made, use, sell, offer for sale, import, and otherwise transfer your Contribution as part of the Project under `AGPL-3.0-or-later`.
