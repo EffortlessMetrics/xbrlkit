@@ -3,7 +3,7 @@
 **Repository:** `EffortlessMetrics/xbrlkit`  
 **Status:** Pending activation; this change must remain draft until the activation receipts below are complete.  
 **Expected status context:** `license/cla`  
-**Repository CLA SHA-256:** `cab771adaf030618bc6d98392fcbb30509f6019b00fc5f6433e6bc7d756a96c3`
+**Repository CLA SHA-256:** `8260cdfb9961a606af2787234a247019f6454056f4e7c393c199b7d97a30cd4f`
 
 ## Decision
 
