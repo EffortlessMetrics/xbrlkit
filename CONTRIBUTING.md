@@ -11,10 +11,12 @@
 ## License and CLA
 
 - `xbrlkit` is licensed under `AGPL-3.0-or-later`.
-- `AGPL-3.0-or-later` plus CLA is the intentional public contribution policy for this alpha series.
-- All intentionally submitted contributions require the repository [CLA](./CLA.md).
-- If the CLA Assistant comments on your pull request, reply with `I have read the CLA Document and I hereby sign the CLA`.
-- If you contribute on behalf of an employer or other entity, make sure you have authority to agree to the CLA.
+- `AGPL-3.0-or-later` plus the repository CLA is the intentional public contribution policy for this alpha series.
+- All intentionally submitted contributions require the repository [Individual CLA](./CLA.md).
+- Open a pull request and follow the signing link posted by the hosted CLA Assistant GitHub App. The individual flow requires a full legal name, email address, and acknowledgement of individual capacity and authority.
+- Contributions owned by an employer or another entity require a separate written contribution path. Contact the maintainers before submitting; do not use the individual flow on the entity's behalf.
+- Licensing records are handled under the [Contributor CLA Privacy Notice](./CONTRIBUTOR_PRIVACY.md).
+- Pull requests must pass the `license/cla` check once the hosted app is activated.
 
 ## Commands
 
