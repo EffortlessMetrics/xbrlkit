@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "repository": "EffortlessMetrics/xbrlkit",
+  "mechanism": "CLA Assistant Lite",
+  "workflow_path": ".github/workflows/cla.yml",
+  "action": "contributor-assistant/github-action@v2.6.1",
+  "ledger_branch": "cla-signatures",
+  "ledger_commit": "d0b08bfb44ca176892192032721027d71e31c7f0",
+  "ledger_path": "signatures/version1/cla.json",
+  "observed_signatures": [
+    {
+      "github_login": "EffortlessSteven",
+      "github_id": 15812269,
+      "comment_id": 4089675267,
+      "signed_at": "2026-03-19T12:08:26Z",
+      "pull_request": 13
+    }
+  ],
+  "disposition": "retained_not_imported",
+  "reason": "The predecessor record did not collect the hosted agreement's required full legal name, email address, and individual-capacity authority acknowledgement."
+}
