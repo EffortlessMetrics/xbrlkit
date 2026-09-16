@@ -78,7 +78,11 @@ cargo run -p xbrlkit-cli -- validate-fixture --profile sec/efm-77/opco --json fi
 
 `xbrlkit` is licensed under `AGPL-3.0-or-later`.
 
-External contributions require signing the repository [CLA](./CLA.md). `xbrlkit`'s public alpha contribution policy is `AGPL-3.0-or-later` plus CLA, and accepted contributions remain under the same license.
+Every external contribution must be covered by the applicable contributor agreement. Individual contributors sign the repository [Individual CLA](./CLA.md) through the hosted CLA Assistant flow.
+
+If an employer or another entity owns or controls the relevant rights, do not use the individual form. Contact the maintainers privately before submitting the covered contribution. After a Corporate CLA is verified, that pull request may use the audited, pull-request-only exception on the dedicated CLA ruleset; corporate contributors are not placed on the CLA Assistant allowlist, and every ordinary review and CI rule still applies. Until that path is configured and approved for the pull request, the contribution cannot merge. See [Hosted CLA Assistant governance](./docs/governance/cla-assistant.md).
+
+`xbrlkit`'s public alpha contribution policy is `AGPL-3.0-or-later` plus the applicable contributor agreement, and accepted contributions remain under `AGPL-3.0-or-later`.
 
 Please do not use public issues for security-sensitive reports. See [SECURITY.md](./SECURITY.md).
 

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "repository": "EffortlessMetrics/xbrlkit",
+  "mechanism": "CLA Assistant Lite",
+  "workflow_path": ".github/workflows/cla.yml",
+  "action": "contributor-assistant/github-action@v2.6.1",
+  "ledger_branch": "cla-signatures",
+  "ledger_commit": "d0b08bfb44ca176892192032721027d71e31c7f0",
+  "ledger_path": "signatures/version1/cla.json",
+  "disposition": "retained_not_imported",
+  "reason": "The predecessor ledger remains the authoritative historical record. It did not collect the hosted agreement's required full legal name, email address, and individual-capacity authority acknowledgement."
+}

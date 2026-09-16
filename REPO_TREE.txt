@@ -8,7 +8,6 @@
     - .github/ISSUE_TEMPLATE/slice_request.yml
   - .github/pull_request_template.md
   - .github/workflows
-    - .github/workflows/cla.yml
     - .github/workflows/ci.yml
 - .gitignore
 - .llm
@@ -244,6 +243,12 @@
     - docs/architecture/overview.md
   - docs/audit
     - docs/audit/evidence.md
+  - docs/governance
+    - docs/governance/cla-assistant-metadata.json
+    - docs/governance/cla-assistant-source.json
+    - docs/governance/cla-assistant.md
+    - docs/governance/cla-lite-predecessor.json
+    - docs/governance/cla-privacy.md
   - docs/how-to
     - docs/how-to/add-scenario.md
   - docs/reference
