@@ -15,7 +15,8 @@
 - Every intentionally submitted contribution must be covered by the applicable contributor agreement.
 - Individual contributors sign the repository [Individual CLA](./CLA.md) through the hosted CLA Assistant GitHub App. Open a pull request, follow the App's signing link, and wait for `license/cla` to pass.
 - If an employer or another entity owns or controls the relevant rights, do not use the individual form. Contact the maintainers privately before submitting the covered contribution so the corporate agreement and authorization process can be completed.
-- See the [Contributor Licensing Records Privacy Notice](./docs/governance/cla-privacy.md) for the licensing-record fields, purpose, retention, and access/correction process.
+- A covered corporate pull request remains blocked until maintainers verify the private Corporate CLA record and approve the audited, pull-request-only exception on the dedicated CLA ruleset. Corporate contributors are not placed on the CLA Assistant allowlist, and every ordinary review and CI rule still applies.
+- See [Hosted CLA Assistant governance](./docs/governance/cla-assistant.md) for the corporate exception receipt and the [Contributor Licensing Records Privacy Notice](./docs/governance/cla-privacy.md) for the licensing-record fields, purpose, retention, and access/correction process.
 
 ## Commands
 
